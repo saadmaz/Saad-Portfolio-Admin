@@ -5,861 +5,128 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   PROFESSIONAL PORTFOLIO DESIGN SYSTEM - DARK TEAL EDITION
+   ADMIN DESIGN TOKENS — SINGLE SOURCE OF TRUTH
    ==========================================================================
-   - Light Mode: Pearl White background with Deep Teal accents.
-   - Dark Mode: Deep Teal-Space gradient background with luminous Teal accents.
-   - Interactive: Glowing hover gradients, lift animations, and bounce icons.
+   This app is dark-only (no theme toggle exists — confirmed no ThemeProvider
+   is mounted anywhere in src/app). Previously this file shipped THREE
+   contradictory token systems (:root light theme, .dark theme, and a
+   .admin-panel override) — only .admin-panel ever actually rendered for
+   authenticated routes, while /login and the 404 page silently fell back to
+   the dead :root theme as a routing-tree accident. This block replaces all
+   three with one definition so every route gets the same theme.
+
+   RULES for anyone editing this block:
+   - Exactly ONE accent color (teal, hue 174). Do not add a second brand hue.
+   - Color elsewhere is reserved for semantic state: --success/--warning/
+     --danger/--info. No decorative per-category colors.
+   - Neutral ramp stays at or below 8% saturation, hue 220 (slight cool cast).
+   - Shadows are neutral (rgba black) — no colored glow shadows.
+   - All pairings below are contrast-checked (WCAG relative-luminance
+     formula) against their actual usage — see docs/ui-audit.md section 9
+     for the method. Don't loosen a value without rechecking contrast.
    ========================================================================== */
 
 @layer base {
   :root {
-    /* --- CORE COLORS - LIGHT THEME (Pearl & Teal Aesthetic) --- */
+    /* --- Neutral ramp (hue 220, sat ≤8%) --- */
+    --background: 220 8% 6%;
+    --foreground: 220 8% 94%;              /* 16.7:1 on background */
 
-    /* Background: Premium 'Pearl White' */
-    --background: 180 20% 98%;
-    --foreground: 200 40% 10%; /* Deep teal-navy for sharp text */
+    --card: 220 8% 11%;
+    --card-foreground: 220 8% 94%;
 
-    /* Card & Surface */
-    --card: 0 0% 100%;
-    --card-foreground: 200 40% 10%;
+    --popover: 220 8% 14%;
+    --popover-foreground: 220 8% 94%;
 
-    /* Popover/Menus */
-    --popover: 0 0% 100%;
-    --popover-foreground: 200 40% 10%;
+    --primary: 220 8% 94%;
+    --primary-foreground: 220 8% 6%;
 
-    /* Primary - Deep Teal used for heavy accents */
-    --primary: 200 40% 10%;
-    --primary-foreground: 0 0% 100%;
+    --secondary: 220 8% 16%;
+    --secondary-foreground: 220 8% 94%;
 
-    /* Secondary - Muted teal-gray */
-    --secondary: 180 14% 94%;
-    --secondary-foreground: 200 40% 10%;
+    --muted: 220 8% 16%;
+    --muted-foreground: 220 6% 58%;        /* 6.1:1 on background */
 
-    /* Muted - Soft teal-gray */
-    --muted: 180 14% 92%;
-    --muted-foreground: 180 12% 38%; /* darkened for 5.5:1+ contrast on pearl bg */
-
-    /* ==========================================
-       THE DARK TEAL ACCENT
-       ========================================== */
-    /* Accent - Professional "Dark Teal" inspired by the image reference.
-       32% lightness measured 3.65-3.96:1 against this theme's near-white
-       surfaces for small/bold text (section eyebrow labels) - short of the
-       4.5:1 WCAG AA floor. 27% clears ~5.5:1 while staying the same hue. */
-    --accent: 174 72% 27%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 174 72% 32%;
-
-    /* Teal highlight (brighter for dark mode) */
-    --accent-bright: 174 72% 44%;
-
-    /* LEGACY CONTACT BLUE (preserved) */
-    --contact-blue: 174 72% 32%;
-
-    /* Destructive */
-    --destructive: 0 84% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Border & Input */
-    --border: 180 20% 88%;
-    --input: 180 20% 88%;
-    --ring: 174 72% 32%;
-
-    /* Radius */
-    --radius: 0.625rem;
-
-    /* Custom Portfolio Tokens */
-    --navy: 200 40% 10%;
-    --navy-light: 200 40% 20%;
-    --slate: 180 12% 60%;
-    --slate-light: 180 14% 94%;
-    --blue-accent: 174 72% 32%;
-    --blue-soft: 174 72% 92%;
-    --success: 142 71% 35%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 38%;
-    --warning-foreground: 0 0% 100%;
-
-    /* --- PREMIUM TEAL GRADIENTS --- */
-    --gradient-hero: linear-gradient(135deg, hsl(180 20% 98%) 0%, hsl(174 30% 95%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(180 20% 99%) 100%);
-    --gradient-navy: linear-gradient(135deg, hsl(200 40% 10%) 0%, hsl(200 40% 18%) 100%);
-    /* Main Teal Gradient: Rich teal → deeper teal-green */
-    --gradient-accent: linear-gradient(135deg, hsl(174 72% 38%) 0%, hsl(180 65% 26%) 100%);
-    --gradient-accent-hover: linear-gradient(135deg, hsl(174 72% 44%) 0%, hsl(180 65% 32%) 100%);
-    --gradient-contact: linear-gradient(135deg, hsl(196 55% 8%) 0%, hsl(180 50% 12%) 100%);
-
-    /* --- REFINED SHADOWS --- */
-    --shadow-sm: 0 1px 2px 0 hsl(200 40% 10% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(174 72% 32% / 0.1), 0 2px 4px -2px hsl(174 72% 32% / 0.08);
-    --shadow-lg: 0 10px 15px -3px hsl(174 72% 32% / 0.12), 0 4px 6px -4px hsl(174 72% 32% / 0.08);
-    --shadow-xl: 0 20px 25px -5px hsl(174 72% 32% / 0.12), 0 8px 10px -6px hsl(174 72% 32% / 0.08);
-    --shadow-card: 0 0 0 1px hsl(180 20% 88%), 0 4px 6px -1px hsl(200 40% 10% / 0.05);
-    --shadow-card-hover: 0 0 0 1px hsl(174 72% 32% / 0.35), 0 10px 20px -5px hsl(174 72% 32% / 0.15);
-    --shadow-glow: 0 0 20px hsl(174 72% 32% / 0.4), 0 0 40px hsl(174 72% 32% / 0.15);
-
-    /* Sidebar Tokens */
-    --sidebar-background: 180 20% 98%;
-    --sidebar-foreground: 200 40% 15%;
-    --sidebar-primary: 200 40% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 180 14% 94%;
-    --sidebar-accent-foreground: 200 40% 10%;
-    --sidebar-border: 180 20% 88%;
-    --sidebar-ring: 174 72% 32%;
-  }
-
-  /* --- DARK THEME OVERRIDES: Deep Teal-Space gradient --- */
-  .dark {
-    /* Deep Space with Teal tint backgrounds */
-    --background: 196 60% 4%;
-    --foreground: 174 20% 95%;
-
-    --card: 196 55% 7%;
-    --card-foreground: 174 20% 95%;
-
-    --popover: 196 55% 7%;
-    --popover-foreground: 174 20% 95%;
-
-    --primary: 174 20% 95%;
-    --primary-foreground: 196 60% 6%;
-
-    --secondary: 196 50% 12%;
-    --secondary-foreground: 174 20% 95%;
-
-    --muted: 196 50% 12%;
-    --muted-foreground: 174 18% 65%; /* lightened for 6:1+ contrast on dark-mode surfaces */
-
-    /* Luminous Teal for Dark Mode */
+    /* --- The one accent: teal --- */
     --accent: 174 72% 44%;
-    --accent-foreground: 196 60% 4%;
-    --accent-bright: 174 72% 54%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 174 20% 95%;
-
-    --border: 196 50% 15%;
-    --input: 196 50% 15%;
-    --ring: 174 72% 44%;
-
-    --navy: 174 20% 95%;
-    --navy-light: 174 18% 75%;
-    --slate: 174 12% 45%;
-    --slate-light: 196 50% 12%;
-    --blue-accent: 174 72% 44%;
-    --blue-soft: 174 72% 10%;
-
-    /* Deep teal-space gradient for hero section */
-    --gradient-hero: linear-gradient(135deg, hsl(196 65% 5%) 0%, hsl(196 60% 8%) 50%, hsl(180 60% 6%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(196 55% 7%) 0%, hsl(196 55% 9%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(174 72% 44%) 0%, hsl(180 65% 32%) 100%);
-    --gradient-accent-hover: linear-gradient(135deg, hsl(174 72% 52%) 0%, hsl(180 65% 38%) 100%);
-    --gradient-contact: linear-gradient(135deg, hsl(196 55% 8%) 0%, hsl(180 50% 12%) 100%);
-
-    --shadow-card: 0 0 0 1px hsl(196 50% 15%), 0 4px 6px -1px hsl(0 0% 0% / 0.25);
-    --shadow-card-hover: 0 0 0 1px hsl(174 72% 44% / 0.4), 0 10px 20px -5px hsl(174 72% 32% / 0.3);
-    --shadow-glow: 0 0 20px hsl(174 72% 44% / 0.5), 0 0 60px hsl(174 72% 32% / 0.2);
-
-    --sidebar-background: 196 55% 7%;
-    --sidebar-foreground: 174 20% 95%;
-    --sidebar-primary: 174 72% 44%;
-    --sidebar-primary-foreground: 196 60% 4%;
-    --sidebar-accent: 196 50% 12%;
-    --sidebar-accent-foreground: 174 20% 95%;
-    --sidebar-border: 196 50% 15%;
-    --sidebar-ring: 174 72% 44%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-
-  /* Dark mode background: teal-space gradient applied to the entire body */
-  .dark body {
-    background: var(--gradient-hero);
-    background-attachment: fixed;
-  }
-
-  /* TYPOGRAPHY SYSTEM: DM Sans for Headings, Inter for Body */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    @apply font-semibold tracking-tight text-foreground;
-  }
-
-  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
-  h2 { @apply text-3xl md:text-4xl; }
-  h3 { @apply text-xl md:text-2xl; }
-  h4 { @apply text-lg md:text-xl; }
-
-  p { @apply leading-relaxed; }
-}
-
-@layer components {
-  /* LAYOUT CONTAINERS */
-  .section-container {
-      @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .section-padding {
-    @apply py-20 md:py-24 lg:py-32;
-  }
-
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-  /* CARD EFFECTS */
-  .card-hover {
-    @apply transition-all duration-300 ease-out;
-    box-shadow: var(--shadow-card);
-  }
-
-  .card-hover:hover {
-    box-shadow: var(--shadow-card-hover);
-    @apply -translate-y-1 scale-[1.005];
-  }
-
-  /* TECH CHIPS */
-  .tech-chip {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide;
-    @apply bg-secondary text-secondary-foreground border border-black/5 dark:border-white/5;
-    @apply transition-all duration-200;
-  }
-
-  .tech-chip:hover {
-    @apply bg-accent text-accent-foreground border-accent;
-  }
-
-  /* SECTION TITLE */
-  .section-title {
-    @apply text-sm font-bold uppercase tracking-widest text-accent mb-3;
-  }
-
-  /* GRADIENT TEXT */
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-accent);
-  }
-
-  /* LINK ANIMATIONS */
-  .link-underline {
-    @apply relative;
-  }
-
-  .link-underline::after {
-    content: '';
-    @apply absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300;
-  }
-
-  .link-underline:hover::after {
-    @apply w-full;
-  }
-
-  /* NAVIGATION LINKS */
-  .nav-link {
-    @apply text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm font-semibold;
-  }
-
-  .nav-link-active {
-    @apply text-accent font-bold;
-  }
-
-  /* ==========================================
-     BUTTON SYSTEM - DARK TEAL PREMIUM
-     ========================================== */
-
-  /* PRIMARY BUTTON: Teal gradient - visible on both light and dark */
-  .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold text-sm;
-    color: hsl(var(--accent-foreground)) !important;
-    @apply border border-transparent transition-all duration-300;
-    background: var(--gradient-accent);
-    box-shadow: var(--shadow-md);
-  }
-
-  .btn-primary:hover {
-    background: var(--gradient-accent-hover);
-    box-shadow: var(--shadow-glow);
-    @apply scale-[1.02] -translate-y-px;
-  }
-
-  /* SECONDARY BUTTON: Teal-stroked outline with fill-on-hover */
-  .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold text-sm;
-    @apply bg-secondary text-secondary-foreground border border-border;
-    @apply transition-all duration-300;
-  }
-
-  .btn-secondary:hover {
-    @apply bg-accent/10 border-accent/40 text-accent;
-    @apply scale-[1.02] -translate-y-px;
-  }
-
-  /* ACCENT TEAL BUTTON: Header CTA - same teal gradient */
-  .btn-accent {
-    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold text-sm;
-    color: hsl(var(--accent-foreground)) !important;
-    @apply border border-transparent transition-all duration-300;
-    background: var(--gradient-accent);
-    box-shadow: var(--shadow-md);
-  }
-
-  .btn-accent:hover {
-    background: var(--gradient-accent-hover);
-    box-shadow: var(--shadow-glow);
-    @apply scale-[1.03] -translate-y-px;
-  }
-
-  /* OUTLINE TEAL BUTTON:
-     Light: teal text + teal border on pearl bg → fills teal on hover.
-     Dark:  teal text + teal border on dark bg  → fills teal on hover. */
-  .btn-outline {
-    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-lg font-semibold text-sm;
-    @apply border-2 border-accent text-accent bg-transparent;
-    @apply transition-all duration-300;
-  }
-
-  .btn-outline:hover {
-    color: hsl(var(--accent-foreground)) !important;
-    border-color: transparent !important;
-    background: var(--gradient-accent);
-    box-shadow: var(--shadow-glow);
-    @apply scale-[1.03] -translate-y-px;
-  }
-
-  /* GLASS BUTTON: Translucent, frosted - for dark backgrounds (contact, footers) */
-  .btn-glass {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-sm;
-    @apply backdrop-blur-md border transition-all duration-300;
-    color: white;
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .btn-glass:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: hsl(174 72% 44% / 0.5);
-    box-shadow: 0 0 20px hsl(174 72% 44% / 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    @apply scale-[1.02] -translate-y-px;
-  }
-
-  /* GHOST-ARROW BUTTON: Text only, arrow slides right + underline sweeps in */
-  .btn-ghost-arrow {
-    @apply inline-flex items-center gap-2 font-semibold text-sm text-accent;
-    @apply bg-transparent border-none transition-all duration-300 relative;
-    padding: 0.5rem 0;
-  }
-
-  .btn-ghost-arrow::after {
-    content: '';
-    @apply absolute bottom-0 left-0 h-[2px] bg-accent transition-all duration-300;
-    width: 0;
-  }
-
-  .btn-ghost-arrow:hover {
-    @apply brightness-125;
-  }
-
-  .btn-ghost-arrow:hover::after {
-    width: 100%;
-  }
-
-  .btn-ghost-arrow:hover svg {
-    transform: translateX(5px);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .btn-ghost-arrow svg {
-    transition: transform 0.3s ease;
-  }
-
-  /* FOOTER LINKS */
-  .footer-link {
-    @apply text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm;
-  }
-
-  /* STATUS SYSTEM */
-  .status-badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border;
-  }
-
-  .status-live {
-    @apply bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30;
-  }
-
-  .status-mvp {
-    @apply bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30;
-  }
-
-  .status-progress {
-    @apply bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-500/20 dark:text-teal-400 dark:border-teal-500/30;
-  }
-}
-
-@layer utilities {
-  /* UNIFIED WHITE UTILITY */
-  .bg-white {
-    background-color: hsl(var(--card)) !important;
-  }
-
-  /* ==========================================
-     CONTACT BLUE (legacy, now teal)
-     ========================================== */
-  .bg-contact-blue {
-    background: var(--gradient-accent) !important;
-  }
-
-  .text-contact-blue {
-    color: hsl(var(--accent)) !important;
-  }
-
-  /* --- CORE ANIMATIONS --- */
-  .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-  .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-
-  /* Staggered entrance delays */
-  .animate-fade-in-delay-1 { animation: fadeInUp 0.6s ease-out 0.1s forwards; opacity: 0; }
-  .animate-fade-in-delay-2 { animation: fadeInUp 0.6s ease-out 0.2s forwards; opacity: 0; }
-  .animate-fade-in-delay-3 { animation: fadeInUp 0.6s ease-out 0.3s forwards; opacity: 0; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-30px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes slideInRight {
-    from { opacity: 0; transform: translateX(30px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  /* BOUNCE SOFT: Social icon hover bounce */
-  @keyframes bounceSoft {
-    0%, 100% { transform: translateY(0) scale(1); }
-    30%       { transform: translateY(-5px) scale(1.12); }
-    60%       { transform: translateY(-2px) scale(1.06); }
-    80%       { transform: translateY(-3px) scale(1.08); }
-  }
-
-  /* GLOW PULSE: Soft radial glow for badges/indicators */
-  @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(174 72% 44% / 0.5); }
-    50%       { box-shadow: 0 0 0 6px hsl(174 72% 44% / 0); }
-  }
-
-  /* SHIMMER: Scanning highlight for skill bars / cards */
-  @keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-
-  /* STATUS PULSE: Very slow, gentle pulse for the "Currently building" indicator */
-  @keyframes statusPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.65; transform: scale(0.9); }
-  }
-
-  /* LETTER TRACK: Slight letter-spacing expansion for name entrance */
-  @keyframes letterTrack {
-    from { letter-spacing: -0.05em; opacity: 0; }
-    to   { letter-spacing: normal; opacity: 1; }
-  }
-
-  .animate-slide-in-left  { animation: slideInLeft 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-  .animate-slide-in-right { animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-  .animate-glow-pulse     { animation: glowPulse 2s ease-in-out infinite; }
-  .animate-status-pulse   { animation: statusPulse 3s ease-in-out infinite; }
-  .animate-letter-track   { animation: letterTrack 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-  /* SOCIAL ICON BOUNCE: Applied on hover via group/peer or direct hover */
-  .social-icon {
-    @apply p-2.5 rounded-lg text-muted-foreground transition-colors duration-200;
-    @apply hover:text-accent-foreground hover:bg-accent active:scale-95;
-    transition: color 0.2s, background 0.2s;
-  }
-
-  .social-icon:hover {
-    animation: bounceSoft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-
-  /* ── BRANDED SOCIAL ICON: Brand-color glow + pulse ring ───────────────── */
-  .social-icon-branded {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    border: 1px solid hsl(var(--border));
-    background: hsl(var(--card));
-    transition: color 0.25s cubic-bezier(0.4,0,0.2,1),
-                transform 0.25s cubic-bezier(0.4,0,0.2,1),
-                box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
-                border-color 0.25s cubic-bezier(0.4,0,0.2,1),
-                background 0.25s cubic-bezier(0.4,0,0.2,1);
-  }
-
-  .social-icon-branded:hover {
-    box-shadow: 0 8px 24px var(--glow-color, rgba(13,148,136,0.35));
-    border-color: var(--brand-color, hsl(var(--accent)));
-    background: color-mix(in srgb, var(--brand-color, hsl(var(--accent))) 8%, hsl(var(--card)));
-  }
-
-  .social-icon-branded:active {
-    transform: translateY(0) !important;
-  }
-
-  /* Pulse ring that expands and fades on hover */
-  .social-icon-ring {
-    position: absolute;
-    inset: 0;
-    border-radius: 10px;
-    border: 2px solid var(--brand-color, hsl(var(--accent)));
-    opacity: 0;
-    transform: scale(0.8);
-    pointer-events: none;
-    transition: none;
-  }
-
-  .social-icon-branded:hover .social-icon-ring {
-    animation: ringExpand 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-
-  @keyframes ringExpand {
-    0%   { opacity: 0.7; transform: scale(0.85); }
-    100% { opacity: 0;   transform: scale(1.4); }
-  }
-
-  @media (max-width: 639px) {
-    .social-icon-branded {
-      width: 40px;
-      height: 40px;
-    }
-  }
-
-  /* ── HERO PRIMARY BUTTON: shimmer sweep ──────────────────────────────────── */
-  .hero-btn-primary {
-    position: relative;
-    overflow: hidden;
-    padding: 0.625rem 1.25rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    background: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
-    border: none;
-    cursor: pointer;
-    transition: background 0.25s cubic-bezier(0.4,0,0.2,1),
-                transform 0.25s cubic-bezier(0.4,0,0.2,1),
-                box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);
-  }
-
-  .hero-btn-primary::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(
-      105deg,
-      transparent 20%,
-      rgba(255,255,255,0.22) 50%,
-      transparent 80%
-    );
-    transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .hero-btn-primary:hover {
-    background: hsl(var(--accent) / 0.88);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px hsl(var(--accent) / 0.35);
-  }
-
-  .hero-btn-primary:hover::after {
-    left: 150%;
-  }
-
-  .hero-btn-primary:active {
-    transform: translateY(0);
-  }
-
-  /* ── HERO OUTLINE BUTTON: fill from left ─────────────────────────────────── */
-  .hero-btn-outline {
-    position: relative;
-    overflow: hidden;
-    padding: 0.625rem 1.25rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    background: transparent;
-    color: hsl(var(--foreground));
-    border: 1.5px solid hsl(var(--border));
-    cursor: pointer;
-    transition: color 0.3s cubic-bezier(0.4,0,0.2,1),
-                border-color 0.25s cubic-bezier(0.4,0,0.2,1);
-    z-index: 0;
-  }
-
-  .hero-btn-outline::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: hsl(var(--accent));
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: -1;
-  }
-
-  .hero-btn-outline:hover {
-    color: hsl(var(--accent-foreground));
-    border-color: hsl(var(--accent));
-  }
-
-  .hero-btn-outline:hover::before {
-    transform: scaleX(1);
-  }
-
-  .hero-btn-outline:active {
-    transform: translateY(0);
-  }
-
-  /* ── MARQUEE: Seamless horizontal scroll ─────────────────────────────────── */
-  @keyframes marqueeScroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-
-  .marquee-track {
-    display: flex;
-    width: max-content;
-    animation: marqueeScroll 28s linear infinite;
-  }
-
-  .marquee-track:hover {
-    animation-play-state: paused;
-  }
-
-  /* ── TIMELINE LINE DRAW: scaleY from top ─────────────────────────────────── */
-  .timeline-line {
-    transform-origin: top;
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* ── VIEW-ALL BUTTON ARROW ───────────────────────────────────────────────── */
-  .btn-view-all {
-    position: relative;
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
-    border-radius: 2rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    border: 1.5px solid hsl(var(--border));
-    background: transparent;
-    color: hsl(var(--foreground));
-    cursor: pointer;
-    transition: color 0.3s cubic-bezier(0.4,0,0.2,1),
-                border-color 0.25s cubic-bezier(0.4,0,0.2,1);
-    z-index: 0;
-  }
-
-  .btn-view-all::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: hsl(var(--accent));
-    border-radius: 2rem;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: -1;
-  }
-
-  .btn-view-all:hover {
-    color: hsl(var(--accent-foreground));
-    border-color: hsl(var(--accent));
-  }
-
-  .btn-view-all:hover::before {
-    transform: scaleX(1);
-  }
-
-  .btn-view-all:hover .btn-arrow {
-    transform: translateX(4px);
-  }
-
-  .btn-arrow {
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* ── CERT TAG: hover interaction ─────────────────────────────────────────── */
-  .cert-tag {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 500;
-    color: hsl(var(--accent));
-    background: hsl(var(--accent) / 0.1);
-    border-radius: 20px;
-    padding: 2px 9px;
-    white-space: nowrap;
-    line-height: 16px;
-    cursor: default;
-  }
-
-  .cert-tag:hover {
-    background: hsl(var(--accent) / 0.2);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px hsl(var(--accent) / 0.2);
-  }
-
-  /* SCROLL REVEAL (Intersection Observer Ready) */
-  .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .reveal.active {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* PREMIUM PROFESSIONAL TOGGLE SWITCH */
-  .toggle-professional {
-    @apply relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full;
-    @apply transition-all duration-300 ease-out border border-transparent shadow-inner;
-    background: hsl(var(--accent));
-  }
-
-  .toggle-professional[data-state="unchecked"] {
-    background: hsl(var(--muted));
-    @apply border-border shadow-none;
-  }
-
-  .toggle-professional-thumb {
-    @apply pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0;
-    @apply transition-transform duration-300 ease-out;
-  }
-
-  .toggle-professional[data-state="checked"] .toggle-professional-thumb {
-    transform: translateX(20px);
-  }
-
-  .toggle-professional[data-state="unchecked"] .toggle-professional-thumb {
-    transform: translateX(2px);
-  }
-
-  /* THEME TRANSITION: smooth cross-fade when toggling dark/light */
-  html {
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     ADMIN PANEL - EDITORIAL DEEP NAVY DESIGN SYSTEM
-     ───────────────────────────────────────────────────────────────────
-     Overriding ALL shadcn/Tailwind CSS variables inside .admin-panel
-     so every component (Card, Button, Input, Badge, Dropdown…) inherits
-     the deep-navy + editorial-gold palette without touching each page.
-
-     Typography:  Playfair Display (headings) · DM Sans (body / UI)
-     Palette:     Deep navy bg · Warm ivory text · #C4A86A editorial gold
-  ═══════════════════════════════════════════════════════════════════ */
-
-  .admin-panel {
-    /* ── Backgrounds ──────────────────────────────────────────── */
-    --background:               228 52%  6%;   /* #070B17 main bg          */
-    --foreground:                36 22% 91%;   /* #EDE9E3 warm ivory        */
-
-    --card:                     222 45% 12%;   /* #111A2B surface           */
-    --card-foreground:           36 22% 91%;
-
-    --popover:                  222 45% 12%;
-    --popover-foreground:        36 22% 91%;
-
-    /* ── Text roles ───────────────────────────────────────────── */
-    --primary:                   36 22% 91%;   /* ivory = primary text      */
-    --primary-foreground:       228 52%  6%;
-
-    --secondary:                220 40% 16%;   /* raised surface            */
-    --secondary-foreground:      36 22% 91%;
-
-    --muted:                    220 40% 16%;
-    --muted-foreground:          36  8% 54%;   /* warm muted gray           */
-
-    /* ── Emerald accent - replaces every teal/gold reference ───── */
-    --accent:                   160 84% 39%;   /* #10b981 emerald-500        */
-    --accent-foreground:       228 52%  6%;    /* dark navy text on emerald — passes AA, white failed at 2.59:1 */
-    --accent-glow:               160 84% 39%;
-    --accent-bright:             152 63% 52%;  /* emerald-400 for highlights */
-
-    /* ── Borders / inputs / focus ring ───────────────────────── */
-    --border:                   222 32% 17%;
-    --input:                    222 32% 17%;
-    --ring:                      38 43% 59%;   /* gold focus ring           */
-    --radius:                   0.5rem;
-
-    /* ── Destructive (unchanged) ─────────────────────────────── */
-    --destructive:                0 62% 44%;
-    --destructive-foreground:    36 22% 91%;
-
-    /* ── Sidebar tokens ──────────────────────────────────────── */
-    --sidebar-background:       225 48%  9%;
-    --sidebar-foreground:        36 22% 91%;
-    --sidebar-primary:          160 84% 39%;
-    --sidebar-primary-foreground: 0  0% 100%;
-    --sidebar-accent:           220 40% 16%;
-    --sidebar-accent-foreground: 36 22% 91%;
-    --sidebar-border:           222 32% 14%;
-    --sidebar-ring:             160 84% 39%;
-
-    /* ── Admin surface/border overlay tokens (always-dark context) ── */
-    --admin-border:     rgba(255,255,255,0.055);
-    --admin-border-sm:  rgba(255,255,255,0.07);
-    --admin-border-md:  rgba(255,255,255,0.08);
-    --admin-border-lg:  rgba(255,255,255,0.10);
-    --admin-surface-xs: rgba(255,255,255,0.03);
-    --admin-surface-sm: rgba(255,255,255,0.04);
-    --admin-surface-md: rgba(255,255,255,0.05);
-    --admin-surface-lg: rgba(255,255,255,0.06);
-    --admin-surface-xl: rgba(255,255,255,0.09);
-
-    /* ── Admin foreground opacity tokens (for Tailwind arbitrary values) */
-    --admin-fg-22:  hsl(36 22% 91% / 0.22);
-    --admin-fg-35:  hsl(36 22% 91% / 0.35);
-    --admin-fg-60:  hsl(36 22% 91% / 0.60);
-
-    /* ── Admin semantic status indicator colors ──────────────── */
-    --status-create:   160 84% 39%;   /* emerald = accent */
-    --status-update:   217 91% 60%;   /* blue-400 */
-    --status-delete:     0 72% 58%;   /* red-400 */
-    --status-default:  262 83% 58%;   /* violet-400 */
-
-    /* ── Admin stat-card categorical gradients ────────────────── */
+    --accent-foreground: 220 8% 6%;        /* 8.5:1 on accent */
+    --accent-hover: 174 72% 50%;
+    --accent-bright: var(--accent-hover);  /* legacy alias — consumed by AdminLayout.tsx, BlogForm.tsx, AdminLoginPage.tsx */
+    --accent-subtle: 174 40% 14%;          /* active-nav / selected-row wash */
+
+    /* --- Semantic state colors (the ONLY other colors permitted) --- */
+    --destructive: 0 65% 46%;
+    --destructive-foreground: 220 8% 94%;  /* 5.0:1 on destructive */
+    --danger: var(--destructive);
+    --danger-subtle: 0 40% 16%;
+    --danger-fg: 0 65% 64%;                /* 4.8:1 on danger-subtle */
+
+    --success: 152 55% 30%;
+    --success-foreground: 220 8% 94%;      /* 4.8:1 on success */
+    --success-subtle: 152 35% 14%;
+    --success-fg: 152 55% 58%;             /* 7.2:1 on success-subtle */
+
+    --warning: 38 80% 38%;
+    --warning-foreground: 220 8% 6%;       /* 4.9:1 on warning */
+    --warning-subtle: 38 45% 16%;
+    --warning-fg: 38 80% 62%;              /* 7.0:1 on warning-subtle */
+
+    --info: 210 70% 42%;
+    --info-foreground: 220 8% 94%;         /* 4.8:1 on info */
+    --info-subtle: 210 40% 15%;
+    --info-fg: 210 70% 64%;                /* 5.8:1 on info-subtle */
+
+    /* --- Borders & focus --- */
+    /* Was 1.3:1 (near-invisible) when this was scoped inside .admin-panel at
+       lightness 17%. Raised to the lightness that actually clears the 3:1
+       WCAG non-text-contrast minimum against both --background and --card. */
+    --border: 220 8% 42%;                  /* 3.4:1 on background, 3.1:1 on card */
+    --input: 220 8% 42%;
+    --border-strong: 220 8% 55%;           /* hover / active borders */
+    --ring: var(--accent);                 /* was a stray gold hue — collapsed into the one accent */
+
+    --radius: 0.5rem;
+
+    /* --- Neutral elevation — no colored glow --- */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.45);
+    --shadow-card: 0 0 0 1px hsl(var(--border) / 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 0 0 1px hsl(var(--border-strong)), 0 8px 24px rgba(0, 0, 0, 0.35);
+
+    /* --- Admin surface/border/foreground overlay tokens (used by AdminLayout,
+       AdminLoginPage, AdminDashboard, BlogForm) — now derived from
+       --foreground instead of a hardcoded white literal, so they track the
+       palette instead of duplicating it. --admin-fg-35 removed (zero refs). */
+    --admin-border:     hsl(var(--foreground) / 0.055);
+    --admin-border-sm:  hsl(var(--foreground) / 0.07);
+    --admin-border-md:  hsl(var(--foreground) / 0.08);
+    --admin-border-lg:  hsl(var(--foreground) / 0.10);
+    --admin-surface-xs: hsl(var(--foreground) / 0.03);
+    --admin-surface-sm: hsl(var(--foreground) / 0.04);
+    --admin-surface-md: hsl(var(--foreground) / 0.05);
+    --admin-surface-lg: hsl(var(--foreground) / 0.06);
+    --admin-surface-xl: hsl(var(--foreground) / 0.09);
+    --admin-fg-22: hsl(var(--foreground) / 0.22);
+    --admin-fg-60: hsl(var(--foreground) / 0.60);
+
+    /* --- Admin status-indicator colors — repointed to the semantic tokens
+       above instead of raw arbitrary hues (was: emerald/blue-400/red-400/
+       violet-400 picked independently of the rest of the palette). --status-*
+       still exists because AdminDashboard.tsx consumes it directly; not
+       renamed to avoid touching that component file in this pass. */
+    --status-create:  var(--success);
+    --status-update:  var(--info);
+    --status-delete:  var(--danger);
+    --status-default: var(--accent);
+
+    /* --- Dashboard category gradients (18 tokens) — INTENTIONALLY UNCHANGED.
+       This is the "rainbow tile" pattern flagged in docs/ui-audit.md as the
+       single loudest generated-template signal, and it's exactly what
+       Prompt 6 (dashboard rebuild) replaces with neutral icon treatments.
+       Deleting these now would break AdminDashboard.tsx before its turn —
+       left in place on purpose, not an oversight. */
     --grad-projects:      linear-gradient(135deg, hsl(224 76% 40%) 0%, hsl(217 91% 60%) 100%);
     --grad-blogs:         linear-gradient(135deg, hsl(32 95% 37%)  0%, hsl(38 92% 50%)  100%);
     --grad-experience:    linear-gradient(135deg, hsl(162 96% 19%) 0%, hsl(160 84% 39%) 100%);
@@ -878,22 +145,57 @@
     --grad-volunteer:     linear-gradient(135deg, hsl(0 75% 30%)   0%, hsl(0 84% 60%)   100%);
     --grad-education:     linear-gradient(135deg, hsl(212 55% 24%) 0%, hsl(213 97% 68%) 100%);
     --grad-messages:      linear-gradient(135deg, hsl(0 75% 15%)   0%, hsl(0 72% 51%)   100%);
+  }
+}
 
-    /* ── Shadows with gold glow ──────────────────────────────── */
-    --shadow-sm:          0 1px 3px rgba(0,0,0,0.35);
-    --shadow-md:          0 4px 10px rgba(0,0,0,0.40);
-    --shadow-lg:          0 10px 24px rgba(0,0,0,0.45);
-    --shadow-xl:          0 20px 40px rgba(0,0,0,0.50);
-    --shadow-card:        0 0 0 1px rgba(255,255,255,0.055), 0 2px 8px rgba(0,0,0,0.30);
-    --shadow-card-hover:  0 0 0 1px hsl(var(--accent) / 0.28), 0 8px 24px rgba(0,0,0,0.35);
-    --shadow-glow:        0 0 22px hsl(var(--accent) / 0.32), 0 0 44px hsl(var(--accent) / 0.10);
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-    /* ── Emerald gradients ────────────────────────────────────── */
-    --gradient-accent:       linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(161 72% 28%) 100%);
-    --gradient-accent-hover: linear-gradient(135deg, hsl(152 63% 52%) 0%, hsl(160 84% 39%) 100%);
-    --gradient-hero:         linear-gradient(135deg, hsl(228 52% 6%) 0%, hsl(222 45% 8%) 50%, hsl(220 40% 7%) 100%);
-    --gradient-card:         linear-gradient(180deg, hsl(222 45% 12%) 0%, hsl(222 45% 14%) 100%);
+  html {
+    scroll-behavior: smooth;
+  }
 
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* TYPOGRAPHY SYSTEM: DM Sans for Headings, Inter for Body */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    @apply font-semibold tracking-tight text-foreground;
+  }
+
+  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
+  h2 { @apply text-3xl md:text-4xl; }
+  h3 { @apply text-xl md:text-2xl; }
+  h4 { @apply text-lg md:text-xl; }
+
+  p { @apply leading-relaxed; }
+}
+
+@layer utilities {
+  /* UNIFIED WHITE UTILITY */
+  .bg-white {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  /* THEME TRANSITION: smooth cross-fade when toggling dark/light */
+  html {
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     .admin-panel — no longer a competing theme (see the token block above,
+     which is now the single source of truth for every route including
+     /login and the 404 page). This class still exists because AdminLayout
+     applies it and the utility-override rules below still key off it;
+     it just no longer redefines the core palette.
+  ═══════════════════════════════════════════════════════════════════ */
+
+  .admin-panel {
     background-color: hsl(var(--background));
     color:            hsl(var(--foreground));
   }
