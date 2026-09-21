@@ -118,14 +118,22 @@ const DesignSystem: React.FC = () => {
               No hover treatment — used for static content.
             </CardContent>
           </Card>
-          <Card interactive onClick={() => {}}>
-            <CardHeader>
-              <CardTitle>Interactive card</CardTitle>
-            </CardHeader>
-            <CardContent className="text-body-sm text-muted-foreground">
-              Hover: border lightens, surface lifts slightly. No colored glow.
-            </CardContent>
-          </Card>
+          {/* `interactive` only supplies hover/cursor styling — it does not add
+              keyboard/focus/role handling, since Card is a plain div used both
+              wrapped in a real focusable element (Link, as in AdminDashboard.tsx)
+              and standalone. When there's no wrapping Link, wrap it in a real
+              <button> like this instead of putting onClick directly on the div —
+              a bare div+onClick is not keyboard-operable. */}
+          <button type="button" className="text-left w-full" onClick={() => {}}>
+            <Card interactive>
+              <CardHeader>
+                <CardTitle>Interactive card</CardTitle>
+              </CardHeader>
+              <CardContent className="text-body-sm text-muted-foreground">
+                Hover: border lightens, surface lifts slightly. No colored glow.
+              </CardContent>
+            </Card>
+          </button>
         </div>
       </Section>
 

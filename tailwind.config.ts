@@ -6,7 +6,6 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
-    // ... same as before
     container: {
       center: true,
       padding: "2rem",
@@ -98,6 +97,13 @@ export default {
         },
         danger: {
           DEFAULT: "hsl(var(--danger))",
+          // --danger aliases --destructive (see index.css), so its
+          // foreground is --destructive-foreground — no separate
+          // --danger-foreground variable exists. This key was missing
+          // entirely, so `text-danger-foreground` compiled to nothing
+          // and the two unread-count badges in AdminLayout.tsx rendered
+          // with unstyled (invisible) digits.
+          foreground: "hsl(var(--destructive-foreground))",
           subtle: "hsl(var(--danger-subtle))",
           fg: "hsl(var(--danger-fg))",
         },

@@ -5,7 +5,14 @@ import { cn } from "@/shared/lib/utils";
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Border-lightening + surface-lift hover, no colored glow (docs/ui-audit.md
    * flagged the old --shadow-card-hover as an accent-tinted bloom — this is
-   * its replacement). Opt-in so static cards don't get a pointer cursor. */
+   * its replacement). Opt-in so static cards don't get a pointer cursor.
+   *
+   * Visual only — does NOT add keyboard/focus/role handling. Card is a plain
+   * div used both wrapped in a real focusable element (e.g. `<Link><Card
+   * interactive>`, see AdminDashboard.tsx) and standalone. Wrap it in a real
+   * `<button>` or `<Link>` when there's no other focusable wrapper — never
+   * attach `onClick` straight to the Card itself, since a bare div+onClick
+   * isn't keyboard-operable (see src/pages/DesignSystem.tsx for the pattern). */
   interactive?: boolean;
 }
 
