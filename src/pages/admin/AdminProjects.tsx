@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -112,26 +112,20 @@ const AdminProjects = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">PORTFOLIO</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Projects
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Manage your portfolio showcase.
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => navigate('/projects/new')}
-          className="bg-accent hover:bg-accent/90 text-black font-semibold rounded-lg transition-all hover:scale-[1.02] active:scale-95 h-11 px-6 flex-shrink-0"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Project
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="PORTFOLIO"
+        title="Projects"
+        subtitle="Manage your portfolio showcase."
+        backTo="/dashboard"
+        actions={
+          <Button
+            onClick={() => navigate('/projects/new')}
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-lg transition-all hover:scale-[1.02] active:scale-95 h-11 px-6 flex-shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Project
+          </Button>
+        }
+      />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 w-full">
@@ -153,7 +147,7 @@ const AdminProjects = () => {
               className={cn(
                 "px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-[0.12em] transition-all",
                 filterStatus === pill.key
-                  ? "bg-accent text-black shadow-sm"
+                  ? "bg-accent text-accent-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-card"
               )}
             >

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import {
   Mail,
   User,
@@ -79,32 +79,24 @@ const AdminMessages = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">INQUIRIES</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Contact Messages
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Manage inquiries and messages from your contact portal.
-            </p>
+      <PageHeader
+        eyebrow="INQUIRIES"
+        title="Contact Messages"
+        subtitle="Manage inquiries and messages from your contact portal."
+        backTo="/dashboard"
+        actions={
+          <div className="relative group max-w-md w-full flex-shrink-0">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
+            <input
+              type="text"
+              placeholder="Search name, email or content..."
+              className="w-full bg-secondary border border-border rounded-lg py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:border-accent/40 transition-all text-foreground placeholder:text-muted-foreground font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </div>
-
-        <div className="relative group max-w-md w-full flex-shrink-0">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
-          <input
-            type="text"
-            placeholder="Search name, email or content..."
-            className="w-full bg-secondary border border-border rounded-lg py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:border-accent/40 transition-all text-foreground placeholder:text-muted-foreground font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+        }
+      />
 
       {error ? (
         <div className="flex flex-col items-center justify-center p-12 bg-red-500/5 rounded-lg border border-red-500/10 text-center">

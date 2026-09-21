@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Search, Calendar, MapPin, Edit2, Trash2, Globe, Loader2, Images, X } from 'lucide-react';
 import { toast } from "sonner";
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import MultiImageUpload from '@/components/admin/MultiImageUpload';
 import {
   Select,
@@ -239,7 +239,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
             <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-secondary text-muted-foreground">
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-accent hover:bg-accent/90 text-black font-black px-8">
+            <Button type="submit" disabled={isSubmitting} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black px-8">
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Save Event
             </Button>
@@ -334,23 +334,17 @@ const AdminEvents = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">SCHEDULE</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Events
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Manage past and upcoming events, workshops, and speaking engagements.
-            </p>
-          </div>
-        </div>
-        <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-black font-black h-11 px-6 rounded-lg flex-shrink-0">
-          <Plus className="w-4 h-4 mr-2" /> Add Event
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="SCHEDULE"
+        title="Events"
+        subtitle="Manage past and upcoming events, workshops, and speaking engagements."
+        backTo="/dashboard"
+        actions={
+          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
+            <Plus className="w-4 h-4 mr-2" /> Add Event
+          </Button>
+        }
+      />
 
       {/* Search */}
       <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">

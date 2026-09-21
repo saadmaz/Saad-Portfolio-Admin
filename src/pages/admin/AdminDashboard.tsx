@@ -167,32 +167,18 @@ const AdminDashboard = () => {
         {STAT_CARDS.map((card) => (
           <Link key={card.key} to={card.path}>
             <div
-              className="relative rounded-2xl p-4 overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl select-none h-full"
+              className="group relative rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:-translate-y-1 select-none h-full bg-card border"
               style={{
-                background: card.gradient,
-                boxShadow: '0 4px 18px rgba(0,0,0,0.14)',
+                borderColor: 'var(--admin-border)',
+                boxShadow: 'var(--shadow-card)',
               }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card-hover)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'; }}
             >
-              {/* Decorative blobs */}
+              {/* Icon — category color contained to a small chip, not a full-bleed tile */}
               <div
-                className="absolute -right-4 -top-4 w-20 h-20 rounded-full pointer-events-none"
-                style={{ background: 'var(--admin-border-lg)' }}
-              />
-              <div
-                className="absolute right-2 -bottom-3 w-10 h-10 rounded-full pointer-events-none"
-                style={{ background: 'var(--admin-surface-xl)' }}
-              />
-
-              {/* Dark scrim so label/count text clears WCAG contrast against the gradient's light end */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0) 80%)' }}
-              />
-
-              {/* Icon */}
-              <div
-                className="relative z-10 w-8 h-8 rounded-xl flex items-center justify-center mb-3"
-                style={{ background: 'hsl(0 0% 100% / 0.22)' }}
+                className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center mb-3"
+                style={{ background: card.gradient }}
               >
                 <card.icon className="w-3.5 h-3.5 text-white" />
               </div>
@@ -200,27 +186,18 @@ const AdminDashboard = () => {
               {/* Label + count + arrow */}
               <div className="relative z-10 flex items-end justify-between">
                 <div>
-                  <p
-                    className="text-[9.5px] font-medium mb-0.5 leading-tight"
-                    style={{ color: 'hsl(0 0% 100% / 0.85)' }}
-                  >
+                  <p className="text-[9.5px] font-medium mb-0.5 leading-tight text-muted-foreground">
                     {card.label}
                   </p>
-                  <p className="text-[26px] font-bold text-white leading-none tabular-nums">
+                  <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">
                     {loading ? (
-                      <span
-                        className="inline-block w-7 h-6 rounded-md animate-pulse align-middle"
-                        style={{ background: 'hsl(0 0% 100% / 0.25)' }}
-                      />
+                      <span className="inline-block w-7 h-6 rounded-md animate-pulse align-middle bg-secondary" />
                     ) : (
                       counts[card.key] ?? 0
                     )}
                   </p>
                 </div>
-                <ArrowRight
-                  className="w-3.5 h-3.5 mb-0.5 flex-shrink-0"
-                  style={{ color: 'hsl(0 0% 100% / 0.50)' }}
-                />
+                <ArrowRight className="w-3.5 h-3.5 mb-0.5 flex-shrink-0 text-muted-foreground/50 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
               </div>
             </div>
           </Link>

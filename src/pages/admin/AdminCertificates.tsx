@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -286,35 +286,32 @@ const AdminCertificates = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-2">CREDENTIALS</p>
-            <h1 className="text-4xl font-black tracking-tight mb-1 text-foreground" style={{ fontFamily: 'DM Sans' }}>Certificates</h1>
-            <p className="text-sm text-muted-foreground font-medium">Showcase your verified achievements and professional learning.</p>
-          </div>
-        </div>
-        <div className="flex gap-3 flex-shrink-0">
-          {!isLoading && certificates.length === 0 && (
+      <PageHeader
+        eyebrow="CREDENTIALS"
+        title="Certificates"
+        subtitle="Showcase your verified achievements and professional learning."
+        backTo="/dashboard"
+        actions={
+          <>
+            {!isLoading && certificates.length === 0 && (
+              <Button
+                variant="outline"
+                onClick={handleSeed}
+                disabled={isSeedLoading}
+                className="border-accent/30 hover:bg-accent/10 rounded-lg h-11 px-5 text-accent hover:text-accent transition-all shadow-sm font-black"
+              >
+                <DatabaseZap className="w-4 h-4 mr-2" /> {isSeedLoading ? 'Seeding...' : 'Seed Default Data'}
+              </Button>
+            )}
             <Button
-              variant="outline"
-              onClick={handleSeed}
-              disabled={isSeedLoading}
-              className="border-accent/30 hover:bg-accent/10 rounded-lg h-11 px-5 text-accent hover:text-accent transition-all shadow-sm font-black"
+              onClick={() => openSheet(null)}
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg"
             >
-              <DatabaseZap className="w-4 h-4 mr-2" /> {isSeedLoading ? 'Seeding...' : 'Seed Default Data'}
+              <Plus className="w-4 h-4 mr-2" /> Add Certificate
             </Button>
-          )}
-          <Button
-            onClick={() => openSheet(null)}
-            className="bg-accent hover:bg-accent/90 text-black font-black h-11 px-6 rounded-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add Certificate
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -390,7 +387,7 @@ const AdminCertificates = () => {
             </div>
             <h3 className="text-base font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No certificates added</h3>
             <p className="text-sm text-muted-foreground mt-1 font-medium">Showcase your verified achievements and professional learning.</p>
-            <Button onClick={() => openSheet(null)} className="mt-4 bg-accent hover:bg-accent/90 text-black font-black h-10 px-5 rounded-lg">
+            <Button onClick={() => openSheet(null)} className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground font-black h-10 px-5 rounded-lg">
               <Plus className="w-4 h-4 mr-1.5" /> Add Certificate
             </Button>
           </div>
@@ -551,7 +548,7 @@ const AdminCertificates = () => {
               type="submit"
               form="cert-sheet-form"
               disabled={isSaving}
-              className="w-full bg-accent hover:bg-accent/90 text-black font-black h-11"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11"
             >
               {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Save className="w-4 h-4 mr-2" /> Save Changes

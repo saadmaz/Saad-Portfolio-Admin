@@ -14,7 +14,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 
 type FilterTab = 'all' | 'current' | 'past' | 'featured';
 
@@ -125,27 +125,20 @@ const AdminExperience = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">CAREER</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Experience
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Manage your professional career timeline and roles.
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => navigate('/experience/new')}
-          className="bg-accent hover:bg-accent/90 text-black font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
-        >
-          <Plus className="w-5 h-5 mr-2" /> Add Experience
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="CAREER"
+        title="Experience"
+        subtitle="Manage your professional career timeline and roles."
+        backTo="/dashboard"
+        actions={
+          <Button
+            onClick={() => navigate('/experience/new')}
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+          >
+            <Plus className="w-5 h-5 mr-2" /> Add Experience
+          </Button>
+        }
+      />
 
       {/* Search + Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -165,13 +158,13 @@ const AdminExperience = () => {
               onClick={() => setFilter(tab.key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 filter === tab.key
-                  ? 'bg-accent text-black border-accent'
+                  ? 'bg-accent text-accent-foreground border-accent'
                   : 'bg-card border-border text-muted-foreground hover:border-accent/40 hover:text-foreground'
               }`}
             >
               {tab.label}
               <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-                filter === tab.key ? 'bg-black/20 text-black' : 'bg-secondary text-muted-foreground'
+                filter === tab.key ? 'bg-black/20 text-accent-foreground' : 'bg-secondary text-muted-foreground'
               }`}>
                 {counts[tab.key]}
               </span>

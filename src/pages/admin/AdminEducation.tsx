@@ -6,7 +6,7 @@ import { Education } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Plus, GraduationCap, Edit2, Calendar, Copy, MoreVertical, Star } from 'lucide-react';
 import { toast } from "sonner";
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -106,22 +106,20 @@ const AdminEducation = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-2">ACADEMIC</p>
-            <h1 className="text-4xl font-black tracking-tight mb-1 text-foreground" style={{ fontFamily: 'DM Sans' }}>Education</h1>
-            <p className="text-sm text-muted-foreground font-medium">Manage your academic background and degrees.</p>
-          </div>
-        </div>
-        <Button
-          onClick={() => navigate('/education/new')}
-          className="bg-accent hover:bg-accent/90 text-black font-black h-11 px-6 rounded-lg flex-shrink-0"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Education
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="ACADEMIC"
+        title="Education"
+        subtitle="Manage your academic background and degrees."
+        backTo="/dashboard"
+        actions={
+          <Button
+            onClick={() => navigate('/education/new')}
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Education
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
@@ -241,7 +239,7 @@ const AdminEducation = () => {
             <p className="text-sm text-muted-foreground mt-1 font-medium">Add your degrees and institutions to complete your profile.</p>
             <Button
               onClick={() => navigate('/education/new')}
-              className="mt-4 bg-accent hover:bg-accent/90 text-black font-black h-10 px-5 rounded-lg"
+              className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground font-black h-10 px-5 rounded-lg"
             >
               <Plus className="w-4 h-4 mr-1.5" /> Add Education
             </Button>

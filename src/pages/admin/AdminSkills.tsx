@@ -20,7 +20,7 @@ import {
   Save,
 } from 'lucide-react';
 import { CommonService } from '@/shared/services/common-service';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import { SkillSet, Skill } from '@/types';
 import { toast } from "sonner";
 
@@ -97,32 +97,30 @@ const AdminSkills = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <BackButton to="/dashboard" className="flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-2">EXPERTISE</p>
-            <h1 className="text-4xl font-black tracking-tight mb-1 text-foreground" style={{ fontFamily: 'DM Sans' }}>Skills & Tools</h1>
-            <p className="text-sm text-muted-foreground font-medium">Manage your technical expertise and group them by category.</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button
-            variant="outline"
-            onClick={addCategory}
-            className="border-border hover:bg-secondary rounded-xl px-4 py-2 text-muted-foreground hover:text-foreground transition-all shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add Category
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-[0_0_20px_hsl(var(--accent)/0.2)] rounded-xl transition-all hover:scale-105 active:scale-95"
-          >
-            <Save className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save All Changes'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="EXPERTISE"
+        title="Skills & Tools"
+        subtitle="Manage your technical expertise and group them by category."
+        backTo="/dashboard"
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={addCategory}
+              className="border-border hover:bg-secondary rounded-xl px-4 py-2 text-muted-foreground hover:text-foreground transition-all shadow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Category
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-[0_0_20px_hsl(var(--accent)/0.2)] rounded-xl transition-all hover:scale-105 active:scale-95"
+            >
+              <Save className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save All Changes'}
+            </Button>
+          </>
+        }
+      />
 
       <div className="space-y-8">
         {isLoading ? (

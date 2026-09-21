@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -135,28 +135,26 @@ const AdminBlogs = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">CONTENT MANAGEMENT</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Blog Posts
-            </h1>
-            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-3">
-              <span className="text-emerald-400 font-black">{publishedCount} Published</span>
-              <span className="mx-2 text-muted-foreground">·</span>
-              <span className="text-amber-400 font-black">{draftCount} Draft{draftCount !== 1 ? 's' : ''}</span>
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => navigate('/blogs/new')}
-          className="bg-accent hover:bg-accent/90 text-black font-semibold rounded-lg transition-all hover:scale-[1.02] active:scale-95 h-11 px-6 flex-shrink-0"
-        >
-          <Plus className="w-4 h-4 mr-2" /> New Post
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="CONTENT MANAGEMENT"
+        title="Blog Posts"
+        subtitle={
+          <span className="text-xs font-bold uppercase tracking-widest">
+            <span className="text-emerald-400 font-black">{publishedCount} Published</span>
+            <span className="mx-2 text-muted-foreground">·</span>
+            <span className="text-amber-400 font-black">{draftCount} Draft{draftCount !== 1 ? 's' : ''}</span>
+          </span>
+        }
+        backTo="/dashboard"
+        actions={
+          <Button
+            onClick={() => navigate('/blogs/new')}
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-lg transition-all hover:scale-[1.02] active:scale-95 h-11 px-6 flex-shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-2" /> New Post
+          </Button>
+        }
+      />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 w-full">
@@ -178,7 +176,7 @@ const AdminBlogs = () => {
               className={cn(
                 "px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-[0.12em] transition-all",
                 filterStatus === pill.key
-                  ? "bg-accent text-black shadow-sm"
+                  ? "bg-accent text-accent-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-card"
               )}
             >

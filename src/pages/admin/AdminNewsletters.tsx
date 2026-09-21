@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Mail, Edit2, Trash2, ExternalLink, Calendar } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import * as z from 'zod';
 
 const newsletterSchema = z.object({
@@ -108,25 +108,17 @@ const AdminNewsletters = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">PUBLICATIONS</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Newsletters
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Manage your newsletter publications and content links.
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-3 flex-shrink-0">
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-black font-black h-11 px-6 rounded-lg">
+      <PageHeader
+        eyebrow="PUBLICATIONS"
+        title="Newsletters"
+        subtitle="Manage your newsletter publications and content links."
+        backTo="/dashboard"
+        actions={
+          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg">
             <Plus className="w-4 h-4 mr-2" /> Add Newsletter
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
         <div className="relative flex-1">

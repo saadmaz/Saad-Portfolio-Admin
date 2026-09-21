@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Lightbulb, Edit2, Trash2, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
-import BackButton from '@/components/admin/BackButton';
+import PageHeader from '@/components/admin/PageHeader';
 import * as z from 'zod';
 
 const patentSchema = z.object({
@@ -102,23 +102,17 @@ const AdminPatents = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-start gap-3">
-          <BackButton to="/dashboard" className="mt-1 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-3">METADATA</p>
-            <h1 className="text-4xl font-black tracking-tight mb-2 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-              Patents
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium">
-              Inventions and intellectual property filings.
-            </p>
-          </div>
-        </div>
-        <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-black font-black h-11 px-6 rounded-lg flex-shrink-0">
-          <Plus className="w-4 h-4 mr-2" /> Add Patent
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="METADATA"
+        title="Patents"
+        subtitle="Inventions and intellectual property filings."
+        backTo="/dashboard"
+        actions={
+          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
+            <Plus className="w-4 h-4 mr-2" /> Add Patent
+          </Button>
+        }
+      />
 
       <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
         <div className="relative flex-1">
