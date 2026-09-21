@@ -245,31 +245,22 @@ const AdminLayout = () => {
                     key={item.path}
                     to={item.path}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg transition-all duration-150 group relative mb-0.5 outline-none focus-visible:ring-1 focus-visible:ring-emerald-500/40",
-                      collapsed ? "justify-center px-0 py-2.5" : "px-2.5 py-2"
+                      "flex items-center gap-2.5 rounded-lg transition-colors duration-150 group relative mb-0.5 outline-none",
+                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      collapsed ? "justify-center px-0 py-2.5" : "px-2.5 py-2",
+                      isActive
+                        ? "bg-accent-subtle text-accent"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                     )}
-                    style={{
-                      background: isActive ? 'hsl(var(--accent) / 0.08)' : undefined,
-                      color: isActive ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.55)',
-                    }}
-                    onMouseEnter={e => {
-                      if (!isActive) (e.currentTarget as HTMLAnchorElement).style.background = 'var(--admin-surface-xs)';
-                    }}
-                    onMouseLeave={e => {
-                      if (!isActive) (e.currentTarget as HTMLAnchorElement).style.background = '';
-                    }}
                   >
                     {isActive && (
-                      <span
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full"
-                        style={{ background: 'hsl(var(--accent))' }}
-                      />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-accent" />
                     )}
 
                     <div className="relative flex-shrink-0">
                       <item.icon className="w-[15px] h-[15px] transition-transform duration-150 group-hover:scale-105" />
                       {hasBadge && collapsed && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[13px] h-[13px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center leading-none">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[13px] h-[13px] px-0.5 rounded-full bg-danger text-danger-foreground text-[8px] font-bold flex items-center justify-center leading-none tabular">
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                       )}
@@ -277,21 +268,15 @@ const AdminLayout = () => {
 
                     {!collapsed && (
                       <>
-                        <span
-                          className="text-[12.5px] font-medium tracking-[0.005em] truncate flex-1 transition-colors duration-150"
-                          style={{ color: isActive ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.60)' }}
-                        >
+                        <span className={cn("text-body-sm truncate flex-1 transition-colors duration-150", isActive ? "text-accent" : "text-muted-foreground")}>
                           {item.label}
                         </span>
                         {hasBadge ? (
-                          <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-red-500/20 text-red-400 text-[9px] font-bold flex items-center justify-center border border-red-500/20">
+                          <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-danger-subtle text-danger-fg text-[9px] font-bold flex items-center justify-center border border-danger/20 tabular">
                             {unreadCount > 9 ? '9+' : unreadCount}
                           </span>
-                        ) : count !== undefined ? (
-                          <span
-                            className="ml-auto text-[10px] font-semibold tabular-nums"
-                            style={{ color: isActive ? 'hsl(var(--accent) / 0.55)' : 'hsl(var(--foreground) / 0.55)' }}
-                          >
+                        ) : count !== undefined && count > 0 ? (
+                          <span className="ml-auto text-body-sm text-muted-foreground tabular">
                             {count}
                           </span>
                         ) : null}
@@ -367,10 +352,7 @@ const AdminLayout = () => {
                 <TooltipTrigger asChild>
                   <button
                     onClick={async () => { try { await auth.signOut(); } catch { /* ignore, still navigate away */ } navigate('/login'); }}
-                    className="w-full flex items-center justify-center p-2 rounded-lg transition-all"
-                    style={{ color: 'hsl(var(--foreground) / 0.55)' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--destructive) / 0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--destructive))'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = ''; (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--foreground) / 0.55)'; }}
+                    className="w-full flex items-center justify-center p-2 rounded-lg transition-colors text-muted-foreground hover:bg-danger-subtle hover:text-danger-fg"
                   >
                     <LogOut className="w-[15px] h-[15px]" />
                   </button>
@@ -382,10 +364,7 @@ const AdminLayout = () => {
             ) : (
               <button
                 onClick={async () => { try { await auth.signOut(); } catch { /* ignore, still navigate away */ } navigate('/login'); }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all group text-[12px] font-medium"
-                style={{ color: 'hsl(var(--foreground) / 0.60)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--destructive) / 0.07)'; (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--destructive))'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = ''; (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--foreground) / 0.60)'; }}
+                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-body-sm font-medium text-muted-foreground hover:bg-danger-subtle hover:text-danger-fg"
               >
                 <LogOut className="w-[14px] h-[14px] flex-shrink-0" />
                 Sign Out
@@ -472,34 +451,22 @@ const AdminLayout = () => {
                 href="https://www.saadmaz.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-full font-medium tracking-wide transition-all duration-200"
-                style={{ background: 'var(--admin-surface-sm)', color: 'hsl(var(--foreground) / 0.60)', border: '1px solid var(--admin-surface-lg)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'hsl(var(--foreground) / 0.65)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'hsl(var(--foreground) / 0.60)'; }}
+                className="hidden sm:flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-full font-medium tracking-wide transition-colors duration-200 bg-secondary text-muted-foreground hover:text-foreground border border-border"
               >
                 <ExternalLink className="w-2.5 h-2.5" />
                 View site
               </a>
 
-              <div
-                className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-full font-medium"
-                style={{ background: 'hsl(var(--accent) / 0.06)', color: 'hsl(var(--accent-bright) / 0.75)', border: '1px solid hsl(var(--accent) / 0.12)' }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-pulse" />
+              <div className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-full font-medium bg-success-subtle text-success-fg border border-success/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 Live
               </div>
 
               {/* Avatar */}
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-all duration-150 text-[10px] font-bold"
-                style={{ background: 'hsl(var(--accent) / 0.08)', border: '1px solid hsl(var(--accent) / 0.18)', color: 'hsl(var(--accent))' }}
-              >
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-colors duration-150 text-[10px] font-bold bg-accent-subtle border border-accent/20 text-accent">
                 SM
                 {unreadCount > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[7px] font-bold flex items-center justify-center"
-                    style={{ border: '1.5px solid hsl(var(--background))' }}
-                  >
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-danger text-danger-foreground text-[7px] font-bold flex items-center justify-center border-[1.5px] border-background tabular">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
