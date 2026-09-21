@@ -208,26 +208,17 @@ const AdminLayout = () => {
       )}>
         {!collapsed && (
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'hsl(var(--accent) / 0.10)', border: '1px solid hsl(var(--accent) / 0.22)' }}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'hsl(var(--accent))' }} />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary border border-border">
+              <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
             </div>
-            <span
-              className="text-[13px] font-semibold"
-              style={{ color: 'hsl(var(--foreground) / 0.90)' }}
-            >
+            <span className="text-[13px] font-semibold text-foreground">
               Admin
             </span>
           </div>
         )}
         {collapsed && (
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: 'hsl(var(--accent) / 0.10)', border: '1px solid hsl(var(--accent) / 0.22)' }}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" style={{ color: 'hsl(var(--accent))' }} />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-secondary border border-border">
+            <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
           </div>
         )}
         <button
@@ -290,12 +281,12 @@ const AdminLayout = () => {
                       "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       collapsed ? "justify-center px-0 py-2.5" : "px-2.5 py-2",
                       isActive
-                        ? "bg-accent-subtle text-accent"
+                        ? "bg-secondary text-foreground font-medium"
                         : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                     )}
                   >
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-accent" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground/50" />
                     )}
 
                     <div className="relative flex-shrink-0">
@@ -309,7 +300,7 @@ const AdminLayout = () => {
 
                     {!collapsed && (
                       <>
-                        <span className={cn("text-body-sm truncate flex-1 transition-colors duration-150", isActive ? "text-accent" : "text-muted-foreground")}>
+                        <span className={cn("text-body-sm truncate flex-1 transition-colors duration-150", isActive ? "text-foreground font-medium" : "text-muted-foreground")}>
                           {item.label}
                         </span>
                         {hasBadge ? (
@@ -359,17 +350,14 @@ const AdminLayout = () => {
         {/* User row */}
         {!collapsed && (
           <div className="flex items-center gap-2.5 px-3 py-3">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold"
-              style={{ background: 'hsl(var(--accent) / 0.10)', border: '1px solid hsl(var(--accent) / 0.20)', color: 'hsl(var(--accent))' }}
-            >
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold bg-secondary border border-border text-foreground">
               SM
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[11.5px] font-semibold truncate" style={{ color: 'hsl(var(--foreground) / 0.80)' }}>
+              <p className="text-[11.5px] font-semibold truncate text-foreground/80">
                 Saad Mazhar
               </p>
-              <p className="text-[9.5px] truncate" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
+              <p className="text-[9.5px] truncate text-muted-foreground">
                 saadmazaa@gmail.com
               </p>
             </div>
@@ -377,10 +365,7 @@ const AdminLayout = () => {
         )}
         {collapsed && (
           <div className="flex justify-center py-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
-              style={{ background: 'hsl(var(--accent) / 0.10)', border: '1px solid hsl(var(--accent) / 0.20)', color: 'hsl(var(--accent))' }}
-            >
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold bg-secondary border border-border text-foreground">
               SM
             </div>
           </div>
@@ -459,10 +444,7 @@ const AdminLayout = () => {
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Top bar */}
-          <header
-            className="h-12 flex items-center justify-between px-4 md:px-5 z-40 flex-shrink-0 backdrop-blur-xl gap-3"
-            style={{ background: 'hsl(var(--card) / 0.80)', borderBottom: '1px solid var(--admin-border)' }}
-          >
+          <header className="h-12 flex items-center justify-between px-4 md:px-5 z-40 flex-shrink-0 gap-3 bg-card border-b border-border">
             {/* Mobile menu */}
             <Button
               ref={mobileMenuButtonRef}
@@ -470,21 +452,18 @@ const AdminLayout = () => {
               size="icon"
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileOpen}
-              className="md:hidden rounded-lg w-7 h-7 hover:bg-white/[0.06] flex-shrink-0"
+              className="md:hidden rounded-lg w-7 h-7 hover:bg-secondary flex-shrink-0"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
               {mobileOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
             </Button>
 
             {/* Breadcrumb */}
-            <div
-              className="hidden md:flex items-center gap-1.5 text-[10.5px] font-medium flex-shrink-0"
-              style={{ color: 'hsl(var(--foreground) / 0.55)' }}
-            >
-              <ShieldCheck className="w-3 h-3" style={{ color: 'hsl(var(--accent) / 0.55)' }} />
+            <div className="hidden md:flex items-center gap-1.5 text-[10.5px] font-medium flex-shrink-0 text-muted-foreground">
+              <ShieldCheck className="w-3 h-3 text-muted-foreground" />
               <span>Admin</span>
-              <span aria-hidden="true" style={{ color: 'hsl(var(--foreground) / 0.12)' }}>›</span>
-              <span style={{ color: 'hsl(var(--foreground) / 0.60)' }}>{currentPageLabel}</span>
+              <span aria-hidden="true" className="text-foreground/10">›</span>
+              <span className="text-foreground/60">{currentPageLabel}</span>
             </div>
 
             {/* Right actions */}
@@ -493,19 +472,19 @@ const AdminLayout = () => {
                 href="https://www.saadmaz.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-full font-medium tracking-wide transition-colors duration-200 bg-secondary text-muted-foreground hover:text-foreground border border-border"
+                className="hidden sm:flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-md font-medium tracking-wide transition-colors duration-200 bg-secondary text-muted-foreground hover:text-foreground border border-border"
               >
                 <ExternalLink className="w-2.5 h-2.5" />
                 View site
               </a>
 
-              <div className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-full font-medium bg-success-subtle text-success-fg border border-success/20">
+              <div className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-md font-medium bg-success-subtle text-success-fg border border-success/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 Live
               </div>
 
               {/* Avatar */}
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-colors duration-150 text-[10px] font-bold bg-accent-subtle border border-accent/20 text-accent">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-colors duration-150 text-[10px] font-bold bg-secondary border border-border text-foreground">
                 SM
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-danger text-danger-foreground text-[7px] font-bold flex items-center justify-center border-[1.5px] border-background tabular">

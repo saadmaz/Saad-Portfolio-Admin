@@ -203,7 +203,7 @@ const AdminDashboard = () => {
                       <metric.icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                       <span className="text-body-sm text-foreground flex-1 truncate">{metric.label}</span>
                       <span className="text-body-sm tabular text-muted-foreground">{counts[metric.key]}</span>
-                      <ArrowRight className="h-3 w-3 text-muted-foreground/0 group-hover:text-accent transition-colors" aria-hidden="true" />
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/0 group-hover:text-foreground transition-colors" aria-hidden="true" />
                     </Link>
                   ))}
                 </div>
@@ -255,14 +255,11 @@ const AdminDashboard = () => {
         {/* Recent Activity */}
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <div>
-              <h2 className="text-h3 text-foreground">Recent Activity</h2>
-              <p className="text-body-sm text-muted-foreground">Latest events across the platform</p>
-            </div>
+            <h2 className="text-h3 text-foreground">Recent Activity</h2>
             {logs.length > 0 && (
               <Link
                 to="/messages"
-                className="text-body-sm font-semibold flex items-center gap-0.5 transition-opacity hover:opacity-70 text-accent"
+                className="text-body-sm font-semibold flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground"
               >
                 View all <ArrowRight className="w-3 h-3" />
               </Link>

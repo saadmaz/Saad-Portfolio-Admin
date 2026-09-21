@@ -47,12 +47,21 @@
     --muted: 220 8% 16%;
     --muted-foreground: 220 6% 58%;        /* 6.1:1 on background */
 
-    /* --- The one accent: teal --- */
-    --accent: 174 72% 44%;
-    --accent-foreground: 220 8% 6%;        /* 8.5:1 on accent */
-    --accent-hover: 174 72% 50%;
+    /* --- The one accent: muted slate-blue, near-monochrome philosophy ---
+       Was teal (174 72% 44%) — a consistent single accent fixed the token
+       *system*, but teal/emerald on near-black is itself one of the most
+       common "AI-generated SaaS dashboard" palettes, so the app still read
+       as generic even with the plumbing correct. This hue sits in the same
+       family as the neutral ramp (220-225°) for cohesion, desaturated well
+       below "brand color" saturation. Reserved for the single primary
+       action per screen and focus rings — NOT for wayfinding/branding
+       chrome (active nav, avatars, chips), which use neutral treatments
+       instead so color stays meaningful when it does appear. */
+    --accent: 225 35% 58%;
+    --accent-foreground: 220 8% 6%;        /* 5.0:1 on accent */
+    --accent-hover: 225 40% 64%;           /* 6.2:1 for accent-foreground on hover */
     --accent-bright: var(--accent-hover);  /* legacy alias — consumed by AdminLayout.tsx, BlogForm.tsx, AdminLoginPage.tsx */
-    --accent-subtle: 174 40% 14%;          /* active-nav / selected-row wash */
+    --accent-subtle: 225 25% 16%;
 
     /* --- Semantic state colors (the ONLY other colors permitted) --- */
     --destructive: 0 65% 46%;
@@ -133,14 +142,17 @@
     scroll-behavior: smooth;
   }
 
-  /* DM Sans is the one app-wide family, set once here so it applies to
-     every route including /login and the 404 page (previously `body` said
-     Inter and only `.admin-panel *` forced DM Sans, so anything outside
-     that wrapper — i.e. login/404 — rendered in a different face than the
-     rest of the app; see docs/ui-audit.md section 5). */
+  /* Geist Variable — one app-wide family, set once here so it applies to
+     every route including /login and the 404 page. Self-hosted via
+     @fontsource-variable/geist (imported in main.tsx), not Google Fonts.
+     Replaced DM Sans: that pairing (DM Sans + Inter + Playfair Display)
+     is one of the most recognizable AI-page-builder font combinations in
+     circulation, and reads as generated regardless of how consistently
+     it's applied. Geist is Vercel's typeface, built for and now widely
+     recognized as software/developer-tool typography specifically. */
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Geist Variable', system-ui, -apple-system, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -208,7 +220,7 @@
   }
 
   /* .admin-panel no longer needs its own font-stack layer: `body` (see
-     @layer base above) now sets DM Sans for the whole app, so it inherits
+     @layer base above) now sets Geist for the whole app, so it inherits
      everywhere without a `.admin-panel *` universal selector. This also
      retires two dead rules: `.admin-mono` (components actually use
      Tailwind's `font-mono` utility, now pointed at this stack directly —
@@ -250,11 +262,13 @@
   }
 
   /* ── TipTap rich-text editor ────────────────────────────────── */
+  /* Was an italic Playfair Display serif accent — a "blog editorial" tell
+     with no place in an admin tool's editor chrome. Bold Geist instead,
+     consistent with every other heading in the app. */
   .admin-panel .ProseMirror h2,
   .admin-panel .ProseMirror h3 {
-    font-family: 'Playfair Display', Georgia, serif !important;
-    font-style:  italic !important;
-    color: hsl(36 22% 91%);
+    font-style: normal;
+    color: hsl(var(--foreground));
   }
   .admin-panel .ProseMirror h2 { @apply text-xl font-semibold mt-6 mb-2; }
   .admin-panel .ProseMirror h3 { @apply text-lg  font-semibold mt-5 mb-2; }
