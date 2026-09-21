@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
 
@@ -9,6 +10,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // The one accent-filled CTA style — was previously unused by any
+        // page (shadcn's "default" mapped to --primary, which is a neutral
+        // ivory tone, not the accent). Use this for the single primary
+        // action on a page/form.
+        primary: "bg-accent text-accent-foreground hover:bg-accent-hover",
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
@@ -34,12 +40,29 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** Shows a spinner and disables the button without changing its width. */
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }), loading && "relative")}
+        ref={ref}
+        disabled={disabled || loading}
+        aria-busy={loading || undefined}
+        {...props}
+      >
+        <span className={cn("inline-flex items-center justify-center gap-2", loading && "invisible")}>
+          {children}
+        </span>
+        {loading && (
+          <Loader2 className="absolute size-4 animate-spin" aria-hidden="true" />
+        )}
+      </Comp>
+    );
   },
 );
 Button.displayName = "Button";

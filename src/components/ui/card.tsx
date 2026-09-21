@@ -2,8 +2,23 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Border-lightening + surface-lift hover, no colored glow (docs/ui-audit.md
+   * flagged the old --shadow-card-hover as an accent-tinted bloom — this is
+   * its replacement). Opt-in so static cards don't get a pointer cursor. */
+  interactive?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, interactive = false, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm transition-colors",
+      interactive && "cursor-pointer hover:border-border-strong hover:bg-secondary/40",
+      className,
+    )}
+    {...props}
+  />
 ));
 Card.displayName = "Card";
 
@@ -16,7 +31,12 @@ CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
+    // Was text-2xl (24px, off the 7-step scale) — moved to the h2 step
+    // (16px/600/-0.01em). Visible change: card titles get smaller across
+    // the ~31 existing call sites (ExperienceForm, CertificateForm,
+    // AdminSkills), matching the dense-CMS type scale from docs/ui-audit.md
+    // instead of the marketing-site sizing this inherited from.
+    <h3 ref={ref} className={cn("text-h2", className)} {...props} />
   ),
 );
 CardTitle.displayName = "CardTitle";

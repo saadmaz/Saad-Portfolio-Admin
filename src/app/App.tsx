@@ -43,6 +43,7 @@ const AdminCauses = React.lazy(() => import("@/pages/admin/AdminCauses"));
 const AdminTestScores = React.lazy(() => import("@/pages/admin/AdminTestScores"));
 const AdminLogs = React.lazy(() => import("@/pages/admin/AdminLogs"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
+const DesignSystem = React.lazy(() => import("@/pages/DesignSystem"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +75,9 @@ const App = () => (
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
+                  {import.meta.env.DEV && (
+                    <Route path="/design-system" element={<DesignSystem />} />
+                  )}
                   <Route path="/login" element={<AdminLoginPage />} />
                   <Route
                     path="/"

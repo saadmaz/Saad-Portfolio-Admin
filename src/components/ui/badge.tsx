@@ -12,6 +12,15 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // Semantic status variants — the only colors a badge should ever
+        // need. Pair a low-alpha "subtle" background with a bright "fg"
+        // text color, both contrast-verified against each other (see
+        // docs/ui-audit.md section 9 for the method used).
+        neutral: "border-transparent bg-secondary text-muted-foreground",
+        success: "border-transparent bg-success-subtle text-success-fg",
+        warning: "border-transparent bg-warning-subtle text-warning-fg",
+        danger: "border-transparent bg-danger-subtle text-danger-fg",
+        info: "border-transparent bg-info-subtle text-info-fg",
       },
     },
     defaultVariants: {
