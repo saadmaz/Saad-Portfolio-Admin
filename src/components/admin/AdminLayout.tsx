@@ -6,6 +6,7 @@ import {
   Mail, Heart, GraduationCap, CalendarDays, Newspaper,
   Quote, ChevronLeft, ChevronRight, ExternalLink,
   BookMarked, FileText, Lightbulb, Building2,
+  Leaf, ClipboardList, History,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -70,8 +71,11 @@ const navGroups: NavGroup[] = [
     label: 'Admin',
     items: [
       { icon: Heart,         label: 'Volunteer',      path: '/volunteer',   countKey: 'volunteer' },
+      { icon: Leaf,          label: 'Causes',         path: '/causes',      countKey: 'causes' },
+      { icon: ClipboardList, label: 'Test Scores',    path: '/test-scores', countKey: 'testScores' },
       { icon: GraduationCap, label: 'Education',      path: '/education',   countKey: 'education' },
       { icon: Mail,          label: 'Messages',        path: '/messages',    countKey: 'messages', badge: true },
+      { icon: History,       label: 'Activity Logs',  path: '/logs' },
     ],
   },
 ];
@@ -119,7 +123,9 @@ const AdminLayout = () => {
       CommonService.getPublications(),
       CommonService.getPatents(),
       CommonService.getOrganizations(),
-    ]).then(([projects, blogs, messages, experience, skills, certs, awards, events, testimonials, courses, publications, patents, organizations]) => {
+      CommonService.getCauses(),
+      CommonService.getTestScores(),
+    ]).then(([projects, blogs, messages, experience, skills, certs, awards, events, testimonials, courses, publications, patents, organizations, causes, testScores]) => {
       const unread = messages.filter((m) => !m.read).length;
       setUnreadCount(unread);
       setNavCounts({
@@ -136,6 +142,8 @@ const AdminLayout = () => {
         publications:  publications.length,
         patents:       patents.length,
         organizations: organizations.length,
+        causes:        causes.length,
+        testScores:    testScores.length,
       });
     }).catch(() => {});
   }, [location.pathname]);

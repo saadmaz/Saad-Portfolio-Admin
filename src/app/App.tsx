@@ -39,6 +39,9 @@ const AdminCourses = React.lazy(() => import("@/pages/admin/AdminCourses"));
 const AdminPublications = React.lazy(() => import("@/pages/admin/AdminPublications"));
 const AdminPatents = React.lazy(() => import("@/pages/admin/AdminPatents"));
 const AdminOrganizations = React.lazy(() => import("@/pages/admin/AdminOrganizations"));
+const AdminCauses = React.lazy(() => import("@/pages/admin/AdminCauses"));
+const AdminTestScores = React.lazy(() => import("@/pages/admin/AdminTestScores"));
+const AdminLogs = React.lazy(() => import("@/pages/admin/AdminLogs"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -110,6 +113,9 @@ const App = () => (
                     <Route path="publications" element={<AdminPublications />} />
                     <Route path="patents" element={<AdminPatents />} />
                     <Route path="organizations" element={<AdminOrganizations />} />
+                    <Route path="causes" element={<AdminCauses />} />
+                    <Route path="test-scores" element={<AdminTestScores />} />
+                    <Route path="logs" element={<AdminLogs />} />
                   </Route>
 
                   <Route path="*" element={<NotFound />} />
