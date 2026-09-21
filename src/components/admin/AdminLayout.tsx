@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Briefcase, Code, BookOpen, FileCheck,
   LogOut, Menu, X, ShieldCheck, Zap, Award, Globe, Trophy,
   Mail, Heart, GraduationCap, CalendarDays, Newspaper,
-  Quote, ChevronLeft, ChevronRight, ExternalLink,
+  Quote, ChevronLeft, ChevronRight, ChevronDown, ExternalLink,
   BookMarked, FileText, Lightbulb, Building2,
   Leaf, ClipboardList, History,
 } from 'lucide-react';
@@ -82,11 +82,22 @@ const navGroups: NavGroup[] = [
 
 /* ─── Palette ────────────────────────────────────────────────── */
 const SIDEBAR_KEY = 'admin_sidebar_collapsed';
+const GROUPS_KEY = 'admin_sidebar_open_groups';
+
+/* Overview/Content stay always-expanded (single item; and the categories
+ * used daily). The rest are collapsible — most of them sit at 0-2 items
+ * used rarely (docs/ui-audit.md section 0.6: 22 items in 5 flat groups,
+ * most reading 0). Closed by default; a group auto-opens if it contains
+ * the current route, and any manual toggle is remembered from then on. */
+const COLLAPSIBLE_GROUPS = new Set(['Metadata', 'Profile', 'Admin']);
 
 /* ─── Main layout ────────────────────────────────────────────── */
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem(SIDEBAR_KEY) === 'true'; } catch { return false; }
+  });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem(GROUPS_KEY) ?? '{}'); } catch { return {}; }
   });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -100,6 +111,10 @@ const AdminLayout = () => {
   useEffect(() => {
     try { localStorage.setItem(SIDEBAR_KEY, String(collapsed)); } catch { /* localStorage unavailable (private mode, quota) - ignore */ }
   }, [collapsed]);
+
+  useEffect(() => {
+    try { localStorage.setItem(GROUPS_KEY, JSON.stringify(openGroups)); } catch { /* localStorage unavailable (private mode, quota) - ignore */ }
+  }, [openGroups]);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((user) => {
@@ -168,6 +183,19 @@ const AdminLayout = () => {
     .find(i => location.pathname === i.path || location.pathname.startsWith(i.path + '/'))
     ?.label ?? 'Dashboard';
 
+  const isGroupActive = (group: NavGroup) =>
+    group.items.some(i => location.pathname === i.path || location.pathname.startsWith(i.path + '/'));
+
+  const isGroupOpen = (group: NavGroup) => {
+    if (!COLLAPSIBLE_GROUPS.has(group.label)) return true;
+    const stored = openGroups[group.label];
+    return stored !== undefined ? stored : isGroupActive(group);
+  };
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => ({ ...prev, [label]: !isGroupOpen({ label, items: navGroups.find(g => g.label === label)!.items }) }));
+  };
+
   /* ── Sidebar content ────────────────────────────────────────── */
   const SidebarContent = () => (
     <div className="flex flex-col h-full overflow-hidden">
@@ -207,8 +235,8 @@ const AdminLayout = () => {
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!collapsed}
           className={cn(
-            "hidden md:flex items-center justify-center w-5 h-5 rounded-md transition-all duration-200 flex-shrink-0",
-            "text-[var(--admin-fg-22)] hover:text-[var(--admin-fg-60)] hover:bg-white/[0.06]",
+            "hidden md:flex items-center justify-center w-5 h-5 rounded-md transition-colors duration-200 flex-shrink-0",
+            "text-[var(--admin-fg-22)] hover:text-[var(--admin-fg-60)] hover:bg-secondary",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             collapsed && "absolute left-[52px] top-[20px] z-10 border shadow-xl rounded-full"
           )}
@@ -221,13 +249,26 @@ const AdminLayout = () => {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar px-2 space-y-0">
         <TooltipProvider delayDuration={0}>
-          {navGroups.map((group) => (
+          {navGroups.map((group) => {
+            const collapsible = COLLAPSIBLE_GROUPS.has(group.label);
+            const open = isGroupOpen(group);
+            const showItems = collapsed || open;
+
+            return (
             <div key={group.label} className="mb-4">
-              {!collapsed && (
-                <p
-                  className="text-[9px] font-semibold px-2.5 pb-1.5 pt-0.5 tracking-[0.14em] uppercase select-none"
-                  style={{ color: 'hsl(var(--foreground) / 0.55)' }}
+              {!collapsed && collapsible && (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.label)}
+                  aria-expanded={open}
+                  className="w-full flex items-center gap-1 px-2.5 pb-1.5 pt-0.5 rounded-md select-none label hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
+                  <ChevronDown className={cn("h-3 w-3 transition-transform flex-shrink-0", !open && "-rotate-90")} aria-hidden="true" />
+                  {group.label}
+                </button>
+              )}
+              {!collapsed && !collapsible && (
+                <p className="label px-2.5 pb-1.5 pt-0.5 select-none">
                   {group.label}
                 </p>
               )}
@@ -235,7 +276,7 @@ const AdminLayout = () => {
                 <div className="my-2 mx-2" style={{ borderTop: '1px solid var(--admin-surface-md)' }} />
               )}
 
-              {group.items.map((item) => {
+              {showItems && group.items.map((item) => {
                 const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
                 const hasBadge = Boolean(item.badge) && unreadCount > 0;
                 const count = item.countKey ? navCounts[item.countKey] : undefined;
@@ -305,7 +346,8 @@ const AdminLayout = () => {
                 return linkEl;
               })}
             </div>
-          ))}
+            );
+          })}
         </TooltipProvider>
       </nav>
 
