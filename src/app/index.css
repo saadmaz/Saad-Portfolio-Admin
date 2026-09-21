@@ -157,21 +157,25 @@
     scroll-behavior: smooth;
   }
 
+  /* DM Sans is the one app-wide family, set once here so it applies to
+     every route including /login and the 404 page (previously `body` said
+     Inter and only `.admin-panel *` forced DM Sans, so anything outside
+     that wrapper — i.e. login/404 — rendered in a different face than the
+     rest of the app; see docs/ui-audit.md section 5). */
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   }
 
-  /* TYPOGRAPHY SYSTEM: DM Sans for Headings, Inter for Body */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    @apply font-semibold tracking-tight text-foreground;
+    @apply text-foreground;
+    font-style: normal;
   }
 
-  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
-  h2 { @apply text-3xl md:text-4xl; }
-  h3 { @apply text-xl md:text-2xl; }
-  h4 { @apply text-lg md:text-xl; }
+  h1 { @apply text-h1; }
+  h2 { @apply text-h2; }
+  h3 { @apply text-h3; }
+  h4 { @apply text-h3; }
 
   p { @apply leading-relaxed; }
 }
@@ -185,6 +189,23 @@
   /* THEME TRANSITION: smooth cross-fade when toggling dark/light */
   html {
     transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  /* Apply to any metric, table cell, count, badge, date, or ID so digits
+     don't shift width as they change (docs/ui-audit.md section 5: found in
+     only 4 places app-wide despite numeric displays throughout — dashboard
+     stat tiles, test scores, table rows, dates). Not applied globally
+     because most running text should stay proportional. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Section-eyebrow / sidebar-group-label treatment (docs/ui-audit.md
+     section 5: this pattern existed with several different ad hoc tracking
+     values — 0.005em, 0.12em, 0.14em, 0.15em, 0.18em — picked per
+     component). One treatment, used verbatim, not restyled per page. */
+  .label {
+    @apply text-caption uppercase text-muted-foreground;
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -210,37 +231,15 @@
     color: inherit;
   }
 
-  /* ── Font stack ────────────────────────────────────────────── */
-  .admin-panel,
-  .admin-panel * {
-    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  }
-
-  /* Editorial class: formal sans-serif for display headings */
-  .admin-panel .admin-editorial {
-    font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
-    font-style:  normal !important;
-  }
-
-  /* Monospace class: system mono stack for command / terminal UI */
-  .admin-panel .admin-mono,
-  .admin-panel .admin-mono * {
-    font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace !important;
-    font-variant-ligatures: none;
-  }
-
-  /* Headings default (non-editorial): DM Sans bold */
-  .admin-panel h1,
-  .admin-panel h2,
-  .admin-panel h3,
-  .admin-panel h4,
-  .admin-panel h5,
-  .admin-panel h6 {
-    font-family:    'DM Sans', system-ui, sans-serif !important;
-    font-style:     normal   !important;
-    font-weight:    700      !important;
-    letter-spacing: -0.02em;
-  }
+  /* .admin-panel no longer needs its own font-stack layer: `body` (see
+     @layer base above) now sets DM Sans for the whole app, so it inherits
+     everywhere without a `.admin-panel *` universal selector. This also
+     retires two dead rules: `.admin-mono` (components actually use
+     Tailwind's `font-mono` utility, now pointed at this stack directly —
+     see tailwind.config.ts) and `.admin-editorial` (its selector required
+     an `.admin-panel` ancestor, but its only real call site,
+     AdminLoginPage.tsx, renders outside that wrapper, so the rule never
+     matched where it was used). */
 
   /* ── text-white → warm ivory (stops the cold-white look) ───── */
   .admin-panel .text-white          { color: hsl(var(--foreground))          !important; }

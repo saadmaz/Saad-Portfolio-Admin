@@ -16,9 +16,36 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        // DM Sans is the one app-wide family (see docs/ui-audit.md section 4/5 —
+        // Inter was only ever visible on /login and 404 as a routing-tree
+        // accident, never an intentional second face). `sans` and `display`
+        // both point here; kept as two names because `font-display` is
+        // already used at a few call sites (NotFound.tsx, ErrorBoundary.tsx).
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
         display: ['DM Sans', 'system-ui', 'sans-serif'],
+        // Single-purpose accent face for the rich-text editor's h2/h3 only
+        // (ProseMirror rules in index.css) — not used as a body/heading font.
         serif: ['Playfair Display', 'Georgia', 'serif'],
+        // Retired the unused .admin-mono CSS class in favor of wiring its
+        // curated stack directly into the `font-mono` utility everyone
+        // already reaches for.
+        mono: ['ui-monospace', 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', 'monospace'],
+      },
+      fontSize: {
+        // 7-step type scale (docs/ui-audit.md section 5: no consistent scale
+        // existed — 207 arbitrary text-[Npx] calls vs. 311 standard-scale
+        // ones). `body`/`body-sm` intentionally reuse the two sizes (14px/
+        // 12px) that already dominate real usage (187/124 occurrences)
+        // instead of inventing new ones — the fix is naming and binding
+        // weight/tracking/line-height consistently, not new pixel values.
+        // h3 and body share a size on purpose; weight is what separates them.
+        display: ['1.5rem',    { lineHeight: '2rem',     letterSpacing: '-0.02em',  fontWeight: '700' }], // 24/32
+        h1:      ['1.25rem',   { lineHeight: '1.75rem',  letterSpacing: '-0.015em', fontWeight: '700' }], // 20/28
+        h2:      ['1rem',      { lineHeight: '1.5rem',   letterSpacing: '-0.01em',  fontWeight: '600' }], // 16/24
+        h3:      ['0.875rem',  { lineHeight: '1.25rem',  letterSpacing: '0em',      fontWeight: '600' }], // 14/20
+        body:    ['0.875rem',  { lineHeight: '1.25rem',  letterSpacing: '0em',      fontWeight: '400' }], // 14/20
+        'body-sm': ['0.75rem', { lineHeight: '1rem',     letterSpacing: '0em',      fontWeight: '400' }], // 12/16
+        caption: ['0.6875rem', { lineHeight: '0.875rem', letterSpacing: '0.04em',   fontWeight: '500' }], // 11/14
       },
       colors: {
         border: "hsl(var(--border))",
