@@ -4,7 +4,7 @@ import {
   Code, BookOpen, Briefcase, Zap, FileCheck, Award,
   CalendarDays, Newspaper, Globe, Trophy, Quote,
   BookMarked, FileText, Lightbulb, Building2, Heart,
-  GraduationCap, Mail, Clock, ArrowRight,
+  GraduationCap, Mail, Clock, ArrowRight, ChevronDown,
 } from 'lucide-react';
 import { ProjectService } from '@/services/project-service';
 import { BlogService } from '@/services/blog-service';
@@ -12,37 +12,43 @@ import { CommonService } from '@/shared/services/common-service';
 import type { ActivityLog, FirestoreLikeTimestamp } from '@/types';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
+import { Card } from '@/components/ui/card';
+import EmptyState from '@/components/admin/EmptyState';
 
-/* ── All 18 stat cards ─────────────────────────────────────────── */
-const STAT_CARDS = [
-  { key: 'projects',      label: 'Projects',        icon: Code,         path: '/projects',      gradient: 'var(--grad-projects)' },
-  { key: 'blogs',         label: 'Blog Posts',       icon: BookOpen,     path: '/blogs',         gradient: 'var(--grad-blogs)' },
-  { key: 'experience',    label: 'Experience',       icon: Briefcase,    path: '/experience',    gradient: 'var(--grad-experience)' },
-  { key: 'skills',        label: 'Skills & Tools',   icon: Zap,          path: '/skills',        gradient: 'var(--grad-skills)' },
-  { key: 'certs',         label: 'Certifications',   icon: FileCheck,    path: '/certificates',  gradient: 'var(--grad-certs)' },
-  { key: 'awards',        label: 'Awards',           icon: Award,        path: '/awards',        gradient: 'var(--grad-awards)' },
-  { key: 'events',        label: 'Events',           icon: CalendarDays, path: '/events',        gradient: 'var(--grad-events)' },
-  { key: 'newsletters',   label: 'Newsletters',      icon: Newspaper,    path: '/newsletters',   gradient: 'var(--grad-newsletters)' },
-  { key: 'languages',     label: 'Languages',        icon: Globe,        path: '/languages',     gradient: 'var(--grad-languages)' },
-  { key: 'hackathons',    label: 'Hackathons',       icon: Trophy,       path: '/hackathons',    gradient: 'var(--grad-hackathons)' },
-  { key: 'testimonials',  label: 'Testimonials',     icon: Quote,        path: '/testimonials',  gradient: 'var(--grad-testimonials)' },
-  { key: 'courses',       label: 'Courses',          icon: BookMarked,   path: '/courses',       gradient: 'var(--grad-courses)' },
-  { key: 'publications',  label: 'Publications',     icon: FileText,     path: '/publications',  gradient: 'var(--grad-publications)' },
-  { key: 'patents',       label: 'Patents',          icon: Lightbulb,    path: '/patents',       gradient: 'var(--grad-patents)' },
-  { key: 'organizations', label: 'Organizations',    icon: Building2,    path: '/organizations', gradient: 'var(--grad-organizations)' },
-  { key: 'volunteer',     label: 'Volunteer',        icon: Heart,        path: '/volunteer',     gradient: 'var(--grad-volunteer)' },
-  { key: 'education',     label: 'Education',        icon: GraduationCap,path: '/education',     gradient: 'var(--grad-education)' },
-  { key: 'messages',      label: 'Unread Messages',  icon: Mail,         path: '/messages',      gradient: 'var(--grad-messages)' },
+/* ── The 4 metrics that are actually acted on day to day ─────────── */
+const PRIMARY_METRICS = [
+  { key: 'projects', label: 'Projects',        icon: Code,     path: '/projects' },
+  { key: 'blogs',    label: 'Blog Posts',      icon: BookOpen, path: '/blogs' },
+  { key: 'certs',    label: 'Certifications',  icon: FileCheck,path: '/certificates' },
+  { key: 'messages', label: 'Unread Messages', icon: Mail,     path: '/messages' },
+] as const;
+
+/* ── Everything else — dense list, not equally-weighted tiles ────── */
+const SECONDARY_METRICS = [
+  { key: 'experience',    label: 'Experience',      icon: Briefcase,     path: '/experience' },
+  { key: 'skills',        label: 'Skills & Tools',  icon: Zap,           path: '/skills' },
+  { key: 'awards',        label: 'Awards',          icon: Award,         path: '/awards' },
+  { key: 'events',        label: 'Events',          icon: CalendarDays,  path: '/events' },
+  { key: 'newsletters',   label: 'Newsletters',     icon: Newspaper,     path: '/newsletters' },
+  { key: 'languages',     label: 'Languages',       icon: Globe,         path: '/languages' },
+  { key: 'hackathons',    label: 'Hackathons',      icon: Trophy,        path: '/hackathons' },
+  { key: 'testimonials',  label: 'Testimonials',    icon: Quote,         path: '/testimonials' },
+  { key: 'courses',       label: 'Courses',         icon: BookMarked,    path: '/courses' },
+  { key: 'publications',  label: 'Publications',    icon: FileText,      path: '/publications' },
+  { key: 'patents',       label: 'Patents',         icon: Lightbulb,     path: '/patents' },
+  { key: 'organizations', label: 'Organizations',   icon: Building2,     path: '/organizations' },
+  { key: 'volunteer',     label: 'Volunteer',       icon: Heart,         path: '/volunteer' },
+  { key: 'education',     label: 'Education',       icon: GraduationCap, path: '/education' },
 ] as const;
 
 /* ── Quick actions ─────────────────────────────────────────────── */
 const QUICK_ACTIONS = [
-  { label: 'Add Project',      sub: 'Upload a new project entry',        icon: Code,         color: 'hsl(221 83% 60%)', iconBg: 'hsl(221 83% 60% / 0.12)', bg: 'hsl(221 83% 60% / 0.08)', path: '/projects/new' },
-  { label: 'Write Blog',       sub: 'Publish an article',                 icon: BookOpen,     color: 'hsl(37 96% 44%)',  iconBg: 'hsl(37 96% 44% / 0.12)',  bg: 'hsl(37 96% 44% / 0.08)',  path: '/blogs/new' },
-  { label: 'Add Event',        sub: 'Log a speaking or attended event',   icon: CalendarDays, color: 'hsl(162 94% 30%)', iconBg: 'hsl(162 94% 30% / 0.12)', bg: 'hsl(162 94% 30% / 0.08)', path: '/events' },
-  { label: 'Add Hackathon',    sub: 'Record a hackathon entry',           icon: Trophy,       color: 'hsl(262 84% 58%)', iconBg: 'hsl(262 84% 58% / 0.12)', bg: 'hsl(262 84% 58% / 0.08)', path: '/hackathons' },
-  { label: 'Add Experience',   sub: 'Add a work experience entry',        icon: Briefcase,    color: 'hsl(177 84% 31%)', iconBg: 'hsl(177 84% 31% / 0.12)', bg: 'hsl(177 84% 31% / 0.08)', path: '/experience/new' },
-  { label: 'Manage Education', sub: 'Edit your academic background',      icon: GraduationCap,color: 'hsl(344 79% 51%)', iconBg: 'hsl(344 79% 51% / 0.12)', bg: 'hsl(344 79% 51% / 0.08)', path: '/education' },
+  { label: 'Add Project',      sub: 'Upload a new project entry',      icon: Code,          path: '/projects/new' },
+  { label: 'Write Blog',       sub: 'Publish an article',              icon: BookOpen,      path: '/blogs/new' },
+  { label: 'Add Event',        sub: 'Log a speaking or attended event',icon: CalendarDays,  path: '/events' },
+  { label: 'Add Hackathon',    sub: 'Record a hackathon entry',        icon: Trophy,        path: '/hackathons' },
+  { label: 'Add Experience',   sub: 'Add a work experience entry',     icon: Briefcase,     path: '/experience/new' },
+  { label: 'Manage Education', sub: 'Edit your academic background',   icon: GraduationCap, path: '/education' },
 ];
 
 /* ── Helpers ───────────────────────────────────────────────────── */
@@ -138,68 +144,36 @@ const AdminDashboard = () => {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const dateStr = format(now, 'EEEE, MMMM d').toUpperCase();
+  const dateStr = format(now, 'EEEE, MMMM d');
+
+  const populatedSecondary = SECONDARY_METRICS.filter((m) => (counts[m.key] ?? 0) > 0);
+  const emptySecondary = SECONDARY_METRICS.filter((m) => (counts[m.key] ?? 0) === 0);
 
   return (
     <div className="space-y-6">
 
-      {/* ── Greeting ───────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 pt-0.5">
-        <div>
-          <p className="text-[10px] font-semibold tracking-[0.18em] uppercase mb-1.5 text-muted-foreground">
-            {dateStr}
-          </p>
-          <h1 className="text-[27px] font-bold leading-tight text-foreground">
-            {greeting}, Saad.
-          </h1>
-          <p className="text-[13px] mt-1 text-muted-foreground">
-            Here's an overview of your portfolio content.
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full flex-shrink-0 mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-400" />
-          Portfolio Live
-        </div>
-      </div>
+      {/* ── Greeting — one line ────────────────────────────────── */}
+      <p className="text-h3 text-foreground">
+        {greeting}, Saad <span className="text-muted-foreground">· {dateStr}</span>
+      </p>
 
-      {/* ── Stat cards (all 18) ────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {STAT_CARDS.map((card) => (
-          <Link key={card.key} to={card.path}>
-            <div
-              className="group relative rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:-translate-y-1 select-none h-full bg-card border"
-              style={{
-                borderColor: 'var(--admin-border)',
-                boxShadow: 'var(--shadow-card)',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card-hover)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'; }}
-            >
-              {/* Icon — category color contained to a small chip, not a full-bleed tile */}
-              <div
-                className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center mb-3"
-                style={{ background: card.gradient }}
-              >
-                <card.icon className="w-3.5 h-3.5 text-white" />
+      {/* ── Primary metrics (4) ────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {PRIMARY_METRICS.map((metric) => (
+          <Link key={metric.key} to={metric.path}>
+            <Card interactive className="p-4 h-full">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground mb-3">
+                <metric.icon className="h-4 w-4" aria-hidden="true" />
               </div>
-
-              {/* Label + count + arrow */}
-              <div className="relative z-10 flex items-end justify-between">
-                <div>
-                  <p className="text-[9.5px] font-medium mb-0.5 leading-tight text-muted-foreground">
-                    {card.label}
-                  </p>
-                  <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">
-                    {loading ? (
-                      <span className="inline-block w-7 h-6 rounded-md animate-pulse align-middle bg-secondary" />
-                    ) : (
-                      counts[card.key] ?? 0
-                    )}
-                  </p>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 mb-0.5 flex-shrink-0 text-muted-foreground/50 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
-              </div>
-            </div>
+              <p className="text-body-sm text-muted-foreground mb-0.5">{metric.label}</p>
+              <p className="text-display tabular text-foreground">
+                {loading ? (
+                  <span className="inline-block h-7 w-10 rounded-md bg-secondary animate-pulse align-middle" />
+                ) : (
+                  counts[metric.key] ?? 0
+                )}
+              </p>
+            </Card>
           </Link>
         ))}
       </div>
@@ -207,58 +181,92 @@ const AdminDashboard = () => {
       {/* ── Bottom row ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
 
-        {/* Quick Actions */}
-        <div className="rounded-2xl p-6 bg-card shadow-[0_1px_10px_rgba(0,0,0,0.06)]">
-          <h2 className="text-[15px] font-bold mb-0.5 text-foreground">
-            Quick Actions
-          </h2>
-          <p className="text-[12px] mb-5 text-muted-foreground">
-            Jump to the most common tasks
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {QUICK_ACTIONS.map((action) => (
-              <Link key={action.path} to={action.path}>
-                <div
-                  className="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
-                  style={{ background: action.bg }}
-                >
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: action.iconBg }}
-                  >
-                    <action.icon className="w-4 h-4" style={{ color: action.color }} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] font-semibold text-foreground">
-                      {action.label}
-                    </p>
-                    <p className="text-[10.5px] truncate text-muted-foreground">
-                      {action.sub}
-                    </p>
-                  </div>
+        <div className="space-y-4">
+          {/* Secondary metrics — dense list */}
+          <Card className="p-5">
+            <h2 className="label mb-3">Content</h2>
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-9 rounded-md bg-secondary animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                  {populatedSecondary.map((metric) => (
+                    <Link
+                      key={metric.key}
+                      to={metric.path}
+                      className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-secondary"
+                    >
+                      <metric.icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+                      <span className="text-body-sm text-foreground flex-1 truncate">{metric.label}</span>
+                      <span className="text-body-sm tabular text-muted-foreground">{counts[metric.key]}</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground/0 group-hover:text-accent transition-colors" aria-hidden="true" />
+                    </Link>
+                  ))}
                 </div>
-              </Link>
-            ))}
-          </div>
+                {emptySecondary.length > 0 && (
+                  <details className="mt-2 group">
+                    <summary className="flex items-center gap-1.5 cursor-pointer text-body-sm text-muted-foreground hover:text-foreground list-none px-2 py-1.5 -mx-2 rounded-md hover:bg-secondary">
+                      <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
+                      Not yet added ({emptySecondary.length})
+                    </summary>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-1">
+                      {emptySecondary.map((metric) => (
+                        <Link
+                          key={metric.key}
+                          to={metric.path}
+                          className="flex items-center gap-2.5 rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-secondary text-muted-foreground/70 hover:text-foreground"
+                        >
+                          <metric.icon className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                          <span className="text-body-sm flex-1 truncate">{metric.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </>
+            )}
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="p-5">
+            <h2 className="label mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+              {QUICK_ACTIONS.map((action) => (
+                <Link key={action.path} to={action.path}>
+                  <div className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-secondary">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary text-muted-foreground">
+                      <action.icon className="w-4 h-4" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-body-sm font-semibold text-foreground">{action.label}</p>
+                      <p className="text-body-sm text-muted-foreground truncate">{action.sub}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Card>
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-2xl overflow-hidden bg-card shadow-[0_1px_10px_rgba(0,0,0,0.06)]">
+        <Card className="overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <div>
-              <h2 className="text-[15px] font-bold text-foreground">
-                Recent Activity
-              </h2>
-              <p className="text-[11px] text-muted-foreground">
-                Latest events across the platform
-              </p>
+              <h2 className="text-h3 text-foreground">Recent Activity</h2>
+              <p className="text-body-sm text-muted-foreground">Latest events across the platform</p>
             </div>
-            <Link
-              to="/messages"
-              className="text-[11px] font-semibold flex items-center gap-0.5 transition-opacity hover:opacity-70 text-blue-400"
-            >
-              View all <ArrowRight className="w-3 h-3" />
-            </Link>
+            {logs.length > 0 && (
+              <Link
+                to="/messages"
+                className="text-body-sm font-semibold flex items-center gap-0.5 transition-opacity hover:opacity-70 text-accent"
+              >
+                View all <ArrowRight className="w-3 h-3" />
+              </Link>
+            )}
           </div>
 
           {loading ? (
@@ -288,16 +296,16 @@ const AdminDashboard = () => {
                       style={{ background: dotColor }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-medium text-foreground">
+                      <p className="text-body-sm font-medium text-foreground">
                         {actionVerb(log.action)}{' '}
                         <span style={{ color: dotColor }}>{log.entityType}</span>
                       </p>
                       {log.details && (
-                        <p className="text-[10.5px] truncate mt-0.5 text-muted-foreground">
+                        <p className="text-body-sm truncate mt-0.5 text-muted-foreground">
                           {log.details}
                         </p>
                       )}
-                      <p className="text-[10px] mt-0.5 flex items-center gap-1 text-muted-foreground">
+                      <p className="text-body-sm mt-0.5 flex items-center gap-1 text-muted-foreground">
                         <Clock className="w-2.5 h-2.5" />
                         {formatDistanceToNow(ts, { addSuffix: true })}
                       </p>
@@ -307,11 +315,15 @@ const AdminDashboard = () => {
               })}
             </div>
           ) : (
-            <div className="py-12 text-center">
-              <p className="text-sm text-muted-foreground">No activity yet.</p>
+            <div className="p-6">
+              <EmptyState
+                icon={Clock}
+                title="No recent activity"
+                description="Changes you make across the admin panel will show up here."
+              />
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );
