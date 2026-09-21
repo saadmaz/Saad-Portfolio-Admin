@@ -21,7 +21,7 @@ import { ProjectService } from '@/services/project-service';
 import { Education, EducationMedia, EducationAward, Project } from '@/types';
 import { toast } from 'sonner';
 import { uploadImage } from '@/services/storage';
-import BackButton from './BackButton';
+import PageHeader from './PageHeader';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -276,7 +276,7 @@ function MediaSubForm({
                   onClick={() => onUpdate({ ...item, media_type: t })}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                     item.media_type === t
-                      ? 'bg-accent text-black border-accent'
+                      ? 'bg-accent text-accent-foreground border-accent'
                       : 'bg-white/5 border-white/10 text-muted-foreground hover:border-accent/40'
                   }`}
                 >
@@ -668,19 +668,12 @@ const EducationForm = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-3xl">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <BackButton to="/education" className="mt-1 flex-shrink-0" />
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-2">ACADEMIC</p>
-          <h1 className="text-4xl font-black tracking-tight mb-1 text-foreground" style={{ fontFamily: 'DM Sans' }}>
-            {isEditMode ? 'Edit Education' : 'Add Education'}
-          </h1>
-          <p className="text-sm text-muted-foreground font-medium">
-            {isEditMode ? 'Update this education entry.' : 'Add a new education entry to your portfolio.'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="ACADEMIC"
+        title={isEditMode ? 'Edit Education' : 'Add Education'}
+        subtitle={isEditMode ? 'Update this education entry.' : 'Add a new education entry to your portfolio.'}
+        backTo="/education"
+      />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
@@ -1033,7 +1026,7 @@ const EducationForm = () => {
                         <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
                           isLinked ? 'bg-accent border-accent' : 'border-white/20'
                         }`}>
-                          {isLinked && <Check className="w-2.5 h-2.5 text-black" />}
+                          {isLinked && <Check className="w-2.5 h-2.5 text-accent-foreground" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-xs font-semibold truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>
@@ -1192,7 +1185,7 @@ const EducationForm = () => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-accent hover:bg-accent/90 text-black font-black h-11 px-8 rounded-lg"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-8 rounded-lg"
           >
             {isLoading ? (
               <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin mr-2" />

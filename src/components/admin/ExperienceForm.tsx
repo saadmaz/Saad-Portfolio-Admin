@@ -11,11 +11,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  ArrowLeft, Save, Trash2, Briefcase, MapPin, Calendar, Building2,
+  Save, Trash2, Briefcase, MapPin, Calendar, Building2,
   Sparkles, Plus, ChevronDown, ChevronUp, Trophy,
   Image as ImageIcon, Link as LinkIcon, FileText, Presentation, X, Star, GripVertical, Check,
 } from 'lucide-react';
 import LogoUpload from './LogoUpload';
+import FormHeader from './FormHeader';
 import { CommonService } from '@/shared/services/common-service';
 import { ProjectService } from '@/services/project-service';
 import { Experience, ExperienceRole, ExperienceMedia, Project } from '@/types';
@@ -598,25 +599,19 @@ const ExperienceForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
 
-      {/* ── Header ── */}
-      <div className="flex items-center gap-4">
-        <Button type="button" variant="ghost" size="icon" className="rounded-full hover:bg-white/10"
-          onClick={() => navigate('/experience')}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'DM Sans' }}>
-            {isEditMode ? 'Edit Experience' : 'New Experience'}
-          </h1>
-          <p className="text-muted-foreground text-sm">Fill in the company details and roles below.</p>
-        </div>
-        <Button type="submit"
-          className="ml-auto bg-accent hover:bg-accent/90 text-black font-bold px-8"
-          disabled={isLoading}>
-          <Save className="w-4 h-4 mr-2" />
-          {isLoading ? 'Saving…' : 'Save'}
-        </Button>
-      </div>
+      <FormHeader
+        backTo="/experience"
+        title={isEditMode ? 'Edit Experience' : 'New Experience'}
+        subtitle="Fill in the company details and roles below."
+        actions={
+          <Button type="submit"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-8"
+            disabled={isLoading}>
+            <Save className="w-4 h-4 mr-2" />
+            {isLoading ? 'Saving…' : 'Save'}
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -671,7 +666,7 @@ const ExperienceForm = () => {
                       onClick={() => setValue('location_type', lt)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                         locationType === lt
-                          ? 'bg-accent text-black border-accent'
+                          ? 'bg-accent text-accent-foreground border-accent'
                           : 'bg-white/5 border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground'
                       }`}
                     >
@@ -915,7 +910,7 @@ const ExperienceForm = () => {
                         <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
                           isLinked ? 'bg-accent border-accent' : 'border-white/20'
                         }`}>
-                          {isLinked && <Check className="w-2.5 h-2.5 text-black" />}
+                          {isLinked && <Check className="w-2.5 h-2.5 text-accent-foreground" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-xs font-semibold truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>

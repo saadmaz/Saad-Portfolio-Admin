@@ -140,9 +140,9 @@ const AdminTestimonials = () => {
             </Card>
           ))
         ) : (
-          <div className="md:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-medium text-muted-foreground mb-1">No testimonials yet</h3>
-            <p className="text-sm text-muted-foreground">Showcase what people are saying about your work.</p>
+          <div className="md:col-span-2 rounded-lg border border-border bg-card shadow-sm p-12 text-center">
+            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No testimonials yet</h3>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">Showcase what people are saying about your work.</p>
           </div>
         )}
       </div>

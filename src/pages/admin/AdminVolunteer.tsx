@@ -154,9 +154,9 @@ const AdminVolunteer = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-2xl border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-medium text-muted-foreground mb-1">No volunteer work added</h3>
-            <p className="text-sm text-muted-foreground">Highlight your contributions to the community.</p>
+          <div className="rounded-lg border border-border bg-card p-12 text-center shadow-sm">
+            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No volunteer work added</h3>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">Highlight your contributions to the community.</p>
           </div>
         )}
       </div>

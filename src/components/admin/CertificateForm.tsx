@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  ArrowLeft, 
-  Save, 
+import {
+  Save,
   Award,
   Calendar,
   Link as LinkIcon,
@@ -20,6 +19,7 @@ import { CommonService } from '@/shared/services/common-service';
 import { Certificate } from '@/types';
 import { toast } from "sonner";
 import ImageUpload from './ImageUpload';
+import FormHeader from './FormHeader';
 
 const certSchema = z.object({
   title: z.string().min(5, 'Title is too short'),
@@ -106,33 +106,21 @@ const CertificateForm = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="flex items-center gap-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="rounded-full hover:bg-white/10"
-          onClick={() => navigate('/certificates')}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isEditMode ? 'Edit Certificate' : 'Add Achievement'}
-          </h1>
-          <p className="text-muted-foreground">
-            "Your hard work is your unique signature."
-          </p>
-        </div>
-        <Button
-          type="submit"
-          className="ml-auto bg-accent hover:bg-accent/90 text-black font-bold px-8"
-          disabled={isLoading}
-        >
-          <Save className="w-4 h-4 mr-2" />
-          Save Achievement
-        </Button>
-      </div>
+      <FormHeader
+        backTo="/certificates"
+        title={isEditMode ? 'Edit Certificate' : 'Add Achievement'}
+        subtitle='"Your hard work is your unique signature."'
+        actions={
+          <Button
+            type="submit"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-8"
+            disabled={isLoading}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save Achievement
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">

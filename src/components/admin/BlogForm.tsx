@@ -9,13 +9,15 @@ import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import {
-  ArrowLeft, Save, Trash2, Send, Eye,
+  Save, Trash2, Send, Eye,
   Bold, Italic, Heading2, Heading3,
   List, ListOrdered, Code, Minus, Link as LinkIcon,
   Undo, Redo, Quote, Image as ImageIcon, Tag as TagIcon,
   Search, Calendar, Globe, ToggleLeft, FileText,
   X, Loader2,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import FormHeader from './FormHeader';
 import { BlogService } from '@/services/blog-service';
 import { uploadImage } from '@/services/storage';
 import { toast } from 'sonner';
@@ -402,82 +404,57 @@ const BlogForm = () => {
 
       {/* ── Top bar ────────────────────────────────────────────── */}
       <div
-        className="sticky top-0 z-30 flex flex-wrap items-center gap-3 px-0 py-4 mb-6"
+        className="sticky top-0 z-30 py-4 mb-6"
         style={{ background: 'hsl(var(--background))' }}
       >
-        <button
-          type="button"
-          onClick={() => navigate('/blogs')}
-          className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-          style={{ background: 'var(--admin-surface-md)', border: '1px solid var(--admin-surface-xl)' }}
-          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--admin-surface-xl)'}
-          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--admin-surface-md)'}
-        >
-          <ArrowLeft className="w-4 h-4" style={{ color: 'hsl(var(--foreground) / 0.60)' }} />
-        </button>
+        <FormHeader
+          backTo="/blogs"
+          title={isEditMode ? 'Edit Post' : 'New Blog Post'}
+          subtitle={isEditMode ? 'Update content and metadata.' : 'Write something worth reading.'}
+          actions={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePreview}
+                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg h-9 px-3 text-xs font-medium"
+              >
+                <Eye className="w-3.5 h-3.5 mr-1.5" /> Preview
+              </Button>
 
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'hsl(var(--foreground) / 0.90)', letterSpacing: '-0.02em' }}>
-            {isEditMode ? 'Edit Post' : 'New Blog Post'}
-          </h1>
-          <p className="text-[11px] mt-0.5" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-            {isEditMode ? 'Update content and metadata.' : 'Write something worth reading.'}
-          </p>
-        </div>
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={isLoading}
+                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg h-9 px-3 text-xs font-medium"
+              >
+                <Save className="w-3.5 h-3.5 mr-1.5" /> Save Draft
+              </Button>
 
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handlePreview}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all"
-            style={{ background: 'var(--admin-surface-md)', border: '1px solid var(--admin-surface-xl)', color: 'hsl(var(--foreground) / 0.55)' }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--admin-surface-xl)'}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--admin-surface-md)'}
-          >
-            <Eye className="w-3.5 h-3.5" /> Preview
-          </button>
+              <Button
+                type="button"
+                onClick={handleSubmit(d => onSubmit(d, publishMode === 'publish'))}
+                disabled={isLoading}
+                className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg h-9 px-4 text-xs font-semibold shadow-[0_0_18px_hsl(var(--accent)/0.28)]"
+              >
+                <Send className="w-3.5 h-3.5 mr-1.5" />
+                {isLoading ? 'Saving…' : isEditMode ? 'Update' : publishMode === 'publish' ? 'Publish' : 'Save'}
+              </Button>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all disabled:opacity-50"
-            style={{ background: 'var(--admin-surface-md)', border: '1px solid var(--admin-surface-xl)', color: 'hsl(var(--foreground) / 0.65)' }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--admin-surface-xl)'}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--admin-surface-md)'}
-          >
-            <Save className="w-3.5 h-3.5" /> Save Draft
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSubmit(d => onSubmit(d, publishMode === 'publish'))}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold transition-all disabled:opacity-50"
-            style={{
-              background: 'hsl(var(--accent))',
-              color: 'hsl(var(--accent-foreground))',
-              boxShadow: '0 0 18px hsl(var(--accent) / 0.28)',
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--accent-bright))'}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--accent))'}
-          >
-            <Send className="w-3.5 h-3.5" />
-            {isLoading ? 'Saving…' : isEditMode ? 'Update' : publishMode === 'publish' ? 'Publish' : 'Save'}
-          </button>
-
-          {isEditMode && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-              style={{ color: 'hsl(var(--destructive) / 0.60)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'hsl(var(--destructive) / 0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--destructive))'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'hsl(var(--destructive) / 0.60)'; }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="text-destructive/60 hover:bg-destructive/10 hover:text-destructive rounded-lg w-9 h-9"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+            </>
+          }
+        />
       </div>
 
       {/* ── Main grid ──────────────────────────────────────────── */}

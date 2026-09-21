@@ -153,9 +153,9 @@ const AdminLanguages = () => {
             </Card>
           ))
         ) : (
-          <div className="md:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-medium text-muted-foreground mb-1">No languages added</h3>
-            <p className="text-sm text-muted-foreground">Add languages to showcase your communication skills.</p>
+          <div className="md:col-span-2 rounded-lg border border-border bg-card shadow-sm p-12 text-center">
+            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No languages added</h3>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">Add languages to showcase your communication skills.</p>
           </div>
         )}
       </div>

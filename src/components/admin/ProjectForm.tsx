@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Images,
+  Save, Plus, Trash2, Image as ImageIcon, Images,
   Globe, Github, Layout, Layers, Sparkles, X, Video,
   BookOpen, Lightbulb, Tag, Star, Link2, Check, GraduationCap, Briefcase,
 } from 'lucide-react';
@@ -26,6 +26,7 @@ import { ProjectService } from '@/services/project-service';
 import { CommonService } from '@/shared/services/common-service';
 import { toast } from "sonner";
 import type { Education, Experience } from '@/types';
+import FormHeader from './FormHeader';
 import ImageUpload from './ImageUpload';
 import MultiImageUpload from './MultiImageUpload';
 import { cn } from "@/shared/lib/utils";
@@ -299,33 +300,26 @@ const ProjectForm = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" variant="ghost" size="icon" className="rounded-xl hover:bg-white/10 w-9 h-9"
-          onClick={() => navigate('/projects')}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-accent mb-0.5">Portfolio</p>
-          <h1 className="text-2xl font-black tracking-tight text-white">
-            {isEditMode ? 'Edit Project' : 'New Project'}
-          </h1>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button type="submit" disabled={isLoading}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-black rounded-xl h-10 px-6 shadow-[0_0_20px_hsl(var(--accent)/0.28)]">
-            <Save className="w-3.5 h-3.5 mr-2" />
-            {isLoading ? 'Saving…' : 'Save Project'}
-          </Button>
-          {isEditMode && (
-            <Button type="button" variant="ghost" size="icon"
-              className="text-red-500/60 hover:bg-red-500/10 hover:text-red-500 rounded-xl w-9 h-9"
-              onClick={() => setDeleteDialogOpen(true)} disabled={isLoading}>
-              <Trash2 className="w-4 h-4" />
+      <FormHeader
+        backTo="/projects"
+        title={isEditMode ? 'Edit Project' : 'New Project'}
+        actions={
+          <>
+            <Button type="submit" disabled={isLoading}
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-black rounded-xl h-10 px-6 shadow-[0_0_20px_hsl(var(--accent)/0.28)]">
+              <Save className="w-3.5 h-3.5 mr-2" />
+              {isLoading ? 'Saving…' : 'Save Project'}
             </Button>
-          )}
-        </div>
-      </div>
+            {isEditMode && (
+              <Button type="button" variant="ghost" size="icon"
+                className="text-red-500/60 hover:bg-red-500/10 hover:text-red-500 rounded-xl w-9 h-9"
+                onClick={() => setDeleteDialogOpen(true)} disabled={isLoading}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── LEFT COLUMN ── */}
@@ -491,7 +485,7 @@ const ProjectForm = () => {
                             <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
                               isLinked ? 'bg-accent border-accent' : 'border-white/20'
                             }`}>
-                              {isLinked && <Check className="w-2.5 h-2.5 text-black" />}
+                              {isLinked && <Check className="w-2.5 h-2.5 text-accent-foreground" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className={`text-xs font-semibold truncate ${isLinked ? 'text-white' : 'text-white/50'}`}>
@@ -534,7 +528,7 @@ const ProjectForm = () => {
                             <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
                               isLinked ? 'bg-accent border-accent' : 'border-white/20'
                             }`}>
-                              {isLinked && <Check className="w-2.5 h-2.5 text-black" />}
+                              {isLinked && <Check className="w-2.5 h-2.5 text-accent-foreground" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className={`text-xs font-semibold truncate ${isLinked ? 'text-white' : 'text-white/50'}`}>

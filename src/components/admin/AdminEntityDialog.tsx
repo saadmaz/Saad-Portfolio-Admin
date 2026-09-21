@@ -183,7 +183,7 @@ const AdminEntityDialog = ({
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-accent hover:bg-accent/90 text-black font-bold px-8"
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-8"
                 >
                   {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Save Changes
