@@ -62,7 +62,7 @@ const AdminLoginPage = () => {
         {/* Brand header */}
         <div className="text-center mb-10">
           <div
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
+            className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-5"
             style={{
               background: 'hsl(var(--accent) / 0.09)',
               border: '1px solid hsl(var(--accent) / 0.22)',
@@ -72,7 +72,7 @@ const AdminLoginPage = () => {
             <ShieldCheck className="w-6 h-6" style={{ color: 'hsl(var(--accent))' }} />
           </div>
           <h1
-            className="admin-editorial text-[28px] mb-2"
+            className="text-[28px] mb-2"
             style={{ color: 'hsl(var(--foreground) / 0.92)' }}
           >
             Admin Portal
@@ -84,9 +84,9 @@ const AdminLoginPage = () => {
 
         {/* Form surface */}
         <div
-          className="rounded-2xl p-7"
+          className="rounded-xl p-7"
           style={{
-            background: 'hsl(222 45% 12%)',
+            background: 'hsl(var(--card))',
             border: '1px solid var(--admin-border-sm)',
             boxShadow: '0 24px 48px rgba(0,0,0,0.45), 0 0 0 1px var(--admin-surface-sm)',
           }}
@@ -186,7 +186,7 @@ const AdminLoginPage = () => {
           {/* Divider */}
           <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--admin-surface-lg)' }}>
             <p
-              className="admin-editorial text-[11px] text-center leading-relaxed"
+              className="text-[11px] text-center leading-relaxed"
               style={{ color: 'hsl(var(--foreground) / 0.60)' }}
             >
               "Great things are done by a series of small things brought together."

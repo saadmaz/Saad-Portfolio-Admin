@@ -8,6 +8,7 @@ import { Plus, Search, ClipboardList, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const testScoreSchema = z.object({
@@ -124,11 +125,11 @@ const AdminTestScores = () => {
                       <ClipboardList className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-black text-foreground text-sm" style={{ fontFamily: 'DM Sans' }}>
+                      <h3 className="font-black text-foreground text-sm">
                         {score.testName}
                       </h3>
                       <p className="text-xs text-muted-foreground font-medium">
-                        Score: <span className="text-accent font-black">{score.score}</span>
+                        Score: <span className="text-accent font-black tabular">{score.score}</span>
                         {score.date ? ` · ${score.date}` : ''}
                       </p>
                     </div>
@@ -137,7 +138,7 @@ const AdminTestScores = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(score)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(score.id, score.testName)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(score.id, score.testName)} className="h-9 w-9 hover:bg-danger-subtle text-danger hover:text-danger-fg rounded-lg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -146,12 +147,11 @@ const AdminTestScores = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No test scores found</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add your standardized test results.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title="No test scores found"
+            description={searchQuery ? 'Try a different search.' : 'Add your standardized test results.'}
+          />
         )}
       </div>
 

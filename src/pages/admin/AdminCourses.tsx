@@ -8,6 +8,7 @@ import { Plus, Search, BookMarked, Edit2, Trash2, ExternalLink } from 'lucide-re
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const courseSchema = z.object({
@@ -129,7 +130,7 @@ const AdminCourses = () => {
                       <BookMarked className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-black text-foreground text-sm truncate" style={{ fontFamily: 'DM Sans' }}>
+                      <h3 className="font-black text-foreground text-sm truncate">
                         {course.name}
                       </h3>
                       <p className="text-xs text-muted-foreground font-medium">
@@ -146,7 +147,7 @@ const AdminCourses = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(course)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id, course.name)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id, course.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -155,12 +156,11 @@ const AdminCourses = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No courses found</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add the courses you have completed.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={BookMarked}
+            title="No courses found"
+            description={searchQuery ? 'Try a different search.' : 'Add the courses you have completed.'}
+          />
         )}
       </div>
 

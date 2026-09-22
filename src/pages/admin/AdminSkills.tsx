@@ -114,7 +114,7 @@ const AdminSkills = () => {
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-[0_0_20px_hsl(var(--accent)/0.2)] rounded-xl transition-all hover:scale-105 active:scale-95"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
             >
               <Save className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save All Changes'}
             </Button>
@@ -124,9 +124,9 @@ const AdminSkills = () => {
 
       <div className="space-y-8">
         {isLoading ? (
-          <div className="h-40 bg-secondary border border-border rounded-2xl animate-pulse" />
+          <div className="h-40 bg-secondary border border-border rounded-xl animate-pulse" />
         ) : skillSets.map((set, catIndex) => (
-          <Card key={catIndex} className="bg-card border-border overflow-hidden rounded-2xl shadow-sm group/card transition-all hover:border-accent/30">
+          <Card key={catIndex} interactive className="overflow-hidden rounded-xl group/card">
             <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-border bg-secondary">
               <div className="flex items-center gap-4 flex-1">
                 <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-accent transition-colors" />
@@ -151,7 +151,7 @@ const AdminSkills = () => {
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'down')} disabled={catIndex === skillSets.length - 1}>
                   <ChevronDown className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg ml-1" onClick={() => removeCategory(catIndex)}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-danger-fg hover:text-danger-fg hover:bg-danger-subtle rounded-lg ml-1" onClick={() => removeCategory(catIndex)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -169,7 +169,7 @@ const AdminSkills = () => {
                       />
                       <button
                         onClick={() => removeSkill(catIndex, skillIndex)}
-                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-all active:scale-90"
+                        className="opacity-0 group-hover:opacity-100 text-danger-fg hover:text-danger-fg/80 transition-all active:scale-90"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -193,7 +193,7 @@ const AdminSkills = () => {
                           type="number"
                           value={skill.startYear}
                           onChange={(e) => updateSkill(catIndex, skillIndex, 'startYear', parseInt(e.target.value))}
-                          className="bg-card border-border h-8 text-[11px] py-0 px-3 pl-7 rounded-lg font-mono text-foreground focus:border-accent/50 ring-0"
+                          className="bg-card border-border h-8 text-caption tabular py-0 px-3 pl-7 rounded-lg font-mono text-foreground focus:border-accent/50 ring-0"
                           placeholder="Year"
                           min={1990}
                           max={new Date().getFullYear()}

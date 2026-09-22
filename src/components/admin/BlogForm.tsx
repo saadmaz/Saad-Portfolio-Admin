@@ -61,7 +61,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 const Field = ({ children, error }: { children: React.ReactNode; error?: string }) => (
   <div className="space-y-1">
     {children}
-    {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+    {error && <p className="text-xs text-danger mt-1">{error}</p>}
   </div>
 );
 
@@ -146,7 +146,7 @@ const SectionCard = ({
       className="flex items-center gap-2 px-4 py-3"
       style={{ borderBottom: '1px solid var(--admin-border-sm)' }}
     >
-      <Icon className="w-3.5 h-3.5 text-emerald-400" />
+      <Icon className="w-3.5 h-3.5 text-accent" />
       <span className="text-[11px] font-semibold uppercase tracking-widest"
             style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
         {title}
@@ -166,7 +166,7 @@ const ToolbarBtn = ({
     onClick={onClick}
     className={cn(
       'p-1.5 rounded-md transition-all flex items-center justify-center',
-      active ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-white/[0.06]',
+      active ? 'bg-accent/20 text-accent' : 'hover:bg-white/[0.06]',
     )}
     style={{ color: active ? 'hsl(var(--accent-bright))' : 'hsl(var(--foreground) / 0.60)' }}
   >
@@ -225,14 +225,14 @@ const BlogForm = () => {
         heading:       { levels: [2, 3] },
         bulletList:    { HTMLAttributes: { class: 'list-disc pl-5 space-y-1' } },
         orderedList:   { HTMLAttributes: { class: 'list-decimal pl-5 space-y-1' } },
-        code:          { HTMLAttributes: { class: 'bg-white/10 rounded px-1.5 py-0.5 font-mono text-sm text-emerald-400' } },
+        code:          { HTMLAttributes: { class: 'bg-white/10 rounded px-1.5 py-0.5 font-mono text-sm text-accent' } },
         codeBlock:     { HTMLAttributes: { class: 'bg-black/40 rounded-xl p-4 font-mono text-sm border border-white/10 my-3' } },
-        blockquote:    { HTMLAttributes: { class: 'border-l-4 border-emerald-500/50 pl-4 text-white/60 my-3 italic' } },
+        blockquote:    { HTMLAttributes: { class: 'border-l-4 border-accent/50 pl-4 text-white/60 my-3 italic' } },
         horizontalRule:{ HTMLAttributes: { class: 'border-white/10 my-5' } },
       }),
       Link.configure({
         openOnClick: false,
-        HTMLAttributes: { class: 'text-emerald-400 underline underline-offset-4 hover:text-emerald-300', target: '_blank' },
+        HTMLAttributes: { class: 'text-accent underline underline-offset-4 hover:text-accent-hover', target: '_blank' },
       }),
       Image.configure({
         HTMLAttributes: { class: 'rounded-xl max-w-full my-4 border border-white/10' },
@@ -493,7 +493,7 @@ const BlogForm = () => {
                   className="flex-1 bg-transparent border-none text-[12px] font-mono focus:outline-none"
                   style={{ color: 'hsl(var(--foreground) / 0.55)' }}
                 />
-                {errors.slug && <p className="text-xs text-red-400 flex-shrink-0">{errors.slug.message}</p>}
+                {errors.slug && <p className="text-xs text-danger flex-shrink-0">{errors.slug.message}</p>}
               </div>
             </div>
 
@@ -515,7 +515,7 @@ const BlogForm = () => {
                 rows={2}
                 placeholder="A compelling summary displayed on the blog archive page…"
               />
-              {errors.excerpt && <p className="text-xs text-red-400 mt-1">{errors.excerpt.message}</p>}
+              {errors.excerpt && <p className="text-xs text-danger mt-1">{errors.excerpt.message}</p>}
             </div>
           </div>
 
@@ -585,7 +585,7 @@ const BlogForm = () => {
             )}
             <EditorContent editor={editor} className="[&_.ProseMirror]:outline-none" />
             {contentError && (
-              <p className="text-xs text-red-400 px-5 pb-4">{contentError}</p>
+              <p className="text-xs text-danger px-5 pb-4">{contentError}</p>
             )}
             <input
               type="file"
@@ -756,7 +756,7 @@ const BlogForm = () => {
           onClick={() => !isLoading && setShowDeleteModal(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+            className="w-full max-w-sm rounded-xl p-6 space-y-4"
             style={{ background: 'hsl(var(--card))', border: '1px solid var(--admin-surface-xl)', boxShadow: 'var(--shadow-xl)' }}
             onClick={e => e.stopPropagation()}
           >

@@ -4,10 +4,12 @@ import { CommonService } from '@/shared/services/common-service';
 import { Publication } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Search, FileText, Edit2, Trash2, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const publicationSchema = z.object({
@@ -145,7 +147,7 @@ const AdminPublications = () => {
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-black text-foreground text-sm" style={{ fontFamily: 'DM Sans' }}>
+                      <h3 className="font-black text-foreground text-sm">
                         {pub.title}
                       </h3>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -159,7 +161,7 @@ const AdminPublications = () => {
                       {pub.tags && pub.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {pub.tags.map(tag => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent/70 font-medium">{tag}</span>
+                            <Badge key={tag} variant="neutral" className="text-[10px] px-1.5 py-0.5">{tag}</Badge>
                           ))}
                         </div>
                       )}
@@ -174,7 +176,7 @@ const AdminPublications = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(pub)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(pub.id, pub.title)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(pub.id, pub.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -183,12 +185,11 @@ const AdminPublications = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No publications found</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add your papers, articles, and published work.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No publications found"
+            description={searchQuery ? 'Try a different search.' : 'Add your papers, articles, and published work.'}
+          />
         )}
       </div>
 

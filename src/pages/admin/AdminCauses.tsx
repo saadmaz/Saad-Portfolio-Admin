@@ -8,6 +8,7 @@ import { Plus, Leaf, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const causeSchema = z.object({
@@ -98,11 +99,11 @@ const AdminCauses = () => {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground flex-shrink-0 mt-0.5">
                       <Leaf className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-black text-foreground text-sm" style={{ fontFamily: 'DM Sans' }}>{cause.name}</h3>
+                      <h3 className="font-black text-foreground text-sm">{cause.name}</h3>
                       {cause.description && (
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{cause.description}</p>
                       )}
@@ -112,7 +113,7 @@ const AdminCauses = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(cause)} className="h-7 w-7 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-md">
                       <Edit2 className="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cause.id, cause.name)} className="h-7 w-7 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-md">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cause.id, cause.name)} className="h-7 w-7 hover:bg-danger-subtle text-danger hover:text-danger-fg rounded-md">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -121,11 +122,12 @@ const AdminCauses = () => {
             </Card>
           ))
         ) : (
-          <div className="col-span-full rounded-lg border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No causes added</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              Share the issues and causes you care about.
-            </p>
+          <div className="col-span-full">
+            <EmptyState
+              icon={Leaf}
+              title="No causes added"
+              description="Share the issues and causes you care about."
+            />
           </div>
         )}
       </div>

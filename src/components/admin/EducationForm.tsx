@@ -63,8 +63,8 @@ function calcDuration(
 
 function charColor(len: number, max: number): string {
   const pct = len / max;
-  if (pct >= 1) return 'text-red-400';
-  if (pct >= 0.8) return 'text-amber-400';
+  if (pct >= 1) return 'text-danger';
+  if (pct >= 0.8) return 'text-warning-fg';
   return 'text-muted-foreground';
 }
 
@@ -256,7 +256,7 @@ function MediaSubForm({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          className="p-1 rounded hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors"
+          className="p-1 rounded hover:bg-danger/10 text-danger hover:text-danger/80 transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -319,7 +319,7 @@ function MediaSubForm({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[10px] uppercase font-bold text-muted-foreground">
-                Caption <span className="text-red-400">*</span>
+                Caption <span className="text-danger">*</span>
               </label>
               <span className={`text-[10px] ${charColor(captionLen, 120)}`}>{captionLen}/120</span>
             </div>
@@ -389,7 +389,7 @@ function AwardSubForm({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          className="p-1 rounded hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors"
+          className="p-1 rounded hover:bg-danger/10 text-danger hover:text-danger/80 transition-colors"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
@@ -690,7 +690,7 @@ const EducationForm = () => {
               {/* School Logo */}
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-muted-foreground">
-                  School Logo <span className="text-red-400">*</span>
+                  School Logo <span className="text-danger">*</span>
                 </label>
                 <LogoUpload
                   value={schoolLogo}
@@ -700,14 +700,14 @@ const EducationForm = () => {
                   size={96}
                 />
                 {errors.school_logo && (
-                  <p className="text-xs text-red-400">{errors.school_logo.message}</p>
+                  <p className="text-xs text-danger">{errors.school_logo.message}</p>
                 )}
               </div>
 
               {/* School Name */}
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-muted-foreground">
-                  School / Institution Name <span className="text-red-400">*</span>
+                  School / Institution Name <span className="text-danger">*</span>
                 </label>
                 <Input
                   {...register('school_name')}
@@ -715,7 +715,7 @@ const EducationForm = () => {
                   className="bg-white/5 border-white/10"
                 />
                 {errors.school_name && (
-                  <p className="text-xs text-red-400">{errors.school_name.message}</p>
+                  <p className="text-xs text-danger">{errors.school_name.message}</p>
                 )}
               </div>
 
@@ -833,7 +833,7 @@ const EducationForm = () => {
                 <p className="text-xs text-accent font-medium">
                   Duration: {duration}
                   {isExpectedGrad && endMonth && endYear && (
-                    <span className="ml-2 text-amber-400">· Expected {endMonth.slice(0, 3)} {endYear}</span>
+                    <span className="ml-2 text-warning-fg">· Expected {endMonth.slice(0, 3)} {endYear}</span>
                   )}
                 </p>
               )}
@@ -866,7 +866,7 @@ const EducationForm = () => {
                 <p className="text-[10px] text-muted-foreground">
                   Accepts any format: GPA, percentage, grade classification, or score.
                 </p>
-                {errors.grade && <p className="text-xs text-red-400">{errors.grade.message}</p>}
+                {errors.grade && <p className="text-xs text-danger">{errors.grade.message}</p>}
               </div>
 
               {/* Show grade publicly toggle */}
@@ -897,7 +897,7 @@ const EducationForm = () => {
                   onChange={(e) => setValue('activities_and_societies', e.target.value.slice(0, 500))}
                 />
                 {errors.activities_and_societies && (
-                  <p className="text-xs text-red-400">{errors.activities_and_societies.message}</p>
+                  <p className="text-xs text-danger">{errors.activities_and_societies.message}</p>
                 )}
               </div>
 
@@ -916,7 +916,7 @@ const EducationForm = () => {
                   onChange={(e) => setValue('description', e.target.value.slice(0, 1000))}
                 />
                 {errors.description && (
-                  <p className="text-xs text-red-400">{errors.description.message}</p>
+                  <p className="text-xs text-danger">{errors.description.message}</p>
                 )}
               </div>
             </div>
@@ -931,7 +931,7 @@ const EducationForm = () => {
             collapsed={collapsed.skills}
             onToggle={() => toggle('skills')}
           >
-            <span className={`text-[10px] font-bold mr-2 ${skills.length > 5 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+            <span className={`text-[10px] font-bold mr-2 ${skills.length > 5 ? 'text-warning-fg' : 'text-muted-foreground'}`}>
               {skills.length}/20
             </span>
           </SectionHeader>
@@ -946,7 +946,7 @@ const EducationForm = () => {
                   {skills.map((s, i) => (
                     <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-medium">
                       {s}
-                      <button type="button" onClick={() => setSkills(p => p.filter((_, idx) => idx !== i))} className="hover:text-red-400 transition-colors ml-0.5">
+                      <button type="button" onClick={() => setSkills(p => p.filter((_, idx) => idx !== i))} className="hover:text-danger transition-colors ml-0.5">
                         <X className="w-2.5 h-2.5" />
                       </button>
                     </span>
@@ -970,10 +970,10 @@ const EducationForm = () => {
               </div>
 
               {skills.length > 5 && (
-                <p className="text-[10px] text-amber-400">Top 5 recommended for visibility on LinkedIn and public portfolio.</p>
+                <p className="text-[10px] text-warning-fg">Top 5 recommended for visibility on LinkedIn and public portfolio.</p>
               )}
               {skills.length >= 20 && (
-                <p className="text-[10px] text-red-400 font-bold">Maximum 20 skills reached.</p>
+                <p className="text-[10px] text-danger font-bold">Maximum 20 skills reached.</p>
               )}
             </div>
           )}
@@ -1119,7 +1119,7 @@ const EducationForm = () => {
                 </Button>
               )}
               {media.length >= 20 && (
-                <p className="text-[10px] text-red-400 font-bold">Maximum 20 media items per education entry.</p>
+                <p className="text-[10px] text-danger font-bold">Maximum 20 media items per education entry.</p>
               )}
             </div>
           )}

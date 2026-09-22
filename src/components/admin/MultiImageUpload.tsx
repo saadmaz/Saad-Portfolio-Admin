@@ -106,7 +106,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => remove(i)}
-                  className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                  className="w-7 h-7 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground hover:bg-destructive/90 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>

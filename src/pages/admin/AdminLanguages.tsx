@@ -8,6 +8,7 @@ import { Plus, Globe, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const languageSchema = z.object({
@@ -103,7 +104,7 @@ const AdminLanguages = () => {
         subtitle="Manage the languages you speak and your proficiency levels."
         backTo="/dashboard"
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11 px-6 rounded-lg">
+          <Button onClick={handleAdd} variant="primary" className="font-semibold h-11 px-6 rounded-lg">
             <Plus className="w-4 h-4 mr-2" /> Add New Language
           </Button>
         }
@@ -112,15 +113,15 @@ const AdminLanguages = () => {
       <div className="grid gap-4 md:grid-cols-2">
         {isLoading && !isDialogOpen ? (
           [1, 2, 3, 4].map(i => (
-            <div key={i} className="h-32 w-full bg-secondary border border-border rounded-2xl animate-pulse" />
+            <div key={i} className="h-32 w-full bg-secondary border border-border rounded-lg animate-pulse" />
           ))
         ) : languages.length > 0 ? (
           languages.map((lang) => (
-            <Card key={lang.id} className="bg-card border-border shadow-sm hover:bg-secondary hover:border-accent/30 transition-all overflow-hidden group">
+            <Card key={lang.id} interactive className="bg-card border-border shadow-sm overflow-hidden group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                    <div className="w-10 h-10 rounded-lg bg-info-subtle border border-info/20 flex items-center justify-center text-info-fg">
                       <Globe className="w-5 h-5" />
                     </div>
                     <div>
@@ -132,7 +133,7 @@ const AdminLanguages = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(lang)} className="h-8 w-8 hover:bg-secondary">
                       <Edit2 className="w-4 h-4 text-muted-foreground" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(lang.id, lang.name)} className="h-8 w-8 hover:bg-red-500/10 text-red-400 hover:text-red-500">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(lang.id, lang.name)} className="h-8 w-8 hover:bg-danger-subtle text-danger-fg hover:text-danger">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -153,10 +154,13 @@ const AdminLanguages = () => {
             </Card>
           ))
         ) : (
-          <div className="md:col-span-2 rounded-lg border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No languages added</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">Add languages to showcase your communication skills.</p>
-          </div>
+          <EmptyState
+            icon={Globe}
+            title="No languages added"
+            description="Add languages to showcase your communication skills."
+            action={{ label: 'Add New Language', onClick: handleAdd }}
+            className="md:col-span-2"
+          />
         )}
       </div>
 

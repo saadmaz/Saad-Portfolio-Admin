@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -356,7 +357,6 @@ const AdminCertificates = () => {
               <div className="p-4 flex flex-col flex-1 min-h-0">
                 <h3
                   className="font-black text-foreground text-sm line-clamp-2 group-hover:text-accent transition-colors leading-snug"
-                  style={{ fontFamily: 'DM Sans' }}
                 >
                   {cert.title}
                 </h3>
@@ -381,15 +381,13 @@ const AdminCertificates = () => {
             </button>
           ))
         ) : (
-          <div className="col-span-full rounded-xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-              <Award className="w-8 h-8 text-accent/50" />
-            </div>
-            <h3 className="text-base font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No certificates added</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">Showcase your verified achievements and professional learning.</p>
-            <Button onClick={() => openSheet(null)} className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground font-black h-10 px-5 rounded-lg">
-              <Plus className="w-4 h-4 mr-1.5" /> Add Certificate
-            </Button>
+          <div className="col-span-full">
+            <EmptyState
+              icon={Award}
+              title="No certificates added"
+              description="Showcase your verified achievements and professional learning."
+              action={{ label: 'Add Certificate', onClick: () => openSheet(null) }}
+            />
           </div>
         )}
       </div>
@@ -401,7 +399,7 @@ const AdminCertificates = () => {
           className="w-full sm:max-w-[480px] bg-card border-l border-border text-foreground flex flex-col p-0"
         >
           <SheetHeader className="px-6 py-4 border-b border-border flex-shrink-0">
-            <SheetTitle className="text-xl font-black text-foreground" style={{ fontFamily: 'DM Sans' }}>
+            <SheetTitle className="text-xl font-black text-foreground">
               {editCert ? 'Edit Certificate' : 'Add Certificate'}
             </SheetTitle>
           </SheetHeader>
@@ -424,7 +422,7 @@ const AdminCertificates = () => {
                     <FormControl>
                       <Input {...field} placeholder="e.g. Python Essential Training" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
                     </FormControl>
-                    <FormMessage className="text-red-500 text-xs" />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
 
@@ -435,7 +433,7 @@ const AdminCertificates = () => {
                       <FormControl>
                         <Input {...field} placeholder="LinkedIn Learning" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
                       </FormControl>
-                      <FormMessage className="text-red-500 text-xs" />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="platform" render={({ field }) => (
@@ -444,7 +442,7 @@ const AdminCertificates = () => {
                       <FormControl>
                         <Input {...field} placeholder="LinkedIn Learning" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
                       </FormControl>
-                      <FormMessage className="text-red-500 text-xs" />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )} />
                 </div>
@@ -455,7 +453,7 @@ const AdminCertificates = () => {
                     <FormControl>
                       <Input {...field} placeholder="YYYY-MM-DD" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
                     </FormControl>
-                    <FormMessage className="text-red-500 text-xs" />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
 
@@ -498,7 +496,7 @@ const AdminCertificates = () => {
                     <FormControl>
                       <Input {...field} placeholder="https://..." className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
                     </FormControl>
-                    <FormMessage className="text-red-500 text-xs" />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
 
@@ -558,7 +556,7 @@ const AdminCertificates = () => {
                 type="button"
                 variant="ghost"
                 onClick={handleDeleteRequest}
-                className="w-full text-red-400 hover:bg-red-500/10 hover:text-red-500 border border-red-500/20 font-black"
+                className="w-full text-danger-fg hover:bg-danger-subtle hover:text-danger-fg border border-danger/20 font-black"
               >
                 <Trash2 className="w-4 h-4 mr-2" /> Delete Entry
               </Button>

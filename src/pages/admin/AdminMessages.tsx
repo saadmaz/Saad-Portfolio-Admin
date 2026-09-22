@@ -16,6 +16,7 @@ import {
 import { CommonService } from '@/shared/services/common-service';
 import { Message } from '@/types';
 import { Button } from "@/components/ui/button";
+import EmptyState from '@/components/admin/EmptyState';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -70,7 +71,7 @@ const AdminMessages = () => {
         <div className="h-10 w-48 bg-secondary animate-pulse rounded-lg" />
         <div className="grid gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 w-full bg-secondary animate-pulse rounded-2xl border border-border" />
+            <div key={i} className="h-32 w-full bg-secondary animate-pulse rounded-lg border border-border" />
           ))}
         </div>
       </div>
@@ -99,51 +100,51 @@ const AdminMessages = () => {
       />
 
       {error ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-red-500/5 rounded-lg border border-red-500/10 text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mb-4 opacity-50" />
-          <h3 className="text-lg font-black mb-2" style={{ fontFamily: 'DM Sans' }}>Error Loading Messages</h3>
+        <div className="flex flex-col items-center justify-center p-12 bg-danger-subtle rounded-lg border border-danger/20 text-center">
+          <AlertCircle className="w-12 h-12 text-danger-fg mb-4 opacity-50" />
+          <h3 className="text-lg font-black mb-2">Error Loading Messages</h3>
           <p className="text-muted-foreground text-sm">{errorMessage}</p>
         </div>
       ) : filteredMessages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-20 bg-card rounded-lg border border-dashed border-border shadow-sm text-center">
-          <Mail className="w-16 h-16 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-black mb-2 text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No messages found</h3>
-          <p className="text-muted-foreground text-sm">Try adjusting your search or check back later.</p>
-        </div>
+        <EmptyState
+          icon={Mail}
+          title="No messages found"
+          description="Try adjusting your search or check back later."
+        />
       ) : (
         <div className="grid gap-4">
           {filteredMessages.map((msg) => (
             <div
               key={msg.id}
-              className={`group relative bg-card border shadow-sm ${msg.read ? 'border-border' : 'border-accent/40 bg-accent/[0.03]'} rounded-lg p-6 transition-all duration-300 hover:border-accent/30 hover:bg-secondary`}
+              className={`group relative bg-card border shadow-sm ${msg.read ? 'border-border' : 'border-warning/40 bg-warning-subtle/40'} rounded-lg p-6 transition-all duration-300 hover:border-border-strong hover:bg-secondary`}
             >
               {!msg.read && (
-                <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-accent rounded-full animate-pulse shadow-[0_0_10px_hsl(var(--accent)/0.45)]" />
+                <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-warning rounded-full animate-pulse" />
               )}
 
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Meta info */}
                 <div className="md:w-64 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center border border-border group-hover:border-accent/30 transition-colors">
-                      <User className="w-5 h-5 text-accent/60" />
+                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center border border-border group-hover:border-border-strong transition-colors">
+                      <User className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className="font-black text-sm truncate text-foreground" style={{ fontFamily: 'DM Sans' }}>{msg.name}</span>
+                      <span className="font-black text-sm truncate text-foreground">{msg.name}</span>
                       <span className="text-[9px] text-muted-foreground uppercase tracking-wider truncate font-bold">{msg.email}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-black uppercase tracking-wider">
                     <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span>{formatDate(msg.created_at)}</span>
+                    <span className="tabular">{formatDate(msg.created_at)}</span>
                   </div>
 
                   <div className="flex gap-2 pt-2">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className={`h-8 rounded-lg flex-1 text-[9px] uppercase font-black tracking-wider transition-all ${msg.read ? 'hover:bg-accent/10 hover:text-accent' : 'bg-accent/20 text-accent hover:bg-accent/30'}`}
+                      className={`h-8 rounded-lg flex-1 text-[9px] uppercase font-black tracking-wider transition-all ${msg.read ? 'hover:bg-secondary hover:text-foreground' : 'bg-warning-subtle text-warning-fg hover:bg-warning-subtle/70'}`}
                       onClick={() => markReadMutation.mutate({ id: msg.id, read: !msg.read })}
                     >
                       {msg.read ? <Circle className="w-3 h-3 mr-1.5" /> : <CheckCircle className="w-3 h-3 mr-1.5" />}
@@ -152,7 +153,7 @@ const AdminMessages = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 rounded-lg flex-shrink-0 hover:bg-red-500/10 hover:text-red-500 transition-all"
+                      className="h-8 w-8 rounded-lg flex-shrink-0 hover:bg-danger-subtle hover:text-danger-fg transition-all"
                       onClick={() => {
                         if (confirm('Delete this message permanently?')) {
                           deleteMutation.mutate(msg.id);

@@ -4,10 +4,12 @@ import { CommonService } from '@/shared/services/common-service';
 import { Patent } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Plus, Search, Lightbulb, Edit2, Trash2, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const patentSchema = z.object({
@@ -34,14 +36,14 @@ const patentFields = [
   { name: 'link', label: 'Patent Link (Optional)', type: 'text' as const, placeholder: 'https://...' },
 ] as const;
 
-const STATUS_COLORS: Record<string, string> = {
-  issued: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  abandoned: 'bg-red-500/10 text-red-400 border-red-500/20',
+const STATUS_VARIANTS: Record<string, NonNullable<BadgeProps['variant']>> = {
+  issued: 'success',
+  pending: 'warning',
+  abandoned: 'danger',
 };
 
-const getStatusColor = (status: string) =>
-  STATUS_COLORS[status.toLowerCase()] ?? 'bg-secondary text-muted-foreground border-border';
+const getStatusVariant = (status: string): NonNullable<BadgeProps['variant']> =>
+  STATUS_VARIANTS[status.toLowerCase()] ?? 'neutral';
 
 const AdminPatents = () => {
   const [patents, setPatents] = useState<Patent[]>([]);
@@ -143,12 +145,12 @@ const AdminPatents = () => {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-black text-foreground text-sm" style={{ fontFamily: 'DM Sans' }}>
+                        <h3 className="font-black text-foreground text-sm">
                           {patent.title}
                         </h3>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${getStatusColor(patent.status)}`}>
+                        <Badge variant={getStatusVariant(patent.status)}>
                           {patent.status}
-                        </span>
+                        </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">
                         {patent.patentOffice}{patent.patentNumber ? ` · ${patent.patentNumber}` : ''}
@@ -171,7 +173,7 @@ const AdminPatents = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(patent)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(patent.id, patent.title)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(patent.id, patent.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -180,12 +182,11 @@ const AdminPatents = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No patents found</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add your patent filings and inventions.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Lightbulb}
+            title="No patents found"
+            description={searchQuery ? 'Try a different search.' : 'Add your patent filings and inventions.'}
+          />
         )}
       </div>
 

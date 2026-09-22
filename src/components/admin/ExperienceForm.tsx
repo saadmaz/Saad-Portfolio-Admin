@@ -237,7 +237,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="p-1 rounded hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors"
+              className="p-1 rounded hover:bg-danger/10 text-danger hover:text-danger/80 transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -317,7 +317,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[10px] uppercase font-bold text-muted-foreground">Skills</label>
-              <span className={`text-[10px] ${(role.skills ?? []).length > 5 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+              <span className={`text-[10px] ${(role.skills ?? []).length > 5 ? 'text-warning-fg' : 'text-muted-foreground'}`}>
                 {(role.skills ?? []).length}/20
                 {(role.skills ?? []).length > 5 && ' · LinkedIn recommends top 5'}
               </span>
@@ -326,7 +326,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
               {(role.skills ?? []).map((s, i) => (
                 <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[11px] font-medium">
                   {s}
-                  <button type="button" onClick={() => removeSkill(i)} className="hover:text-red-400 transition-colors">
+                  <button type="button" onClick={() => removeSkill(i)} className="hover:text-danger transition-colors">
                     <X className="w-2.5 h-2.5" />
                   </button>
                 </span>
@@ -375,7 +375,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
                         className="bg-white/5 border-white/10 text-xs h-7"
                       />
                     </div>
-                    <button type="button" onClick={() => removeMedia(mi)} className="mt-1 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors flex-shrink-0">
+                    <button type="button" onClick={() => removeMedia(mi)} className="mt-1 p-1 text-danger hover:text-danger/80 hover:bg-danger/10 rounded transition-colors flex-shrink-0">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -630,7 +630,7 @@ const ExperienceForm = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-muted-foreground">Company / Organization *</label>
                 <Input {...register('company_name')} placeholder="e.g. Google" className="bg-white/5 border-white/10" />
-                {errors.company_name && <p className="text-xs text-red-400">{errors.company_name.message}</p>}
+                {errors.company_name && <p className="text-xs text-danger">{errors.company_name.message}</p>}
               </div>
 
               {/* Employment Type */}
@@ -654,7 +654,7 @@ const ExperienceForm = () => {
                   placeholder="e.g. Colombo, Western Province, Sri Lanka"
                   className="bg-white/5 border-white/10"
                 />
-                {errors.location && <p className="text-xs text-red-400">{errors.location.message}</p>}
+                {errors.location && <p className="text-xs text-danger">{errors.location.message}</p>}
               </div>
 
               {/* Location Type — pill toggle */}
@@ -800,7 +800,7 @@ const ExperienceForm = () => {
             <CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">Skills across all roles (optional)</p>
-                <span className={`text-[10px] ${topSkills.length > 5 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                <span className={`text-[10px] ${topSkills.length > 5 ? 'text-warning-fg' : 'text-muted-foreground'}`}>
                   {topSkills.length}/20{topSkills.length > 5 && ' · LinkedIn recommends top 5'}
                 </span>
               </div>
@@ -852,7 +852,7 @@ const ExperienceForm = () => {
                       placeholder="Caption (optional)" className="bg-white/5 border-white/10 text-xs h-7" />
                   </div>
                   <button type="button" onClick={() => setTopMedia(m => m.filter((_, idx) => idx !== i))}
-                    className="mt-1 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors flex-shrink-0">
+                    className="mt-1 p-1 text-danger hover:text-danger/80 hover:bg-danger/10 rounded transition-colors flex-shrink-0">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -937,7 +937,7 @@ const ExperienceForm = () => {
             <CardHeader className="border-b border-white/5 pb-3">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-accent" />
-                Company Logo <span className="text-red-400 text-[10px] font-normal">(required)</span>
+                Company Logo <span className="text-danger text-[10px] font-normal">(required)</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">

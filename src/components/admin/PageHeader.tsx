@@ -23,13 +23,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ eyebrow, title, subtitle, backT
       <div className="flex items-start gap-3">
         {backTo && <BackButton to={backTo} className="mt-1 flex-shrink-0" />}
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-accent mb-2">
+          <p className="label mb-2">
             {eyebrow}
           </p>
-          <h1
-            className="text-3xl md:text-4xl font-black tracking-tight mb-1 text-foreground"
-            style={{ fontFamily: 'DM Sans' }}
-          >
+          <h1 className="text-display text-foreground mb-1">
             {title}
           </h1>
           {subtitle && (

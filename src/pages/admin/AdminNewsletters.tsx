@@ -4,10 +4,12 @@ import { CommonService } from '@/shared/services/common-service';
 import { Newsletter } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Mail, Edit2, Trash2, ExternalLink, Calendar } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const newsletterSchema = z.object({
@@ -147,12 +149,12 @@ const AdminNewsletters = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-black text-foreground text-base group-hover:text-accent transition-colors truncate" style={{ fontFamily: 'DM Sans' }}>
+                    <h3 className="font-black text-foreground text-base group-hover:text-accent transition-colors truncate">
                       {newsletter.title}
                     </h3>
-                    <span className="px-2.5 py-1 rounded-md bg-accent/20 text-accent text-[9px] font-black uppercase tracking-wider border border-accent/20 flex-shrink-0">
+                    <Badge variant="neutral" className="uppercase tracking-wider flex-shrink-0">
                       {newsletter.type}
-                    </span>
+                    </Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground font-medium">
                     <span className="flex items-center gap-1.5">
@@ -167,7 +169,7 @@ const AdminNewsletters = () => {
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(newsletter)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                     <Edit2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(newsletter.id, newsletter.title)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(newsletter.id, newsletter.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -175,14 +177,11 @@ const AdminNewsletters = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>
-              No newsletters found
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Publish your first newsletter to get started.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Mail}
+            title="No newsletters found"
+            description={searchQuery ? 'Try a different search.' : 'Publish your first newsletter to get started.'}
+          />
         )}
       </div>
 

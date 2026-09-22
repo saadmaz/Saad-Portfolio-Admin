@@ -20,6 +20,7 @@ import { Certificate } from '@/types';
 import { toast } from "sonner";
 import ImageUpload from './ImageUpload';
 import FormHeader from './FormHeader';
+import Field from './Field';
 
 const certSchema = z.object({
   title: z.string().min(5, 'Title is too short'),
@@ -132,32 +133,36 @@ const CertificateForm = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Certificate Title</label>
-                <Input {...register('title')} placeholder="e.g. Google Cloud Professional Engineer" className="bg-white/5 border-white/10" />
-                {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
-              </div>
+              <Field label="Certificate Title" error={errors.title?.message}>
+                {(bind) => (
+                  <Input {...register('title')} {...bind} placeholder="e.g. Google Cloud Professional Engineer" className="bg-white/5 border-white/10" />
+                )}
+              </Field>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Issuer / Authority</label>
-                  <Input {...register('issuer')} placeholder="e.g. Google" className="bg-white/5 border-white/10" />
-                  {errors.issuer && <p className="text-xs text-red-500">{errors.issuer.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Platform</label>
-                  <Input {...register('platform')} placeholder="e.g. Coursera" className="bg-white/5 border-white/10" />
-                </div>
+                <Field label="Issuer / Authority" error={errors.issuer?.message}>
+                  {(bind) => (
+                    <Input {...register('issuer')} {...bind} placeholder="e.g. Google" className="bg-white/5 border-white/10" />
+                  )}
+                </Field>
+                <Field label="Platform">
+                  {(bind) => (
+                    <Input {...register('platform')} {...bind} placeholder="e.g. Coursera" className="bg-white/5 border-white/10" />
+                  )}
+                </Field>
               </div>
 
-                <ImageUpload 
-                  value={watch('issuer_logo')} 
-                  onChange={(url) => setValue('issuer_logo', url)} 
+                <ImageUpload
+                  value={watch('issuer_logo')}
+                  onChange={(url) => setValue('issuer_logo', url)}
                   label="Issuer Logo (Optional)"
                   className="mb-4"
                 />
-                <label className="text-xs font-medium text-muted-foreground">Brief Description</label>
-                <Textarea {...register('description')} className="bg-white/5 border-white/10 min-h-[100px]" />
+                <Field label="Brief Description">
+                  {(bind) => (
+                    <Textarea {...register('description')} {...bind} className="bg-white/5 border-white/10 min-h-[100px]" />
+                  )}
+                </Field>
             </CardContent>
           </Card>
 
@@ -169,15 +174,16 @@ const CertificateForm = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Verifiable Credential URL</label>
-                <Input {...register('credential_url')} placeholder="https://..." className="bg-white/5 border-white/10" />
-                {errors.credential_url && <p className="text-xs text-red-500">{errors.credential_url.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">PDF Document Link (Optional)</label>
-                <Input {...register('pdf_document_link')} placeholder="https://..." className="bg-white/5 border-white/10" />
-              </div>
+              <Field label="Verifiable Credential URL" error={errors.credential_url?.message}>
+                {(bind) => (
+                  <Input {...register('credential_url')} {...bind} placeholder="https://..." className="bg-white/5 border-white/10" />
+                )}
+              </Field>
+              <Field label="PDF Document Link (Optional)">
+                {(bind) => (
+                  <Input {...register('pdf_document_link')} {...bind} placeholder="https://..." className="bg-white/5 border-white/10" />
+                )}
+              </Field>
             </CardContent>
           </Card>
         </div>
@@ -191,10 +197,11 @@ const CertificateForm = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-bold text-muted-foreground">Issue Date</label>
-                <Input {...register('issue_date')} placeholder="e.g. Jan 2024" className="bg-white/5 border-white/10 h-8" />
-              </div>
+              <Field label="Issue Date">
+                {(bind) => (
+                  <Input {...register('issue_date')} {...bind} placeholder="e.g. Jan 2024" className="bg-white/5 border-white/10 h-8" />
+                )}
+              </Field>
             </CardContent>
           </Card>
 
@@ -206,14 +213,16 @@ const CertificateForm = () => {
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-               <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Category</label>
-                  <Input {...register('category')} className="bg-white/5 border-white/10 h-8 text-sm" />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold text-muted-foreground">Type</label>
-                  <Input {...register('type')} className="bg-white/5 border-white/10 h-8 text-sm" />
-               </div>
+               <Field label="Category">
+                  {(bind) => (
+                    <Input {...register('category')} {...bind} className="bg-white/5 border-white/10 h-8 text-sm" />
+                  )}
+               </Field>
+               <Field label="Type">
+                  {(bind) => (
+                    <Input {...register('type')} {...bind} className="bg-white/5 border-white/10 h-8 text-sm" />
+                  )}
+               </Field>
                <div className="flex items-center justify-between pt-2">
                   <span className="text-xs font-medium">Featured Achievement</span>
                   <input type="checkbox" {...register('is_featured')} className="w-4 h-4 accent-accent" />

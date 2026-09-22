@@ -8,6 +8,7 @@ import { Plus, Search, Building2, Edit2, Trash2, ExternalLink, Calendar } from '
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const organizationSchema = z.object({
@@ -140,7 +141,7 @@ const AdminOrganizations = () => {
                         </div>
                       )}
                       <div className="min-w-0">
-                        <h3 className="font-black text-foreground text-sm" style={{ fontFamily: 'DM Sans' }}>{org.name}</h3>
+                        <h3 className="font-black text-foreground text-sm">{org.name}</h3>
                         {org.position && <p className="text-xs text-accent font-medium">{org.position}</p>}
                         {(org.startDate || org.endDate) && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -159,7 +160,7 @@ const AdminOrganizations = () => {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(org)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(org.id, org.name)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(org.id, org.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -169,12 +170,11 @@ const AdminOrganizations = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No organizations found</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add professional associations and memberships.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Building2}
+            title="No organizations found"
+            description={searchQuery ? 'Try a different search.' : 'Add professional associations and memberships.'}
+          />
         )}
       </div>
 

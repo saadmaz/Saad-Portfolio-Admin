@@ -33,14 +33,11 @@ const FormHeader: React.FC<FormHeaderProps> = ({ backTo, title, subtitle, action
         <ArrowLeft className="w-4 h-4" />
       </Button>
       <div>
-        <h1
-          className="text-2xl font-black tracking-tight text-foreground"
-          style={{ fontFamily: 'DM Sans' }}
-        >
+        <h1 className="text-display text-foreground">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-xs text-muted-foreground font-medium mt-0.5">{subtitle}</p>
+          <p className="text-body-sm text-muted-foreground font-medium mt-0.5">{subtitle}</p>
         )}
       </div>
       {actions && (

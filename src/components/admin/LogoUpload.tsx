@@ -83,7 +83,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
 
       <div className="flex flex-col gap-1.5">
         <p className="text-xs font-bold text-white/70">
-          {label} {required && <span className="text-red-400">*</span>}
+          {label} {required && <span className="text-danger">*</span>}
         </p>
         <p className="text-[10px] text-white/60">JPG, PNG, WebP · Max 5 MB</p>
         <div className="flex gap-2">
@@ -102,7 +102,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              className="h-7 text-[10px] text-danger hover:text-danger-fg hover:bg-danger-subtle"
               onClick={() => onChange('')}
               disabled={isUploading}
             >

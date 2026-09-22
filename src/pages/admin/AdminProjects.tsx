@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -192,7 +194,7 @@ const AdminProjects = () => {
           ))
         ) : filtered.length > 0 ? (
           filtered.map((project) => (
-            <Card key={project.id} className="bg-card border-border hover:bg-secondary hover:border-accent/30 transition-all group rounded-lg overflow-hidden shadow-sm">
+            <Card key={project.id} interactive className="overflow-hidden group">
               <CardContent className="p-0">
                 <div className="flex items-center p-4 gap-4">
                   <div className="w-16 h-16 rounded-lg overflow-hidden border border-border bg-secondary flex-shrink-0 shadow-sm">
@@ -208,16 +210,16 @@ const AdminProjects = () => {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-black text-foreground text-sm truncate group-hover:text-accent transition-colors" style={{ fontFamily: 'DM Sans' }}>
+                      <h3 className="font-black text-foreground text-sm truncate group-hover:text-accent transition-colors">
                         {project.title}
                       </h3>
                       {project.featured && (
-                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent/15 text-accent text-[8px] font-black uppercase tracking-wider border border-accent/20 flex-shrink-0">
+                        <Badge variant="neutral" className="gap-1 flex-shrink-0">
                           <Star className="w-2.5 h-2.5 fill-current" /> Featured
-                        </span>
+                        </Badge>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground truncate mb-2.5 leading-relaxed">{project.tagline}</p>
+                    <p className="text-caption text-muted-foreground truncate mb-2.5">{project.tagline}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {(project.techStack || []).slice(0, 4).map(tech => (
                         <span key={tech} className="text-[9px] px-2 py-0.5 rounded-md bg-secondary text-muted-foreground border border-border font-medium">
@@ -257,7 +259,7 @@ const AdminProjects = () => {
                           <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="hover:bg-red-500/10 hover:text-red-500 cursor-pointer text-red-400 rounded-md m-1 py-2 px-3 text-xs font-bold"
+                          className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-md m-1 py-2 px-3 text-xs font-bold"
                           onClick={() => setDeleteDialog({ open: true, id: project.id, title: project.title })}
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
@@ -270,24 +272,23 @@ const AdminProjects = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-            <div className="mx-auto w-14 h-14 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border">
-              <Plus className="w-7 h-7 text-muted-foreground" />
-            </div>
-            <h3 className="text-base font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>
-              No projects found
-            </h3>
-            <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider font-medium">
-              {searchQuery || filterStatus !== 'all' ? 'Try adjusting your filters.' : 'Add your first project to get started.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Plus}
+            title="No projects found"
+            description={searchQuery || filterStatus !== 'all' ? 'Try adjusting your filters.' : 'Add your first project to get started.'}
+            action={
+              !searchQuery && filterStatus === 'all'
+                ? { label: 'Add Project', onClick: () => navigate('/projects/new') }
+                : undefined
+            }
+          />
         )}
       </div>
 
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !isDeleting && setDeleteDialog(d => ({ ...d, open }))}>
         <AlertDialogContent className="bg-card border-border text-foreground rounded-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-black text-foreground" style={{ fontFamily: 'DM Sans' }}>
+            <AlertDialogTitle className="text-lg font-black text-foreground">
               Delete Project?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-sm">
@@ -304,7 +305,7 @@ const AdminProjects = () => {
             <AlertDialogAction
               disabled={isDeleting}
               onClick={handleDeleteConfirm}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-lg font-black border-0 shadow-lg shadow-red-500/20"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-black border-0"
             >
               {isDeleting ? 'Deleting…' : 'Delete'}
             </AlertDialogAction>

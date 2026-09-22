@@ -155,7 +155,7 @@ const AdminEntityDialog = ({
                         />
                       )}
                     </FormControl>
-                    <FormMessage className="text-red-500" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -166,7 +166,7 @@ const AdminEntityDialog = ({
                   type="button"
                   variant="ghost"
                   onClick={onDelete}
-                  className="w-full text-red-400 hover:bg-red-500/10 hover:text-red-500 border border-red-500/20 justify-center"
+                  className="w-full text-danger hover:bg-danger-subtle hover:text-danger-fg border border-danger/20 justify-center"
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Delete Entry
                 </Button>

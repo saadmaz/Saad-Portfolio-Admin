@@ -8,6 +8,7 @@ import { Plus, Search, Award as AwardIcon, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const awardSchema = z.object({
@@ -102,7 +103,7 @@ const AdminAwards = () => {
         subtitle="Manage your honors, awards, and certifications."
         backTo="/dashboard"
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
+          <Button onClick={handleAdd} variant="primary" className="font-black h-11 px-6 rounded-lg flex-shrink-0">
             <Plus className="w-4 h-4 mr-2" /> Add Award
           </Button>
         }
@@ -128,7 +129,7 @@ const AdminAwards = () => {
           ))
         ) : filteredAwards.length > 0 ? (
           filteredAwards.map((award) => (
-            <Card key={award.id} className="bg-card border-border hover:border-accent/30 hover:bg-secondary transition-all group rounded-lg shadow-sm">
+            <Card key={award.id} interactive className="bg-card border-border group rounded-lg shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -136,7 +137,7 @@ const AdminAwards = () => {
                       <AwardIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-black text-foreground text-sm" style={{ fontFamily: 'DM Sans' }}>
+                      <h3 className="font-black text-foreground text-sm">
                         {award.title}
                       </h3>
                       <p className="text-xs text-muted-foreground font-medium">{award.issuer} • {award.date}</p>
@@ -146,7 +147,7 @@ const AdminAwards = () => {
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(award)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(award.id, award.title)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(award.id, award.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger rounded-lg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -155,14 +156,12 @@ const AdminAwards = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card p-12 text-center shadow-sm">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>
-              No awards found
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add your achievements to get started.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={AwardIcon}
+            title={searchQuery ? 'No awards found' : 'No awards yet'}
+            description={searchQuery ? 'Try a different search.' : 'Add your achievements to get started.'}
+            action={!searchQuery ? { label: 'Add Award', onClick: handleAdd } : undefined}
+          />
         )}
       </div>
 

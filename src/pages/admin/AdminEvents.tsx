@@ -13,6 +13,7 @@ import {
 import { Plus, Search, Calendar, MapPin, Edit2, Trash2, Globe, Loader2, Images, X } from 'lucide-react';
 import { toast } from "sonner";
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import MultiImageUpload from '@/components/admin/MultiImageUpload';
 import {
   Select,
@@ -99,7 +100,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[680px] bg-card border-border text-foreground max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black text-foreground" style={{ fontFamily: 'DM Sans' }}>{title}</DialogTitle>
+          <DialogTitle className="text-xl font-black text-foreground">{title}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 py-2">
@@ -107,7 +108,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
           {/* ── IMAGES ── */}
           <div className="space-y-1.5">
             <label className={`${lbl} flex items-center gap-1.5`}>
-              <Images className="w-3 h-3" /> Event Photos (16:9) <span className="text-red-400">*</span>
+              <Images className="w-3 h-3" /> Event Photos (16:9) <span className="text-danger">*</span>
             </label>
             <MultiImageUpload
               value={images}
@@ -116,7 +117,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
               folder="events"
             />
             {errors.images && (
-              <p className="text-[11px] text-red-400 font-medium">{errors.images.message as string}</p>
+              <p className="text-caption text-danger font-medium">{errors.images.message as string}</p>
             )}
           </div>
 
@@ -124,7 +125,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
           <div className="space-y-1">
             <label className={lbl}>Event Title *</label>
             <input {...register('title')} placeholder="e.g. Google I/O 2024" className={inp} />
-            {errors.title && <p className="text-[11px] text-red-400">{errors.title.message}</p>}
+            {errors.title && <p className="text-caption text-danger">{errors.title.message}</p>}
           </div>
 
           {/* ── ROLE + TYPE ── */}
@@ -139,7 +140,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
                   {ROLE_OPTIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {errors.role && <p className="text-[11px] text-red-400">{errors.role.message}</p>}
+              {errors.role && <p className="text-caption text-danger">{errors.role.message}</p>}
             </div>
             <div className="space-y-1">
               <label className={lbl}>Event Type * <span className="text-white/60 normal-case font-normal">(category)</span></label>
@@ -151,7 +152,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
                   {TYPE_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {errors.type && <p className="text-[11px] text-red-400">{errors.type.message}</p>}
+              {errors.type && <p className="text-caption text-danger">{errors.type.message}</p>}
             </div>
           </div>
 
@@ -160,7 +161,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
             <div className="space-y-1">
               <label className={lbl}>Organizer *</label>
               <input {...register('organizer')} placeholder="e.g. Google" className={inp} />
-              {errors.organizer && <p className="text-[11px] text-red-400">{errors.organizer.message}</p>}
+              {errors.organizer && <p className="text-caption text-danger">{errors.organizer.message}</p>}
             </div>
             <div className="space-y-1">
               <label className={lbl}>Attendees <span className="text-white/60 normal-case font-normal">(optional)</span></label>
@@ -173,12 +174,12 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
             <div className="space-y-1">
               <label className={lbl}>Date *</label>
               <input {...register('date')} placeholder="e.g. May 14, 2024" className={inp} />
-              {errors.date && <p className="text-[11px] text-red-400">{errors.date.message}</p>}
+              {errors.date && <p className="text-caption text-danger">{errors.date.message}</p>}
             </div>
             <div className="space-y-1">
               <label className={lbl}>Location *</label>
               <input {...register('location')} placeholder="e.g. Mountain View, CA or Online" className={inp} />
-              {errors.location && <p className="text-[11px] text-red-400">{errors.location.message}</p>}
+              {errors.location && <p className="text-caption text-danger">{errors.location.message}</p>}
             </div>
           </div>
 
@@ -191,7 +192,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
               placeholder="Full description shown on the event detail page…"
               className={`${inp} resize-none`}
             />
-            {errors.description && <p className="text-[11px] text-red-400">{errors.description.message}</p>}
+            {errors.description && <p className="text-caption text-danger">{errors.description.message}</p>}
           </div>
 
           {/* ── HIGHLIGHTS ── */}
@@ -203,7 +204,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
                   <li key={i} className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground">
                     <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
                     <span className="flex-1">{h}</span>
-                    <button type="button" onClick={() => removeHighlight(i)} className="text-muted-foreground hover:text-red-400 transition-colors">
+                    <button type="button" onClick={() => removeHighlight(i)} className="text-muted-foreground hover:text-danger transition-colors">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </li>
@@ -232,14 +233,14 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
           <div className="space-y-1">
             <label className={lbl}>Event Link <span className="text-white/60 normal-case font-normal">(optional)</span></label>
             <input {...register('link')} placeholder="https://..." className={inp} />
-            {errors.link && <p className="text-[11px] text-red-400">{errors.link.message}</p>}
+            {errors.link && <p className="text-caption text-danger">{errors.link.message}</p>}
           </div>
 
           <DialogFooter className="pt-2">
             <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-secondary text-muted-foreground">
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black px-8">
+            <Button type="submit" variant="primary" disabled={isSubmitting} className="font-black px-8">
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Save Event
             </Button>
@@ -340,7 +341,7 @@ const AdminEvents = () => {
         subtitle="Manage past and upcoming events, workshops, and speaking engagements."
         backTo="/dashboard"
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
+          <Button onClick={handleAdd} variant="primary" className="font-black h-11 px-6 rounded-lg flex-shrink-0">
             <Plus className="w-4 h-4 mr-2" /> Add Event
           </Button>
         }
@@ -370,7 +371,7 @@ const AdminEvents = () => {
           filteredEvents.map((event) => {
             const imgCount = (event.images?.length ?? 0) || (event.image ? 1 : 0);
             return (
-              <Card key={event.id} className="bg-card border-border shadow-sm hover:border-accent/30 hover:bg-secondary transition-all group rounded-lg overflow-hidden">
+              <Card key={event.id} interactive className="bg-card border-border shadow-sm group rounded-lg overflow-hidden">
                 <CardContent className="p-0">
                   <div className="flex items-stretch">
                     {/* Thumbnail */}
@@ -387,7 +388,7 @@ const AdminEvents = () => {
                     <div className="flex-1 p-5 flex items-center gap-5 min-w-0">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-black text-foreground text-base group-hover:text-accent transition-colors truncate" style={{ fontFamily: 'DM Sans' }}>
+                          <h3 className="font-black text-foreground text-base group-hover:text-accent transition-colors truncate">
                             {event.title}
                           </h3>
                           {event.role && (
@@ -418,7 +419,7 @@ const AdminEvents = () => {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id, event.title)} className="h-9 w-9 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-lg">
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id, event.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger rounded-lg">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -429,12 +430,12 @@ const AdminEvents = () => {
             );
           })
         ) : (
-          <div className="rounded-lg border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No events found</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {searchQuery ? 'Try a different search.' : 'Add your first event to get started.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Calendar}
+            title={searchQuery ? 'No events found' : 'No events yet'}
+            description={searchQuery ? 'Try a different search.' : 'Add your first event to get started.'}
+            action={!searchQuery ? { label: 'Add Event', onClick: handleAdd } : undefined}
+          />
         )}
       </div>
 

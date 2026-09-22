@@ -30,7 +30,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
 }) => (
   <AlertDialog open={open} onOpenChange={(o) => !isLoading && onOpenChange(o)}>
-    <AlertDialogContent className="bg-card border-border text-foreground rounded-2xl shadow-2xl">
+    <AlertDialogContent className="bg-card border-border text-foreground rounded-xl shadow-2xl">
       <AlertDialogHeader>
         <AlertDialogTitle className="text-lg font-black text-foreground">{title}</AlertDialogTitle>
         <AlertDialogDescription className="text-muted-foreground text-sm">{description}</AlertDialogDescription>
@@ -45,7 +45,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <AlertDialogAction
           disabled={isLoading}
           onClick={onConfirm}
-          className="bg-red-500 hover:bg-red-600 text-white rounded-xl font-black border-0 shadow-lg shadow-red-500/20"
+          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl font-black border-0"
         >
           {isLoading ? 'Deleting…' : confirmLabel}
         </AlertDialogAction>

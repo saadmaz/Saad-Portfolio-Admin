@@ -4,9 +4,12 @@ import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
 import { Education } from '@/types';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Plus, GraduationCap, Edit2, Calendar, Copy, MoreVertical, Star } from 'lucide-react';
 import { toast } from "sonner";
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -134,14 +137,12 @@ const AdminEducation = () => {
             const isCurrent = edu.is_current ?? edu.isCurrent ?? false;
 
             return (
-              <div
+              <Card
                 key={edu.id}
-                className="group relative bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:border-accent/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left h-[240px] flex flex-col animate-in fade-in slide-in-from-bottom-2"
+                interactive
+                className="group relative overflow-hidden text-left h-[240px] flex flex-col animate-in fade-in slide-in-from-bottom-2"
                 style={{ animationDelay: `${index * 50}ms`, animationDuration: '300ms', animationFillMode: 'both' }}
               >
-                {/* Hover tint */}
-                <div className="absolute inset-0 bg-accent/[0.03] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
-
                 {/* Actions dropdown */}
                 <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
                   <DropdownMenu>
@@ -159,7 +160,7 @@ const AdminEducation = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setDeleteTarget({ id: edu.id, label: getSchoolName(edu) })}
-                        className="cursor-pointer text-red-400 hover:text-red-300 focus:text-red-300"
+                        className="cursor-pointer text-danger-fg hover:text-danger-fg/80 focus:text-danger-fg/80"
                       >
                         <span className="w-3.5 h-3.5 mr-2 inline-flex items-center justify-center">✕</span> Delete
                       </DropdownMenuItem>
@@ -170,14 +171,12 @@ const AdminEducation = () => {
                 {/* Badges */}
                 <div className="absolute top-3 left-3 z-20 flex gap-1.5">
                   {edu.is_featured && (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-0.5">
+                    <Badge variant="neutral" className="gap-0.5">
                       <Star className="w-2.5 h-2.5" /> Featured
-                    </span>
+                    </Badge>
                   )}
                   {edu.is_published === false && (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-secondary text-muted-foreground border border-border">
-                      Draft
-                    </span>
+                    <Badge variant="warning">Draft</Badge>
                   )}
                 </div>
 
@@ -194,8 +193,8 @@ const AdminEducation = () => {
                       className="h-12 w-12 object-contain"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-                      <GraduationCap className="w-6 h-6 text-purple-400" />
+                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border flex items-center justify-center">
+                      <GraduationCap className="w-6 h-6 text-muted-foreground" />
                     </div>
                   )}
                 </button>
@@ -208,7 +207,6 @@ const AdminEducation = () => {
                 >
                   <h3
                     className="font-black text-foreground text-sm line-clamp-1 group-hover:text-accent transition-colors leading-snug"
-                    style={{ fontFamily: 'DM Sans' }}
                   >
                     {edu.degree ? `${edu.degree}${edu.field_of_study ? ` · ${edu.field_of_study}` : ''}` : getSchoolName(edu)}
                   </h3>
@@ -218,7 +216,7 @@ const AdminEducation = () => {
                     <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-accent/70" />
                       {getDisplayStartDate(edu)} – {endDate}
-                      {expectedGrad && <span className="ml-1 text-amber-400/80">(Expected)</span>}
+                      {expectedGrad && <span className="ml-1 text-warning-fg/80">(Expected)</span>}
                     </span>
                     {edu.grade && edu.show_grade_publicly !== false && (
                       <span className="text-[10px] font-mono bg-secondary px-1.5 py-0.5 rounded border border-border text-foreground truncate max-w-[80px]">
@@ -227,22 +225,17 @@ const AdminEducation = () => {
                     )}
                   </div>
                 </button>
-              </div>
+              </Card>
             );
           })
         ) : (
-          <div className="col-span-full rounded-xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto mb-4">
-              <GraduationCap className="w-8 h-8 text-purple-400" />
-            </div>
-            <h3 className="text-base font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No education history</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">Add your degrees and institutions to complete your profile.</p>
-            <Button
-              onClick={() => navigate('/education/new')}
-              className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground font-black h-10 px-5 rounded-lg"
-            >
-              <Plus className="w-4 h-4 mr-1.5" /> Add Education
-            </Button>
+          <div className="col-span-full">
+            <EmptyState
+              icon={GraduationCap}
+              title="No education history"
+              description="Add your degrees and institutions to complete your profile."
+              action={{ label: 'Add Education', onClick: () => navigate('/education/new') }}
+            />
           </div>
         )}
       </div>

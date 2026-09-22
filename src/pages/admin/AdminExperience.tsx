@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 
 type FilterTab = 'all' | 'current' | 'past' | 'featured';
 
@@ -177,7 +179,7 @@ const AdminExperience = () => {
       <div className="grid gap-4">
         {isLoading ? (
           [1, 2, 3].map(i => (
-            <div key={i} className="h-28 bg-secondary border border-border rounded-2xl animate-pulse" />
+            <div key={i} className="h-28 bg-secondary border border-border rounded-xl animate-pulse" />
           ))
         ) : filtered.length > 0 ? (
           filtered.map((exp) => {
@@ -191,11 +193,12 @@ const AdminExperience = () => {
             return (
               <Card
                 key={exp.id}
-                className="bg-card border-border hover:bg-secondary hover:border-accent/30 transition-all group overflow-hidden rounded-2xl shadow-sm"
+                interactive
+                className="overflow-hidden rounded-xl group"
               >
                 <CardContent className="p-5 flex items-center gap-5">
                   {/* Logo or fallback icon */}
-                  <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+                  <div className="w-14 h-14 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                     {logo ? (
                       <img src={logo} alt={name} className="w-10 h-10 object-contain" />
                     ) : (
@@ -210,20 +213,18 @@ const AdminExperience = () => {
                         {name}
                       </h3>
                       {isCurrent && (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 flex-shrink-0">
-                          Current
-                        </span>
+                        <Badge variant="success" className="flex-shrink-0">Current</Badge>
                       )}
                       {exp.is_featured && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest border border-amber-500/20 flex-shrink-0 flex items-center gap-1">
+                        <Badge variant="neutral" className="gap-1 flex-shrink-0">
                           <Star className="w-2.5 h-2.5" /> Featured
-                        </span>
+                        </Badge>
                       )}
                     </div>
                     <p className="text-muted-foreground font-semibold text-sm mb-2">
                       {firstRoleTitle}
                       {roleCount > 1 && (
-                        <span className="ml-2 text-[11px] text-muted-foreground font-normal">
+                        <span className="ml-2 text-caption text-muted-foreground font-normal">
                           +{roleCount - 1} more role{roleCount > 2 ? 's' : ''}
                         </span>
                       )}
@@ -263,7 +264,7 @@ const AdminExperience = () => {
                         <Copy className="w-4 h-4 mr-2" /> Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="hover:bg-red-500/10 hover:text-red-500 cursor-pointer text-red-400 rounded-lg m-1 py-2 font-semibold"
+                        className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-lg m-1 py-2 font-semibold"
                         onClick={() => handleDelete(exp.id, getCompanyName(exp))}
                       >
                         <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -275,22 +276,15 @@ const AdminExperience = () => {
             );
           })
         ) : (
-          <div className="p-12 text-center border-2 border-dashed border-border rounded-2xl bg-card shadow-sm">
-            <Building2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground font-medium">
-              {search || filter !== 'all' ? 'No results match your search.' : 'No experience entries yet.'}
-            </p>
-            {!search && filter === 'all' && (
-              <Button
-                onClick={() => navigate('/experience/new')}
-                variant="outline"
-                size="sm"
-                className="mt-4 border-accent/30 text-accent"
-              >
-                <Plus className="w-4 h-4 mr-1" /> Add your first experience
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            icon={Building2}
+            title={search || filter !== 'all' ? 'No results match your search.' : 'No experience entries yet.'}
+            action={
+              !search && filter === 'all'
+                ? { label: 'Add your first experience', onClick: () => navigate('/experience/new') }
+                : undefined
+            }
+          />
         )}
       </div>
 

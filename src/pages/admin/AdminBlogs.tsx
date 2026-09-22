@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -140,9 +141,9 @@ const AdminBlogs = () => {
         title="Blog Posts"
         subtitle={
           <span className="text-xs font-bold uppercase tracking-widest">
-            <span className="text-emerald-400 font-black">{publishedCount} Published</span>
+            <span className="text-success-fg font-black">{publishedCount} Published</span>
             <span className="mx-2 text-muted-foreground">·</span>
-            <span className="text-amber-400 font-black">{draftCount} Draft{draftCount !== 1 ? 's' : ''}</span>
+            <span className="text-warning-fg font-black">{draftCount} Draft{draftCount !== 1 ? 's' : ''}</span>
           </span>
         }
         backTo="/dashboard"
@@ -221,7 +222,7 @@ const AdminBlogs = () => {
           ))
         ) : filtered.length > 0 ? (
           filtered.map((post) => (
-            <Card key={post.id} className="bg-card border-border hover:bg-secondary hover:border-accent/30 transition-all group overflow-hidden rounded-lg shadow-sm">
+            <Card key={post.id} interactive className="overflow-hidden group">
               <CardContent className="p-0">
                 <div className="flex items-center p-4 gap-4">
                   <div className="w-16 h-16 rounded-lg overflow-hidden border border-border bg-secondary flex-shrink-0 shadow-sm">
@@ -240,7 +241,7 @@ const AdminBlogs = () => {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-black text-foreground text-sm truncate group-hover:text-accent transition-colors" style={{ fontFamily: 'DM Sans' }}>
+                      <h3 className="font-black text-foreground text-sm truncate group-hover:text-accent transition-colors">
                         {post.title}
                       </h3>
                       <button
@@ -248,11 +249,11 @@ const AdminBlogs = () => {
                         disabled={togglingId === post.id}
                         title={post.published ? 'Click to unpublish' : 'Click to publish'}
                         className={cn(
-                          "flex items-center gap-1 px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-wider border flex-shrink-0 transition-all hover:scale-105 active:scale-95",
+                          "flex items-center gap-1 px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-wider border border-transparent flex-shrink-0 transition-all hover:scale-105 active:scale-95",
                           togglingId === post.id ? "opacity-50 cursor-not-allowed" :
                             post.published
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                              : "bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
+                              ? "bg-success-subtle text-success-fg hover:bg-success-subtle/80"
+                              : "bg-warning-subtle text-warning-fg hover:bg-warning-subtle/80"
                         )}
                       >
                         {post.published
@@ -266,7 +267,7 @@ const AdminBlogs = () => {
                       <span>·</span>
                       <UserIcon className="w-3 h-3 text-accent/50 flex-shrink-0" />{post.author}
                     </div>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1 max-w-lg leading-relaxed">{post.excerpt}</p>
+                    <p className="text-caption text-muted-foreground line-clamp-1 max-w-lg">{post.excerpt}</p>
                   </div>
 
                   <div className="flex items-center gap-1.5 ml-2">
@@ -303,7 +304,7 @@ const AdminBlogs = () => {
                           }
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="hover:bg-red-500/10 hover:text-red-500 cursor-pointer text-red-400 rounded-md m-1 py-2 px-3 text-xs font-bold"
+                          className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-md m-1 py-2 px-3 text-xs font-bold"
                           onClick={() => setDeleteDialog({ open: true, id: post.id, title: post.title })}
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
@@ -316,22 +317,23 @@ const AdminBlogs = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-lg border border-border bg-card py-16 text-center shadow-sm">
-            <div className="mx-auto w-14 h-14 rounded-lg bg-secondary flex items-center justify-center mb-4 border border-border">
-              <FileText className="w-7 h-7 text-muted-foreground" />
-            </div>
-            <h3 className="text-base font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No posts found</h3>
-            <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider font-medium">
-              {searchQuery || filterStatus !== 'all' ? 'Try adjusting your filters.' : 'Write your first blog post to get started.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No posts found"
+            description={searchQuery || filterStatus !== 'all' ? 'Try adjusting your filters.' : 'Write your first blog post to get started.'}
+            action={
+              !searchQuery && filterStatus === 'all'
+                ? { label: 'New Post', onClick: () => navigate('/blogs/new') }
+                : undefined
+            }
+          />
         )}
       </div>
 
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !isDeleting && setDeleteDialog(d => ({ ...d, open }))}>
         <AlertDialogContent className="bg-card border-border text-foreground rounded-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-black text-foreground" style={{ fontFamily: 'DM Sans' }}>
+            <AlertDialogTitle className="text-lg font-black text-foreground">
               Delete Post?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground text-sm">
@@ -348,7 +350,7 @@ const AdminBlogs = () => {
             <AlertDialogAction
               disabled={isDeleting}
               onClick={handleDeleteConfirm}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-lg font-black border-0 shadow-lg shadow-red-500/20"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-black border-0"
             >
               {isDeleting ? 'Deleting…' : 'Delete'}
             </AlertDialogAction>

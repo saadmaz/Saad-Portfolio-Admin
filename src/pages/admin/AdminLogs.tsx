@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { CommonService } from '@/shared/services/common-service';
 import { ActivityLog } from '@/types';
 import { Card, CardContent } from "@/components/ui/card";
-import { History, Shield, Info, AlertCircle, Clock, Search, Filter } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { History, Shield, Clock, Search } from 'lucide-react';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import { toast } from "sonner";
 import { format } from 'date-fns';
 import { Input } from "@/components/ui/input";
@@ -43,14 +45,26 @@ const AdminLogs = () => {
     }
   };
 
-  const getActionColor = (action: string) => {
+  type ActionVariant = 'success' | 'info' | 'danger' | 'warning' | 'neutral';
+
+  const getActionVariant = (action: string): ActionVariant => {
     switch (action.toUpperCase()) {
-      case 'CREATE': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-      case 'UPDATE': return 'text-sky-400 bg-sky-500/10 border-sky-500/20';
-      case 'DELETE': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-      case 'LOGIN':  return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-      default:       return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+      case 'CREATE': return 'success';
+      case 'UPDATE': return 'info';
+      case 'DELETE': return 'danger';
+      case 'LOGIN':  return 'warning';
+      default:       return 'neutral';
     }
+  };
+
+  // Icon-avatar treatment for each action, sharing the same semantic mapping
+  // as the Badge variant below instead of a separate hand-rolled color map.
+  const actionIconClasses: Record<ActionVariant, string> = {
+    success: 'text-success-fg bg-success-subtle border-success/20',
+    info: 'text-info-fg bg-info-subtle border-info/20',
+    danger: 'text-danger-fg bg-danger-subtle border-danger/20',
+    warning: 'text-warning-fg bg-warning-subtle border-warning/20',
+    neutral: 'text-muted-foreground bg-secondary border-border',
   };
 
   const getTimestamp = (timestamp: ActivityLog['timestamp']) => {
@@ -92,16 +106,16 @@ const AdminLogs = () => {
             <Card key={log.id} className="bg-card border border-border shadow-sm hover:border-accent/30 hover:bg-secondary transition-all overflow-hidden group rounded-xl">
               <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-4 flex-1">
-                  <div className={`p-2.5 rounded-lg border flex-shrink-0 transition-transform group-hover:scale-110 duration-300 ${getActionColor(log.action)}`}>
+                  <div className={`p-2.5 rounded-lg border flex-shrink-0 transition-transform group-hover:scale-110 duration-300 ${actionIconClasses[getActionVariant(log.action)]}`}>
                     <Shield className="w-5 h-5" />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
                       <span className="font-semibold text-foreground text-sm truncate">{log.adminEmail}</span>
-                      <span className={`text-[9px] px-2.5 py-1 rounded-full border font-black uppercase tracking-wider ${getActionColor(log.action)}`}>
+                      <Badge variant={getActionVariant(log.action)} className="text-[9px] py-1 font-black uppercase tracking-wider">
                         {log.action}
-                      </span>
+                      </Badge>
                       <span className="text-[9px] text-accent font-black px-2.5 py-1 bg-accent/10 border border-accent/20 rounded-full uppercase tracking-wider">
                         {log.entityType}
                       </span>
@@ -114,12 +128,12 @@ const AdminLogs = () => {
                 </div>
 
                 <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 border-t sm:border-t-0 border-border pt-3 sm:pt-0 text-right">
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-wider tabular">
                     <Clock className="w-3 h-3 flex-shrink-0" />
                     <span className="hidden sm:inline">{getTimestamp(log.timestamp)}</span>
                     <span className="sm:hidden">{getTimestamp(log.timestamp).split(',')[0]}</span>
                   </div>
-                  <span className="text-[9px] text-muted-foreground font-mono bg-secondary px-2 py-1 rounded border border-border">
+                  <span className="text-[9px] text-muted-foreground font-mono bg-secondary px-2 py-1 rounded border border-border tabular">
                     {log.entityId ? log.entityId.slice(0, 8) : 'N/A'}
                   </span>
                 </div>
@@ -127,17 +141,12 @@ const AdminLogs = () => {
             </Card>
           ))
         ) : (
-          <div className="rounded-xl border border-dashed border-border bg-card p-16 text-center shadow-sm">
-            <div className="mx-auto w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mb-5 border border-border">
-              <History className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-black text-muted-foreground mb-2" style={{ fontFamily: 'DM Sans' }}>
-              No logs found
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              {searchQuery ? `No results for "${searchQuery}". Try a different search.` : "Administrative actions will appear here."}
-            </p>
-          </div>
+          <EmptyState
+            icon={History}
+            title="No logs found"
+            description={searchQuery ? `No results for "${searchQuery}". Try a different search.` : "Administrative actions will appear here."}
+            className="p-16"
+          />
         )}
       </div>
     </div>

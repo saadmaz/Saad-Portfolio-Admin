@@ -116,7 +116,7 @@ const TagListEditor = ({
         {values.map((v, i) => (
           <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent/10 border border-accent/20 text-accent text-xs font-bold">
             {v}
-            <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-accent/50 hover:text-red-400 ml-0.5">
+            <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-accent/50 hover:text-danger ml-0.5">
               <X className="w-3 h-3" />
             </button>
           </span>
@@ -312,7 +312,7 @@ const ProjectForm = () => {
             </Button>
             {isEditMode && (
               <Button type="button" variant="ghost" size="icon"
-                className="text-red-500/60 hover:bg-red-500/10 hover:text-red-500 rounded-xl w-9 h-9"
+                className="text-danger/60 hover:bg-danger/10 hover:text-danger rounded-xl w-9 h-9"
                 onClick={() => setDeleteDialogOpen(true)} disabled={isLoading}>
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -331,12 +331,12 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Title</label>
                 <Input {...register('title')} placeholder="e.g. Portfolio v3" className={FIELD_CLS} />
-                {errors.title && <p className="text-xs text-red-400 mt-1">{errors.title.message}</p>}
+                {errors.title && <p className="text-xs text-danger mt-1">{errors.title.message}</p>}
               </div>
               <div>
                 <label className={LABEL_CLS}>Slug (URL)</label>
                 <Input {...register('slug')} placeholder="portfolio-v3" className={cn(FIELD_CLS, "font-mono text-sm")} />
-                {errors.slug && <p className="text-xs text-red-400 mt-1">{errors.slug.message}</p>}
+                {errors.slug && <p className="text-xs text-danger mt-1">{errors.slug.message}</p>}
               </div>
             </div>
 
@@ -400,7 +400,7 @@ const ProjectForm = () => {
               <label className={LABEL_CLS}>Overview (Detailed)</label>
               <Textarea {...register('overview')} placeholder="Full project overview - goals, outcomes, architecture…"
                 className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/60 focus:ring-2 focus:ring-accent rounded-lg min-h-[120px] resize-none" />
-              {errors.overview && <p className="text-xs text-red-400 mt-1">{errors.overview.message}</p>}
+              {errors.overview && <p className="text-xs text-danger mt-1">{errors.overview.message}</p>}
             </div>
             <div>
               <label className={LABEL_CLS}>Long Description</label>
@@ -414,7 +414,7 @@ const ProjectForm = () => {
             <TagListEditor label="Tech Stack Tags (chips on cards)"
               values={techStack} placeholder="e.g. React, TypeScript…"
               onChange={v => setValue('techStack', v)} />
-            {errors.techStack && <p className="text-xs text-red-400">{errors.techStack.message}</p>}
+            {errors.techStack && <p className="text-xs text-danger">{errors.techStack.message}</p>}
 
             <div className="border-t border-white/5 pt-4">
               <TagListEditor label="Technologies (full list on detail page)"
@@ -602,7 +602,7 @@ const ProjectForm = () => {
                 <Input {...register('liveUrl')} placeholder="https://example.com"
                   className={cn(FIELD_CLS, "pl-9")} />
               </div>
-              {errors.liveUrl && <p className="text-xs text-red-400 mt-1">{errors.liveUrl.message}</p>}
+              {errors.liveUrl && <p className="text-xs text-danger mt-1">{errors.liveUrl.message}</p>}
             </div>
             <div>
               <label className={LABEL_CLS}>Live Preview (legacy)</label>
@@ -660,14 +660,14 @@ const ProjectForm = () => {
             <label className="flex items-center justify-between cursor-pointer group pt-1">
               <span className="text-sm font-bold text-white/70 group-hover:text-white transition-colors">Featured Project</span>
               <input type="checkbox" {...register('featured')}
-                className="w-4 h-4 rounded accent-teal-400 bg-white/5 border-white/10" />
+                className="w-4 h-4 rounded accent-accent bg-white/5 border-white/10" />
             </label>
             <label className="flex items-center justify-between cursor-pointer group pt-1">
               <span className="text-sm font-bold text-white/70 group-hover:text-white transition-colors">
                 Published <span className="font-normal text-white/40">(unpublish to hide from the public site and sitemap)</span>
               </span>
               <input type="checkbox" {...register('published')}
-                className="w-4 h-4 rounded accent-teal-400 bg-white/5 border-white/10" />
+                className="w-4 h-4 rounded accent-accent bg-white/5 border-white/10" />
             </label>
           </Section>
         </div>
@@ -675,7 +675,7 @@ const ProjectForm = () => {
 
       {/* Delete dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={o => !isLoading && setDeleteDialogOpen(o)}>
-        <AlertDialogContent className="bg-card border-[var(--admin-border-lg)] text-foreground rounded-2xl shadow-2xl">
+        <AlertDialogContent className="bg-card border-[var(--admin-border-lg)] text-foreground rounded-xl shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-black">Delete Project?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/50 text-sm">
@@ -688,7 +688,7 @@ const ProjectForm = () => {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction disabled={isLoading} onClick={onDelete}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-xl font-black border-0 shadow-lg shadow-red-500/20">
+              className="bg-danger hover:bg-danger/90 text-danger-foreground rounded-xl font-black border-0 shadow-lg shadow-danger/20">
               {isLoading ? 'Deleting…' : 'Delete Project'}
             </AlertDialogAction>
           </AlertDialogFooter>

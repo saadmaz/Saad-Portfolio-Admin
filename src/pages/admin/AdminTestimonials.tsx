@@ -8,6 +8,7 @@ import { Plus, Quote, Edit2, Trash2, User } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
 const testimonialSchema = z.object({
@@ -96,7 +97,7 @@ const AdminTestimonials = () => {
         subtitle="Manage recommendations from colleagues and clients."
         backTo="/dashboard"
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11 px-6 rounded-lg">
+          <Button onClick={handleAdd} variant="primary" className="font-semibold h-11 px-6 rounded-lg">
             <Plus className="w-4 h-4 mr-2" /> Add Testimonial
           </Button>
         }
@@ -105,11 +106,11 @@ const AdminTestimonials = () => {
       <div className="grid gap-6 md:grid-cols-2">
         {isLoading && !isDialogOpen ? (
           [1, 2].map(i => (
-            <div key={i} className="h-48 w-full bg-secondary border border-border rounded-2xl animate-pulse" />
+            <div key={i} className="h-48 w-full bg-secondary border border-border rounded-lg animate-pulse" />
           ))
         ) : testimonials.length > 0 ? (
           testimonials.map((test) => (
-            <Card key={test.id} className="bg-card border-border shadow-sm hover:bg-secondary hover:border-accent/30 transition-all overflow-hidden relative group">
+            <Card key={test.id} interactive className="bg-card border-border shadow-sm overflow-hidden relative group">
               <CardContent className="p-6">
                 <Quote className="absolute top-4 right-4 w-10 h-10 text-border group-hover:text-accent/10 transition-colors" />
                 <div className="flex items-center gap-3 mb-4">
@@ -132,7 +133,7 @@ const AdminTestimonials = () => {
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(test)} className="h-8 w-8 hover:bg-secondary">
                     <Edit2 className="w-4 h-4 text-muted-foreground" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(test.id, test.name)} className="h-8 w-8 hover:bg-red-500/10 text-red-400 hover:text-red-500">
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(test.id, test.name)} className="h-8 w-8 hover:bg-danger-subtle text-danger-fg hover:text-danger">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -140,10 +141,13 @@ const AdminTestimonials = () => {
             </Card>
           ))
         ) : (
-          <div className="md:col-span-2 rounded-lg border border-border bg-card shadow-sm p-12 text-center">
-            <h3 className="text-lg font-black text-muted-foreground" style={{ fontFamily: 'DM Sans' }}>No testimonials yet</h3>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">Showcase what people are saying about your work.</p>
-          </div>
+          <EmptyState
+            icon={Quote}
+            title="No testimonials yet"
+            description="Showcase what people are saying about your work."
+            action={{ label: 'Add Testimonial', onClick: handleAdd }}
+            className="md:col-span-2"
+          />
         )}
       </div>
 
