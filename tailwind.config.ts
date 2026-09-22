@@ -15,20 +15,20 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Geist Variable — one app-wide family, self-hosted via
-        // @fontsource-variable/geist (imported in main.tsx). Replaced DM
-        // Sans: that pairing (DM Sans + Inter + Playfair Display) reads as
-        // an AI-page-builder default regardless of how consistently it's
-        // applied. `sans` and `display` both point here; kept as two names
-        // because `font-display` is already used at a few call sites
-        // (NotFound.tsx, ErrorBoundary.tsx).
-        sans: ['Geist Variable', 'system-ui', 'sans-serif'],
-        display: ['Geist Variable', 'system-ui', 'sans-serif'],
-        serif: ['Geist Variable', 'system-ui', 'sans-serif'],
-        // Real Geist Mono instead of a system-mono fallback stack — used by
-        // `font-mono` call sites and worth reaching for on numeric/ID/date
-        // table columns for an even more deliberate, "engineered" feel.
-        mono: ['Geist Mono Variable', 'ui-monospace', 'SF Mono', 'Consolas', 'monospace'],
+        // Native system-font stack — no webfont. Researched the specific
+        // reference the user asked to match (Payload CMS) and confirmed
+        // its admin panel uses system fonts, not a custom typeface; that's
+        // very likely part of why it reads as native software rather than
+        // "a website," since there's no webfont signature and it matches
+        // the OS's own UI chrome exactly (San Francisco on Mac, Segoe UI
+        // on Windows, Roboto on Android/Linux). `sans`/`display`/`serif`
+        // all point here — kept as separate names only because
+        // `font-display` is already used at a few call sites (NotFound.tsx,
+        // ErrorBoundary.tsx); there's no second face anymore.
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        serif: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
       },
       fontSize: {
         // 7-step type scale (docs/ui-audit.md section 5: no consistent scale
@@ -38,12 +38,13 @@ export default {
         // instead of inventing new ones — the fix is naming and binding
         // weight/tracking/line-height consistently, not new pixel values.
         // h3 and body share a size on purpose; weight is what separates them.
-        // Tracking pulled in slightly from the original DM-Sans-tuned values
-        // — Geist is tighter by default and doesn't need as much extra
-        // negative tracking at large sizes to avoid looking loose.
-        display: ['1.5rem',    { lineHeight: '2rem',     letterSpacing: '-0.015em', fontWeight: '600' }], // 24/32
-        h1:      ['1.25rem',   { lineHeight: '1.75rem',  letterSpacing: '-0.01em',  fontWeight: '600' }], // 20/28
-        h2:      ['1rem',      { lineHeight: '1.5rem',   letterSpacing: '-0.005em', fontWeight: '600' }], // 16/24
+        // Tracking pulled back close to 0 — system fonts (San Francisco,
+        // Segoe UI) are already tuned for their own platform's rendering
+        // and read cramped with the extra negative tracking a webfont like
+        // DM Sans or Geist needed at these sizes.
+        display: ['1.5rem',    { lineHeight: '2rem',     letterSpacing: '-0.01em',  fontWeight: '600' }], // 24/32
+        h1:      ['1.25rem',   { lineHeight: '1.75rem',  letterSpacing: '-0.005em', fontWeight: '600' }], // 20/28
+        h2:      ['1rem',      { lineHeight: '1.5rem',   letterSpacing: '0em',      fontWeight: '600' }], // 16/24
         h3:      ['0.875rem',  { lineHeight: '1.25rem',  letterSpacing: '0em',      fontWeight: '600' }], // 14/20
         body:    ['0.875rem',  { lineHeight: '1.25rem',  letterSpacing: '0em',      fontWeight: '400' }], // 14/20
         'body-sm': ['0.75rem', { lineHeight: '1rem',     letterSpacing: '0em',      fontWeight: '400' }], // 12/16

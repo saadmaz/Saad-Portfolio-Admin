@@ -47,21 +47,20 @@
     --muted: 220 8% 16%;
     --muted-foreground: 220 6% 58%;        /* 6.1:1 on background */
 
-    /* --- The one accent: muted slate-blue, near-monochrome philosophy ---
-       Was teal (174 72% 44%) — a consistent single accent fixed the token
-       *system*, but teal/emerald on near-black is itself one of the most
-       common "AI-generated SaaS dashboard" palettes, so the app still read
-       as generic even with the plumbing correct. This hue sits in the same
-       family as the neutral ramp (220-225°) for cohesion, desaturated well
-       below "brand color" saturation. Reserved for the single primary
-       action per screen and focus rings — NOT for wayfinding/branding
-       chrome (active nav, avatars, chips), which use neutral treatments
-       instead so color stays meaningful when it does appear. */
-    --accent: 225 35% 58%;
-    --accent-foreground: 220 8% 6%;        /* 5.0:1 on accent */
-    --accent-hover: 225 40% 64%;           /* 6.2:1 for accent-foreground on hover */
+    /* --- The one accent: muted teal, near-monochrome philosophy ---
+       A brief detour to a slate-blue accent (225°) proved the discipline
+       right — accent reserved for the single primary action + focus rings,
+       neutral everywhere else — but the hue itself wasn't the point.
+       Restored teal on request, at roughly 2/3 the original saturation
+       (was 72%, now 50%) so it reads as a considered, muted color rather
+       than the bright, saturated teal that's become an "AI SaaS dashboard"
+       cliché. Same usage rules as before: primary action + focus ring
+       only, never wayfinding/branding chrome. */
+    --accent: 174 50% 45%;
+    --accent-foreground: 220 8% 6%;        /* 6.9:1 on accent */
+    --accent-hover: 174 52% 52%;           /* 9.0:1 for accent-foreground on hover */
     --accent-bright: var(--accent-hover);  /* legacy alias — consumed by AdminLayout.tsx, BlogForm.tsx, AdminLoginPage.tsx */
-    --accent-subtle: 225 25% 16%;
+    --accent-subtle: 174 35% 14%;
 
     /* --- Semantic state colors (the ONLY other colors permitted) --- */
     --destructive: 0 65% 46%;
@@ -142,17 +141,20 @@
     scroll-behavior: smooth;
   }
 
-  /* Geist Variable — one app-wide family, set once here so it applies to
-     every route including /login and the 404 page. Self-hosted via
-     @fontsource-variable/geist (imported in main.tsx), not Google Fonts.
-     Replaced DM Sans: that pairing (DM Sans + Inter + Playfair Display)
-     is one of the most recognizable AI-page-builder font combinations in
-     circulation, and reads as generated regardless of how consistently
-     it's applied. Geist is Vercel's typeface, built for and now widely
-     recognized as software/developer-tool typography specifically. */
+  /* Native system-font stack — no webfont at all, set once here so it
+     applies to every route including /login and the 404 page. This is a
+     deliberate reversal of an earlier attempt to fix "the fonts look AI"
+     with a different webfont (Geist): researched the specific premium CMS
+     admin the user asked to match (Payload CMS) and confirmed it uses
+     system fonts, not a custom typeface — on Mac this renders San
+     Francisco, on Windows Segoe UI, on Linux/Android the platform's own
+     UI font. That's arguably *why* it reads as native software rather
+     than "a website with a font choice": there's no webfont signature to
+     recognize as generated, no font-loading flash, and it matches
+     whatever the user's own OS chrome already looks like. */
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Geist Variable', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -220,8 +222,8 @@
   }
 
   /* .admin-panel no longer needs its own font-stack layer: `body` (see
-     @layer base above) now sets Geist for the whole app, so it inherits
-     everywhere without a `.admin-panel *` universal selector. This also
+     @layer base above) now sets the system font for the whole app, so it
+     inherits everywhere without a `.admin-panel *` universal selector. This also
      retires two dead rules: `.admin-mono` (components actually use
      Tailwind's `font-mono` utility, now pointed at this stack directly —
      see tailwind.config.ts) and `.admin-editorial` (its selector required
@@ -243,12 +245,16 @@
   .admin-panel .text-white\/15      { color: hsl(var(--foreground) / 0.15)   !important; }
   .admin-panel .text-white\/10      { color: hsl(var(--foreground) / 0.10)   !important; }
 
-  /* ── bg-white/* → card surface (stops transparent-glass floats) */
+  /* ── bg-white/* → card surface (stops transparent-glass floats) ─────
+     These two rules hardcoded the pre-token-reset palette's literal HSL
+     values (222 45% 12%, 220 40% 16%) and were never updated when the
+     token layer was consolidated — pointing them at the live tokens
+     instead so they can't drift out of sync with the palette again. */
   .admin-panel .bg-white\/\[0\.03\],
-  .admin-panel .bg-white\/\[0\.02\] { background-color: hsl(222 45% 12%) !important; }
+  .admin-panel .bg-white\/\[0\.02\] { background-color: hsl(var(--card)) !important; }
   .admin-panel .bg-white\/\[0\.04\],
   .admin-panel .bg-white\/\[0\.05\],
-  .admin-panel .bg-white\/\[0\.06\] { background-color: hsl(220 40% 16%) !important; }
+  .admin-panel .bg-white\/\[0\.06\] { background-color: hsl(var(--secondary)) !important; }
 
   /* ── Scrollbar ───────────────────────────────────────────────── */
   .admin-panel ::-webkit-scrollbar       { width: 5px; height: 5px; }
@@ -263,8 +269,8 @@
 
   /* ── TipTap rich-text editor ────────────────────────────────── */
   /* Was an italic Playfair Display serif accent — a "blog editorial" tell
-     with no place in an admin tool's editor chrome. Bold Geist instead,
-     consistent with every other heading in the app. */
+     with no place in an admin tool's editor chrome. Bold system-font
+     instead, consistent with every other heading in the app. */
   .admin-panel .ProseMirror h2,
   .admin-panel .ProseMirror h3 {
     font-style: normal;
