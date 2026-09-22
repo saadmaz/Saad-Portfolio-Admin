@@ -1,94 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, Code, BookOpen, FileCheck,
-  LogOut, Menu, X, ShieldCheck, Zap, Award, Globe, Trophy,
-  Mail, Heart, GraduationCap, CalendarDays, Newspaper,
-  Quote, ChevronLeft, ChevronRight, ChevronDown, ExternalLink,
-  BookMarked, FileText, Lightbulb, Building2,
-  Leaf, ClipboardList, History,
+  LogOut, Menu, X, ShieldCheck, ChevronLeft, ChevronRight,
+  ChevronDown, ExternalLink, Search,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/shared/lib/utils";
 import { auth } from '@/lib/firebase';
 import { CommonService } from '@/shared/services/common-service';
 import { ProjectService } from '@/services/project-service';
 import { BlogService } from '@/services/blog-service';
-
-/* ─── Nav definition ─────────────────────────────────────────── */
-interface NavItem {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  path: string;
-  countKey?: string;
-  badge?: boolean;
-}
-
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
-const navGroups: NavGroup[] = [
-  {
-    label: 'Overview',
-    items: [
-      { icon: LayoutDashboard, label: 'Dashboard',  path: '/dashboard' },
-    ],
-  },
-  {
-    label: 'Content',
-    items: [
-      { icon: Code,         label: 'Projects',       path: '/projects',     countKey: 'projects' },
-      { icon: BookOpen,     label: 'Blog Posts',      path: '/blogs',        countKey: 'blogs' },
-      { icon: Briefcase,    label: 'Experience',      path: '/experience',   countKey: 'experience' },
-      { icon: Zap,          label: 'Skills & Tools',  path: '/skills',       countKey: 'skills' },
-      { icon: FileCheck,    label: 'Certifications',  path: '/certificates', countKey: 'certificates' },
-    ],
-  },
-  {
-    label: 'Metadata',
-    items: [
-      { icon: Award,        label: 'Awards',       path: '/awards',       countKey: 'awards' },
-      { icon: CalendarDays, label: 'Events',        path: '/events',       countKey: 'events' },
-      { icon: Newspaper,    label: 'Newsletters',   path: '/newsletters',  countKey: 'newsletters' },
-      { icon: Globe,        label: 'Languages',     path: '/languages',    countKey: 'languages' },
-      { icon: Trophy,       label: 'Hackathons',    path: '/hackathons',   countKey: 'hackathons' },
-      { icon: Quote,        label: 'Testimonials',  path: '/testimonials', countKey: 'testimonials' },
-    ],
-  },
-  {
-    label: 'Profile',
-    items: [
-      { icon: BookMarked,    label: 'Courses',         path: '/courses',       countKey: 'courses' },
-      { icon: FileText,      label: 'Publications',    path: '/publications',  countKey: 'publications' },
-      { icon: Lightbulb,     label: 'Patents',         path: '/patents',       countKey: 'patents' },
-      { icon: Building2,     label: 'Organizations',   path: '/organizations', countKey: 'organizations' },
-    ],
-  },
-  {
-    label: 'Admin',
-    items: [
-      { icon: Heart,         label: 'Volunteer',      path: '/volunteer',   countKey: 'volunteer' },
-      { icon: Leaf,          label: 'Causes',         path: '/causes',      countKey: 'causes' },
-      { icon: ClipboardList, label: 'Test Scores',    path: '/test-scores', countKey: 'testScores' },
-      { icon: GraduationCap, label: 'Education',      path: '/education',   countKey: 'education' },
-      { icon: Mail,          label: 'Messages',        path: '/messages',    countKey: 'messages', badge: true },
-      { icon: History,       label: 'Activity Logs',  path: '/logs' },
-    ],
-  },
-];
+import { navGroups, type NavGroup } from './navConfig';
+import CommandMenu from './CommandMenu';
 
 /* ─── Palette ────────────────────────────────────────────────── */
 const SIDEBAR_KEY = 'admin_sidebar_collapsed';
 const GROUPS_KEY = 'admin_sidebar_open_groups';
 
 /* Overview/Content stay always-expanded (single item; and the categories
- * used daily). The rest are collapsible — most of them sit at 0-2 items
- * used rarely (docs/ui-audit.md section 0.6: 22 items in 5 flat groups,
- * most reading 0). Closed by default; a group auto-opens if it contains
- * the current route, and any manual toggle is remembered from then on. */
+ * used daily). The rest are collapsible so infrequently-used sections CAN
+ * be tucked away, but default OPEN — every nav item is visible on first
+ * load, nothing is hidden unless the user explicitly collapses a group
+ * themselves (that choice is then remembered via localStorage). */
 const COLLAPSIBLE_GROUPS = new Set(['Metadata', 'Profile', 'Admin']);
 
 /* ─── Main layout ────────────────────────────────────────────── */
@@ -183,13 +121,9 @@ const AdminLayout = () => {
     .find(i => location.pathname === i.path || location.pathname.startsWith(i.path + '/'))
     ?.label ?? 'Dashboard';
 
-  const isGroupActive = (group: NavGroup) =>
-    group.items.some(i => location.pathname === i.path || location.pathname.startsWith(i.path + '/'));
-
   const isGroupOpen = (group: NavGroup) => {
     if (!COLLAPSIBLE_GROUPS.has(group.label)) return true;
-    const stored = openGroups[group.label];
-    return stored !== undefined ? stored : isGroupActive(group);
+    return openGroups[group.label] ?? true;
   };
 
   const toggleGroup = (label: string) => {
@@ -406,6 +340,7 @@ const AdminLayout = () => {
   /* ── Root render ──────────────────────────────────────────── */
   return (
     <div className="admin-panel min-h-screen flex" style={{ background: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}>
+        <CommandMenu />
 
         {/* Desktop sidebar */}
         <aside
@@ -444,7 +379,7 @@ const AdminLayout = () => {
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Top bar */}
-          <header className="h-12 flex items-center justify-between px-4 md:px-5 z-40 flex-shrink-0 gap-3 bg-card border-b border-border">
+          <header className="h-14 flex items-center justify-between px-4 md:px-5 z-40 flex-shrink-0 gap-3 bg-card border-b border-border">
             {/* Mobile menu */}
             <Button
               ref={mobileMenuButtonRef}
@@ -459,15 +394,35 @@ const AdminLayout = () => {
             </Button>
 
             {/* Breadcrumb */}
-            <div className="hidden md:flex items-center gap-1.5 text-[10.5px] font-medium flex-shrink-0 text-muted-foreground">
-              <ShieldCheck className="w-3 h-3 text-muted-foreground" />
-              <span>Admin</span>
-              <span aria-hidden="true" className="text-foreground/10">›</span>
-              <span className="text-foreground/60">{currentPageLabel}</span>
+            <div className="hidden md:flex items-baseline gap-1.5 flex-shrink-0 min-w-0">
+              <span className="text-body-sm text-muted-foreground">Admin</span>
+              <span aria-hidden="true" className="text-foreground/10 text-body-sm">/</span>
+              <span className="text-h3 text-foreground truncate">{currentPageLabel}</span>
             </div>
+
+            {/* Search / command palette trigger */}
+            <button
+              type="button"
+              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              className="hidden lg:flex items-center gap-2 text-body-sm text-muted-foreground px-3 py-1.5 rounded-md border border-border bg-background hover:bg-secondary hover:text-foreground transition-colors w-56 flex-shrink-0"
+            >
+              <Search className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="text-caption text-muted-foreground bg-secondary border border-border rounded px-1.5 py-0.5">⌘K</kbd>
+            </button>
 
             {/* Right actions */}
             <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Search"
+                className="lg:hidden w-7 h-7"
+                onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              >
+                <Search className="w-3.5 h-3.5" />
+              </Button>
+
               <a
                 href="https://www.saadmaz.com"
                 target="_blank"
@@ -483,15 +438,43 @@ const AdminLayout = () => {
                 Live
               </div>
 
-              {/* Avatar */}
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-colors duration-150 text-[10px] font-bold bg-secondary border border-border text-foreground">
-                SM
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-danger text-danger-foreground text-[7px] font-bold flex items-center justify-center border-[1.5px] border-background tabular">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </div>
+              {/* Avatar menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-colors duration-150 text-[10px] font-bold bg-secondary border border-border text-foreground hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    aria-label="Account menu"
+                  >
+                    SM
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-danger text-danger-foreground text-[7px] font-bold flex items-center justify-center border-[1.5px] border-background tabular">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <p className="text-body-sm text-foreground">Saad Mazhar</p>
+                    <p className="text-body-sm text-muted-foreground font-normal">saadmazaa@gmail.com</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href="https://www.saadmaz.com" target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                      <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                      View site
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-danger focus:text-danger-fg focus:bg-danger-subtle cursor-pointer"
+                    onClick={async () => { try { await auth.signOut(); } catch { /* ignore, still navigate away */ } navigate('/login'); }}
+                  >
+                    <LogOut className="mr-2 h-3.5 w-3.5" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
