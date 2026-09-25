@@ -39,19 +39,11 @@ export class ProjectService {
 
   // ─── Public reads (no auth required) ───────────────────────────
 
-  /**
-   * Fetch all projects ordered by order_index ascending.
-   * Falls back to empty array on error so pages never crash.
-   */
+  /** Fetch all projects ordered by order_index ascending. */
   static async getAll(): Promise<Project[]> {
-    try {
-      const q = query(collection(db, COL), orderBy("order_index", "asc"));
-      const snap = await getDocs(q);
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Project));
-    } catch (error) {
-      console.error("[ProjectService] getAll:", error);
-      return [];
-    }
+    const q = query(collection(db, COL), orderBy("order_index", "asc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Project));
   }
 
   /**
@@ -59,45 +51,30 @@ export class ProjectService {
    * Used on the homepage hero / featured section.
    */
   static async getFeatured(): Promise<Project[]> {
-    try {
-      // No orderBy — avoids requiring a composite index on (featured, order_index).
-      // Sorting is done client-side in useFeaturedProjects / FeaturedProjects.tsx.
-      const q = query(
-        collection(db, COL),
-        where("featured", "==", true)
-      );
-      const snap = await getDocs(q);
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Project));
-    } catch (error) {
-      console.error("[ProjectService] getFeatured:", error);
-      return [];
-    }
+    // No orderBy — avoids requiring a composite index on (featured, order_index).
+    // Sorting is done client-side in useFeaturedProjects / FeaturedProjects.tsx.
+    const q = query(
+      collection(db, COL),
+      where("featured", "==", true)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Project));
   }
 
   /** Fetch one project by its Firestore document ID. */
   static async getById(id: string): Promise<Project | null> {
-    try {
-      const snap = await getDoc(doc(db, COL, id));
-      if (!snap.exists()) return null;
-      return { id: snap.id, ...snap.data() } as Project;
-    } catch (error) {
-      console.error("[ProjectService] getById:", error);
-      return null;
-    }
+    const snap = await getDoc(doc(db, COL, id));
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() } as Project;
   }
 
   /** Fetch one project by its slug field. Used by /projects/:slug routes. */
   static async getBySlug(slug: string): Promise<Project | null> {
-    try {
-      const q = query(collection(db, COL), where("slug", "==", slug));
-      const snap = await getDocs(q);
-      if (snap.empty) return null;
-      const d = snap.docs[0];
-      return { id: d.id, ...d.data() } as Project;
-    } catch (error) {
-      console.error("[ProjectService] getBySlug:", error);
-      return null;
-    }
+    const q = query(collection(db, COL), where("slug", "==", slug));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() } as Project;
   }
 
   // ─── Admin writes (require active Firebase Auth session) ────────

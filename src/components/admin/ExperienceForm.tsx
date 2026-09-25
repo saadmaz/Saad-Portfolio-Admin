@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Save, Trash2, Briefcase, MapPin, Calendar, Building2,
+  Save, Trash2, Briefcase, Calendar, Building2,
   Sparkles, Plus, ChevronDown, ChevronUp, Trophy,
   Image as ImageIcon, Link as LinkIcon, FileText, Presentation, X, Star, GripVertical, Check,
 } from 'lucide-react';

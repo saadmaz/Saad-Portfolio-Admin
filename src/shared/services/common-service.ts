@@ -53,19 +53,17 @@ import type {
 
 /**
  * Generic "get all documents from a collection" helper.
- * Returns typed results or an empty array on error.
+ * Throws on error - callers are responsible for surfacing the failure
+ * (every admin page already wraps its fetch in a try/catch + toast).
+ * A collection that fails to load must never look identical to one
+ * that's genuinely empty.
  */
 async function fetchAll<T>(col: string, sortField?: string): Promise<T[]> {
-  try {
-    const q = sortField
-      ? query(collection(db, col), orderBy(sortField, "asc"))
-      : collection(db, col);
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
-  } catch (error) {
-    console.error(`[CommonService] fetchAll(${col}):`, error);
-    return [];
-  }
+  const q = sortField
+    ? query(collection(db, col), orderBy(sortField, "asc"))
+    : collection(db, col);
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
 }
 
 /** Recursively strip undefined values — Firestore rejects them, null is fine. */
@@ -304,43 +302,10 @@ export class CommonService {
     return fetchAll<ActivityLog>(COLLECTIONS.logs, "timestamp");
   }
 
-  // ── Contact Form ─────────────────────────────────────────────────
-  /**
-   * Submits a contact form message.
-   *
-   * This is the ONE remaining HTTP call - it POSTs to the Vercel
-   * serverless function at /api/contact which:
-   *   1. Saves the message to Firestore via Firebase Admin SDK
-   *   2. Sends the email notification via SendGrid
-   *
-   * We can't do the email from the browser because the SendGrid API
-   * key must stay server-side.
-   */
-  static async submitContact(data: {
-    name: string;
-    email: string;
-    subject?: string;
-    message: string;
-  }): Promise<void> {
-    // Save directly to Firestore so messages are always captured
-    await addDoc(collection(db, COLLECTIONS.messages), {
-      name:       data.name.trim(),
-      email:      data.email.trim(),
-      subject:    data.subject?.trim() ?? "",
-      message:    data.message.trim(),
-      created_at: serverTimestamp(),
-      read:       false,
-    });
-
-    // Fire-and-forget to /api/contact for email notification
-    fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).catch(() => {/* email notification optional */});
-  }
-
   // ── Admin Messages (contact submissions) ────────────────────────
+  // Note: message *creation* happens on the public Saad-Portfolio site
+  // (a separate repo/deployment), which writes directly into the
+  // `contact_messages` collection this admin panel reads below.
 
   static async getMessages(): Promise<Message[]> {
     return fetchAll<Message>(COLLECTIONS.messages, "created_at");

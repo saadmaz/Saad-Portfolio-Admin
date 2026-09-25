@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommonService } from '@/shared/services/common-service';
 import { ActivityLog } from '@/types';
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import EmptyState from '@/components/admin/EmptyState';
 import { toast } from "sonner";
 import { format } from 'date-fns';
 import { Input } from "@/components/ui/input";
+import { toJsDate } from '@/shared/lib/utils';
 
 const AdminLogs = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -38,7 +39,7 @@ const AdminLogs = () => {
       const data = await CommonService.getActivityLogs();
       setLogs(data);
       setFilteredLogs(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load activity logs');
     } finally {
       setIsLoading(false);
@@ -70,9 +71,8 @@ const AdminLogs = () => {
   const getTimestamp = (timestamp: ActivityLog['timestamp']) => {
     if (!timestamp) return 'Just now';
     try {
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-      return format(date, 'MMM d, h:mm a');
-    } catch (e) {
+      return format(toJsDate(timestamp), 'MMM d, h:mm a');
+    } catch {
       return 'Recent';
     }
   };

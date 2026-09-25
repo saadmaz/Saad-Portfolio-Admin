@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
 import { Testimonial } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Quote, Edit2, Trash2, User } from 'lucide-react';
+import { Plus, Quote, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
@@ -45,7 +45,7 @@ const AdminTestimonials = () => {
     try {
       const data = await CommonService.getTestimonials();
       setTestimonials(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load testimonials');
     } finally {
       setIsLoading(false);

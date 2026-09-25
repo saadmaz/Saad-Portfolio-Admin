@@ -45,7 +45,6 @@ const TYPE_OPTIONS = ['Conference', 'Summit', 'Workshop', 'Hackathon', 'Networki
 
 // shared input class helper
 const inp = 'bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:border-accent/40 outline-none w-full';
-const sel = 'bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none w-full';
 const lbl = 'text-[10px] font-black uppercase tracking-widest text-muted-foreground';
 
 // ─── Event Form Dialog ────────────────────────────────────────────────────────

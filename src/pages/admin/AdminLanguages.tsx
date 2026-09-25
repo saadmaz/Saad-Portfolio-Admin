@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
 import { Language } from '@/types';
@@ -52,7 +52,7 @@ const AdminLanguages = () => {
     try {
       const data = await CommonService.getLanguages();
       setLanguages(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load languages');
     } finally {
       setIsLoading(false);

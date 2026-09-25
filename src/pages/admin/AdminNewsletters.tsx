@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
 import { Newsletter } from '@/types';
@@ -59,7 +59,7 @@ const AdminNewsletters = () => {
     try {
       const data = await CommonService.getNewsletters();
       setNewsletters(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load newsletters');
     } finally {
       setIsLoading(false);

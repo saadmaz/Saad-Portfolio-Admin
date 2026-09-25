@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
@@ -202,7 +202,7 @@ const AdminCertificates = () => {
     try {
       const data = await CommonService.getCertificates();
       setCertificates(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load certificates');
     } finally {
       setIsLoading(false);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Code, BookOpen, Briefcase, Zap, FileCheck, Award,
@@ -9,11 +9,12 @@ import {
 import { ProjectService } from '@/services/project-service';
 import { BlogService } from '@/services/blog-service';
 import { CommonService } from '@/shared/services/common-service';
-import type { ActivityLog, FirestoreLikeTimestamp } from '@/types';
+import type { ActivityLog } from '@/types';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import EmptyState from '@/components/admin/EmptyState';
+import { toJsDate } from '@/shared/lib/utils';
 
 /* ── The 4 metrics that are actually acted on day to day ─────────── */
 const PRIMARY_METRICS = [
@@ -64,13 +65,6 @@ const actionVerb = (action: string) => {
   if (action === 'UPDATE') return 'Updated';
   if (action === 'DELETE') return 'Deleted';
   return action;
-};
-
-/** Firestore Admin/client SDKs return Timestamp objects with .toDate(); plain
- * writes may store a Date, ISO string, or epoch number instead. */
-const toJsDate = (ts: FirestoreLikeTimestamp): Date => {
-  if (ts && typeof ts === 'object' && 'toDate' in ts) return ts.toDate();
-  return ts ? new Date(ts) : new Date(0);
 };
 
 /* ══════════════════════════════════════════════════════════════════

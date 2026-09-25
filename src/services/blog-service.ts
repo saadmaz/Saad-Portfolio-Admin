@@ -43,14 +43,9 @@ export class BlogService {
    * Used in the admin panel to show all entries for management.
    */
   static async getAll(): Promise<BlogPost[]> {
-    try {
-      const q = query(collection(db, COL), orderBy("date", "desc"));
-      const snap = await getDocs(q);
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() } as BlogPost));
-    } catch (error) {
-      console.warn("[BlogService] getAll:", error);
-      return [];
-    }
+    const q = query(collection(db, COL), orderBy("date", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as BlogPost));
   }
 
   /**
@@ -78,28 +73,18 @@ export class BlogService {
 
   /** Fetch one post by its Firestore document ID. */
   static async getById(id: string): Promise<BlogPost | null> {
-    try {
-      const snap = await getDoc(doc(db, COL, id));
-      if (!snap.exists()) return null;
-      return { id: snap.id, ...snap.data() } as BlogPost;
-    } catch (error) {
-      console.error("[BlogService] getById:", error);
-      return null;
-    }
+    const snap = await getDoc(doc(db, COL, id));
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() } as BlogPost;
   }
 
   /** Fetch one post by its slug field. Used by /blog/:slug routes. */
   static async getBySlug(slug: string): Promise<BlogPost | null> {
-    try {
-      const q = query(collection(db, COL), where("slug", "==", slug));
-      const snap = await getDocs(q);
-      if (snap.empty) return null;
-      const d = snap.docs[0];
-      return { id: d.id, ...d.data() } as BlogPost;
-    } catch (error) {
-      console.error("[BlogService] getBySlug:", error);
-      return null;
-    }
+    const q = query(collection(db, COL), where("slug", "==", slug));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() } as BlogPost;
   }
 
   /** Try slug first, fall back to Firestore document ID. */

@@ -13,10 +13,8 @@ import {
   Calendar,
   Link as LinkIcon,
   FileBadge,
-  Sparkles
 } from 'lucide-react';
 import { CommonService } from '@/shared/services/common-service';
-import { Certificate } from '@/types';
 import { toast } from "sonner";
 import ImageUpload from './ImageUpload';
 import FormHeader from './FormHeader';
@@ -73,7 +71,7 @@ const CertificateForm = () => {
           pdf_document_link: item.pdf_document_link,
         });
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load certificate');
     } finally {
       setIsLoading(false);

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -38,7 +38,7 @@ const AdminSkills = () => {
     try {
       const data = await CommonService.getSkills();
       setSkillSets(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load skills');
     } finally {
       setIsLoading(false);
@@ -50,7 +50,7 @@ const AdminSkills = () => {
       setIsSaving(true);
       await CommonService.updateSkills(skillSets);
       toast.success('Skills updated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to save skills');
     } finally {
       setIsSaving(false);

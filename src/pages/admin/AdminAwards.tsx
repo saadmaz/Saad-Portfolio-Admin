@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
 import { Award } from '@/types';
@@ -46,7 +46,7 @@ const AdminAwards = () => {
     try {
       const data = await CommonService.getAwards();
       setAwards(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load awards');
     } finally {
       setIsLoading(false);

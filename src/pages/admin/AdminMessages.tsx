@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/admin/PageHeader';
 import {
@@ -10,7 +10,6 @@ import {
   Circle,
   ExternalLink,
   Search,
-  MessageSquare,
   AlertCircle
 } from 'lucide-react';
 import { CommonService } from '@/shared/services/common-service';
@@ -19,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import EmptyState from '@/components/admin/EmptyState';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { toJsDate } from '@/shared/lib/utils';
 
 const AdminMessages = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,9 +56,8 @@ const AdminMessages = () => {
   const formatDate = (date: Message['created_at']) => {
     if (!date) return 'Unknown';
     try {
-      const d = date.toDate ? date.toDate() : new Date(date);
-      return format(d, 'MMM d, h:mm a');
-    } catch (e) {
+      return format(toJsDate(date), 'MMM d, h:mm a');
+    } catch {
       return 'Invalid Date';
     }
   };

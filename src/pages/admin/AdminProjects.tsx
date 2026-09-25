@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
@@ -260,7 +260,7 @@ const AdminProjects = () => {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-md m-1 py-2 px-3 text-xs font-bold"
-                          onClick={() => setDeleteDialog({ open: true, id: project.id, title: project.title })}
+                          onClick={() => setDeleteDialog({ open: true, id: String(project.id), title: project.title })}
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
                         </DropdownMenuItem>

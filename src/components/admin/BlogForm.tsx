@@ -13,7 +13,7 @@ import {
   Bold, Italic, Heading2, Heading3,
   List, ListOrdered, Code, Minus, Link as LinkIcon,
   Undo, Redo, Quote, Image as ImageIcon, Tag as TagIcon,
-  Search, Calendar, Globe, ToggleLeft, FileText,
+  Search, Globe,
   X, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -110,28 +110,6 @@ const StyledTextarea = React.forwardRef<
 ));
 StyledTextarea.displayName = 'StyledTextarea';
 
-/* ── Toggle switch ───────────────────────────────────────────────── */
-const Toggle = ({
-  checked,
-  onChange,
-  label,
-}: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
-  <div className="flex items-center justify-between py-1">
-    <span className="text-[13px] font-medium" style={{ color: 'hsl(var(--foreground) / 0.65)' }}>{label}</span>
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 flex-shrink-0"
-      style={{ background: checked ? 'hsl(var(--accent))' : 'var(--admin-border-lg)' }}
-    >
-      <span
-        className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transform transition-transform duration-200"
-        style={{ transform: checked ? 'translateX(18px)' : 'translateX(3px)' }}
-      />
-    </button>
-  </div>
-);
-
 /* ── Section card ────────────────────────────────────────────────── */
 const SectionCard = ({
   title,
@@ -188,7 +166,6 @@ const BlogForm = () => {
   const isEditMode   = !!id && id !== 'new';
 
   const [isLoading,          setIsLoading]          = useState(false);
-  const [deleteOpen,         setDeleteOpen]          = useState(false);
   const [contentError,       setContentError]        = useState('');
   const [tagInput,           setTagInput]            = useState('');
   const [publishMode,        setPublishMode]         = useState<'draft' | 'publish' | 'schedule'>('draft');
@@ -256,6 +233,11 @@ const BlogForm = () => {
     if (!isEditMode && titleValue && !slugValue) {
       setValue('slug', toSlug(titleValue));
     }
+    // slugValue/setValue intentionally excluded: this is a one-way
+    // mirror (title -> slug) that must not re-run just because the
+    // slug itself changed, or a manually-edited slug would get
+    // clobbered on the next render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titleValue, isEditMode]);
 
   /* Update char counters */
@@ -294,7 +276,7 @@ const BlogForm = () => {
 
   useEffect(() => {
     if (isEditMode && editor) loadPost();
-  }, [isEditMode, editor]);
+  }, [isEditMode, editor, loadPost]);
 
   /* ── Submit ────────────────────────────────────────────────────── */
   const onSubmit = async (data: BlogFormValues, forcePublish?: boolean) => {

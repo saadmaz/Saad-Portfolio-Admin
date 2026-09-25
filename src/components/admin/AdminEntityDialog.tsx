@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldValues, type Path, type DefaultValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -36,25 +36,26 @@ interface FieldConfig {
   label: string;
   type: 'text' | 'number' | 'textarea' | 'select' | 'date' | 'image' | 'logo';
   placeholder?: string;
-  options?: { label: string; value: string }[];
+  options?: readonly { readonly label: string; readonly value: string }[];
   required?: boolean;
 }
 
+// Default shape when a caller doesn't need a specific entity type.
 type EntityFormValues = Record<string, unknown>;
 
-interface AdminEntityDialogProps {
+interface AdminEntityDialogProps<T extends FieldValues = EntityFormValues> {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   fields: readonly FieldConfig[];
-  schema: z.ZodType<EntityFormValues>;
-  defaultValues?: EntityFormValues;
-  onSubmit: (data: EntityFormValues) => Promise<void>;
+  schema: z.ZodType<T>;
+  defaultValues?: Partial<T>;
+  onSubmit: (data: T) => Promise<void>;
   isLoading?: boolean;
   onDelete?: () => void;
 }
 
-const AdminEntityDialog = ({
+function AdminEntityDialog<T extends FieldValues = EntityFormValues>({
   isOpen,
   onClose,
   title,
@@ -62,23 +63,22 @@ const AdminEntityDialog = ({
   schema,
   defaultValues,
   onSubmit,
-  isLoading,
   onDelete,
-}: AdminEntityDialogProps) => {
+}: AdminEntityDialogProps<T>) {
   const [isSaving, setIsSaving] = useState(false);
 
-  const form = useForm<EntityFormValues>({
+  const form = useForm<T>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues || {},
+    defaultValues: (defaultValues ?? {}) as DefaultValues<T>,
   });
 
   React.useEffect(() => {
     if (isOpen) {
-      form.reset(defaultValues || {});
+      form.reset((defaultValues ?? {}) as DefaultValues<T>);
     }
   }, [isOpen, defaultValues, form]);
 
-  const handleSubmit = async (data: EntityFormValues) => {
+  const handleSubmit = async (data: T) => {
     setIsSaving(true);
     try {
       await onSubmit(data);
@@ -100,7 +100,9 @@ const AdminEntityDialog = ({
               <FormField
                 key={field.name}
                 control={form.control}
-                name={field.name}
+                // `fields` is runtime config, not statically tied to T's keys -
+                // this is the one intentional boundary cast for that mismatch.
+                name={field.name as Path<T>}
                 render={({ field: formField }) => (
                   <FormItem>
                     <FormLabel className="text-muted-foreground font-medium">{field.label}</FormLabel>
@@ -108,6 +110,7 @@ const AdminEntityDialog = ({
                       {field.type === 'textarea' ? (
                         <Textarea
                           {...formField}
+                          value={(formField.value as string) ?? ''}
                           placeholder={field.placeholder}
                           className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50 min-h-[100px]"
                         />
@@ -141,6 +144,7 @@ const AdminEntityDialog = ({
                       ) : (
                         <Input
                           {...formField}
+                          value={(formField.value as string | number) ?? ''}
                           type={field.type}
                           placeholder={field.placeholder}
                           className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50"
@@ -195,6 +199,6 @@ const AdminEntityDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default AdminEntityDialog;

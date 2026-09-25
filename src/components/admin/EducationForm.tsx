@@ -519,7 +519,6 @@ const EducationForm = () => {
       if (!item) { toast.error('Education entry not found'); navigate('/education'); return; }
 
       setSkills(item.skills ?? []);
-      setProjects(item.projects ?? []);
       setMedia(item.media ?? []);
       setAwards(item.honors_and_awards ?? []);
 

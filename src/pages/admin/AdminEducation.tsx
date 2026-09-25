@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
@@ -134,7 +134,6 @@ const AdminEducation = () => {
             const logo = getLogoUrl(edu);
             const endDate = getDisplayEndDate(edu);
             const expectedGrad = isExpectedGrad(edu);
-            const isCurrent = edu.is_current ?? edu.isCurrent ?? false;
 
             return (
               <Card

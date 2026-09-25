@@ -34,6 +34,21 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Fail loud, at startup, instead of letting `initializeApp` silently accept
+// `undefined` fields - a missing/misnamed Vercel env var used to degrade
+// into a confusing "looks like you're logged out" screen (AuthContext's
+// generic error path) instead of a clear configuration error.
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+if (missingKeys.length > 0) {
+  throw new Error(
+    `Firebase is misconfigured: missing environment variable(s) for ${missingKeys.join(", ")}. ` +
+    `Set the corresponding VITE_FIREBASE_* values (see .env.example).`
+  );
+}
+
 // ─── App singleton ───────────────────────────────────────────────
 // Prevent "Firebase app already exists" errors during hot-reloads.
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);

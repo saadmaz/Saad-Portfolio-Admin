@@ -20,7 +20,7 @@ import {
 import {
   Save, Plus, Trash2, Image as ImageIcon, Images,
   Globe, Github, Layout, Layers, Sparkles, X, Video,
-  BookOpen, Lightbulb, Tag, Star, Link2, Check, GraduationCap, Briefcase,
+  BookOpen, Lightbulb, Star, Link2, Check, GraduationCap, Briefcase,
 } from 'lucide-react';
 import { ProjectService } from '@/services/project-service';
 import { CommonService } from '@/shared/services/common-service';
@@ -186,7 +186,6 @@ const ProjectForm = () => {
   const techStack    = (w('techStack')    as string[]) ?? [];
   const technologies = (w('technologies') as string[]) ?? [];
   const screenshots  = (w('screenshots')  as string[]) ?? [];
-  const images       = (w('images')       as string[]) ?? [];
   const challenges   = (w('challenges')   as string[]) ?? [];
   const learnings    = (w('learnings')    as string[]) ?? [];
   const features     = (w('features')     as string[]) ?? [];
@@ -195,6 +194,9 @@ const ProjectForm = () => {
 
   useEffect(() => {
     if (!isEditMode && titleValue && !slugValue) setValue('slug', toSlug(titleValue));
+    // slugValue/setValue intentionally excluded — see BlogForm's identical
+    // one-way title->slug mirror for why.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titleValue, isEditMode]);
 
   const loadProject = React.useCallback(async () => {

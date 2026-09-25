@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -15,8 +16,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+  },
   build: {
-    sourcemap: true,
+    // No error-tracking service consumes these yet, so shipping them
+    // publicly (full readable source layout, original names) has no
+    // operational upside. Re-enable (or switch to 'hidden') once one is
+    // wired up to actually symbolicate production errors.
+    sourcemap: false,
     minify: "terser",
     terserOptions: {
       compress: {
