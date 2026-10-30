@@ -65,11 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
-        <div className="h-screen w-full flex items-center justify-center bg-background">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin" />
-            <span className="text-sm text-muted-foreground font-medium animate-pulse">Initializing...</span>
-          </div>
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+          <div className="h-5 w-5 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-label="Loading" />
         </div>
       ) : children}
     </AuthContext.Provider>

@@ -34,14 +34,14 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-          <div className="bg-destructive/10 p-4 rounded-full mb-6">
-            <AlertCircle className="w-12 h-12 text-destructive" />
+          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-subtle">
+            <AlertCircle className="h-6 w-6 text-danger-fg" />
           </div>
-          <h1 className="text-3xl font-display font-bold mb-4 text-foreground">Something went wrong</h1>
+          <h1 className="mb-3 text-[28px] font-medium tracking-[-0.02em] text-foreground">Something went wrong</h1>
           <p className="text-muted-foreground max-w-md mx-auto mb-8">
             An unexpected error occurred while rendering this page.
             {this.state.error && (
-              <span className="block mt-2 font-mono text-sm bg-secondary p-2 rounded text-left overflow-auto max-w-full">
+              <span className="mt-3 block max-w-full overflow-auto rounded-lg bg-secondary p-3 text-left font-mono text-[13px]">
                 {this.state.error.message}
               </span>
             )}

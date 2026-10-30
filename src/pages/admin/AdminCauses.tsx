@@ -8,6 +8,8 @@ import { Plus, Leaf, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -45,6 +47,7 @@ const AdminCauses = () => {
   };
 
   const handleAdd = () => { setCurrent(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (c: Cause) => { setCurrent(c); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -75,15 +78,13 @@ const AdminCauses = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="PROFILE"
         title="Causes"
-        subtitle="Issues and causes you care about."
-        backTo="/dashboard"
+        subtitle={plural(causes.length, "cause")}
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Add Cause
+          <Button onClick={handleAdd}>
+            <Plus className="w-4 h-4" /> Add cause
           </Button>
         }
       />
@@ -103,17 +104,17 @@ const AdminCauses = () => {
                       <Leaf className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-black text-foreground text-sm">{cause.name}</h3>
+                      <h3 className="font-medium text-foreground text-sm">{cause.name}</h3>
                       {cause.description && (
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{cause.description}</p>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(cause)} className="h-7 w-7 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-md">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(cause)} className="h-7 w-7 hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <Edit2 className="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cause.id, cause.name)} className="h-7 w-7 hover:bg-danger-subtle text-danger hover:text-danger-fg rounded-md">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cause.id, cause.name)} className="h-7 w-7 hover:bg-danger-subtle text-danger hover:text-danger-fg">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -135,15 +136,15 @@ const AdminCauses = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Cause?"
+        title="Delete cause?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
-        confirmLabel="Delete Cause"
+        confirmLabel="Delete cause"
         onConfirm={handleConfirmDelete}
       />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={current ? 'Edit Cause' : 'Add Cause'}
+        title={current ? 'Edit cause' : 'Add cause'}
         fields={causeFields}
         schema={causeSchema}
         defaultValues={current || {}}

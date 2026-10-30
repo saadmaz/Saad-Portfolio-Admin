@@ -13,6 +13,8 @@ import {
 import { Plus, Search, Calendar, MapPin, Edit2, Trash2, Globe, Loader2, Images, X } from 'lucide-react';
 import { toast } from "sonner";
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import MultiImageUpload from '@/components/admin/MultiImageUpload';
 import {
@@ -45,7 +47,7 @@ const TYPE_OPTIONS = ['Conference', 'Summit', 'Workshop', 'Hackathon', 'Networki
 
 // shared input class helper
 const inp = 'bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:border-accent/40 outline-none w-full';
-const lbl = 'text-[10px] font-black uppercase tracking-widest text-muted-foreground';
+const lbl = 'text-[12px] font-medium uppercase tracking-widest text-muted-foreground';
 
 // ─── Event Form Dialog ────────────────────────────────────────────────────────
 interface EventFormDialogProps {
@@ -99,7 +101,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[680px] bg-card border-border text-foreground max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black text-foreground">{title}</DialogTitle>
+          <DialogTitle className="text-xl font-medium text-foreground">{title}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 py-2">
@@ -130,7 +132,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
           {/* ── ROLE + TYPE ── */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className={lbl}>Your Role * <span className="text-white/60 normal-case font-normal">(how you participated)</span></label>
+              <label className={lbl}>Your Role * <span className="text-muted-foreground normal-case font-normal">(how you participated)</span></label>
               <Select value={watch('role')} onValueChange={(v) => setValue('role', v, { shouldValidate: true })}>
                 <SelectTrigger className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none w-full h-auto">
                   <SelectValue placeholder="Select role…" />
@@ -142,7 +144,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
               {errors.role && <p className="text-caption text-danger">{errors.role.message}</p>}
             </div>
             <div className="space-y-1">
-              <label className={lbl}>Event Type * <span className="text-white/60 normal-case font-normal">(category)</span></label>
+              <label className={lbl}>Event Type * <span className="text-muted-foreground normal-case font-normal">(category)</span></label>
               <Select value={watch('type')} onValueChange={(v) => setValue('type', v, { shouldValidate: true })}>
                 <SelectTrigger className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none w-full h-auto">
                   <SelectValue placeholder="Select type…" />
@@ -163,7 +165,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
               {errors.organizer && <p className="text-caption text-danger">{errors.organizer.message}</p>}
             </div>
             <div className="space-y-1">
-              <label className={lbl}>Attendees <span className="text-white/60 normal-case font-normal">(optional)</span></label>
+              <label className={lbl}>Attendees <span className="text-muted-foreground normal-case font-normal">(optional)</span></label>
               <input {...register('attendees')} placeholder='e.g. 500+, 2,000+' className={inp} />
             </div>
           </div>
@@ -196,7 +198,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
 
           {/* ── HIGHLIGHTS ── */}
           <div className="space-y-2">
-            <label className={lbl}>Highlights <span className="text-white/60 normal-case font-normal">(bullet points on detail page)</span></label>
+            <label className={lbl}>Highlights <span className="text-muted-foreground normal-case font-normal">(bullet points on detail page)</span></label>
             {highlights.length > 0 && (
               <ul className="space-y-1.5">
                 {highlights.map((h, i) => (
@@ -230,7 +232,7 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
 
           {/* ── LINK ── */}
           <div className="space-y-1">
-            <label className={lbl}>Event Link <span className="text-white/60 normal-case font-normal">(optional)</span></label>
+            <label className={lbl}>Event Link <span className="text-muted-foreground normal-case font-normal">(optional)</span></label>
             <input {...register('link')} placeholder="https://..." className={inp} />
             {errors.link && <p className="text-caption text-danger">{errors.link.message}</p>}
           </div>
@@ -239,8 +241,8 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
             <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-secondary text-muted-foreground">
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={isSubmitting} className="font-black px-8">
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Save Event
             </Button>
           </DialogFooter>
@@ -274,6 +276,7 @@ const AdminEvents = () => {
   };
 
   const handleAdd = () => { setCurrentEvent(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (event: Event) => { setCurrentEvent(event); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -333,27 +336,25 @@ const AdminEvents = () => {
     (ev.images && ev.images.length > 0) ? ev.images[0] : (ev.image ?? null);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="SCHEDULE"
         title="Events"
-        subtitle="Manage past and upcoming events, workshops, and speaking engagements."
-        backTo="/dashboard"
+        subtitle={plural(events.length, "event")}
         actions={
-          <Button onClick={handleAdd} variant="primary" className="font-black h-11 px-6 rounded-lg flex-shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Add Event
+          <Button onClick={handleAdd} variant="primary">
+            <Plus className="w-4 h-4" /> Add event
           </Button>
         }
       />
 
       {/* Search */}
-      <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
+      <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search events..."
-            className="w-full bg-secondary border border-border rounded-lg pl-11 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-accent outline-none transition-all text-foreground placeholder:text-muted-foreground font-medium"
+            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -387,22 +388,22 @@ const AdminEvents = () => {
                     <div className="flex-1 p-5 flex items-center gap-5 min-w-0">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-black text-foreground text-base group-hover:text-accent transition-colors truncate">
+                          <h3 className="font-medium text-foreground text-base group-hover:text-accent transition-colors truncate">
                             {event.title}
                           </h3>
                           {event.role && (
-                            <span className="shrink-0 text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full">
+                            <span className="shrink-0 text-[12px] font-medium text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full">
                               {event.role}
                             </span>
                           )}
                           {imgCount > 0 && (
-                            <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-muted-foreground bg-secondary border border-border px-1.5 py-0.5 rounded">
+                            <span className="shrink-0 flex items-center gap-1 text-[12px] font-medium text-muted-foreground bg-secondary border border-border px-1.5 py-0.5 rounded">
                               <Images className="w-3 h-3" />{imgCount}
                             </span>
                           )}
                         </div>
-                        <p className="text-muted-foreground font-semibold text-sm">{event.organizer} • {event.type}</p>
-                        <div className="flex flex-wrap items-center gap-4 text-[10px] text-muted-foreground font-medium mt-1.5">
+                        <p className="text-muted-foreground font-medium text-sm">{event.organizer} · {event.type}</p>
+                        <div className="flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground font-medium mt-1.5">
                           <span className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5 text-accent/60" /> {event.date}
                           </span>
@@ -415,10 +416,10 @@ const AdminEvents = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id, event.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger rounded-lg">
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id, event.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -433,7 +434,7 @@ const AdminEvents = () => {
             icon={Calendar}
             title={searchQuery ? 'No events found' : 'No events yet'}
             description={searchQuery ? 'Try a different search.' : 'Add your first event to get started.'}
-            action={!searchQuery ? { label: 'Add Event', onClick: handleAdd } : undefined}
+            action={!searchQuery ? { label: 'Add event', onClick: handleAdd } : undefined}
           />
         )}
       </div>
@@ -441,7 +442,7 @@ const AdminEvents = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Event?"
+        title="Delete event?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}
@@ -450,7 +451,7 @@ const AdminEvents = () => {
       <EventFormDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentEvent ? 'Edit Event' : 'Add New Event'}
+        title={currentEvent ? 'Edit event' : 'Add new event'}
         defaultValues={getDefaultValues(currentEvent)}
         onSubmit={handleSubmit}
       />

@@ -92,8 +92,8 @@ const toSlug = (s: string) =>
     .replace(/[\s_]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const FIELD_CLS = "bg-white/[0.04] border-white/10 text-white placeholder:text-white/60 focus:ring-2 focus:ring-accent focus:border-accent/40 rounded-lg h-10";
-const LABEL_CLS = "text-[10px] font-black uppercase tracking-widest text-white/60 mb-1.5 block";
+const FIELD_CLS = "bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:border-accent/40 rounded-lg h-10";
+const LABEL_CLS = "text-[12px] font-medium uppercase tracking-widest text-muted-foreground mb-1.5 block";
 
 // ── Reusable tag-list editor ──────────────────────────────────────
 const TagListEditor = ({
@@ -114,21 +114,21 @@ const TagListEditor = ({
       <label className={LABEL_CLS}>{label}</label>
       <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
         {values.map((v, i) => (
-          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent/10 border border-accent/20 text-accent text-xs font-bold">
+          <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent/10 border border-accent/20 text-accent text-xs font-medium">
             {v}
             <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-accent/50 hover:text-danger ml-0.5">
               <X className="w-3 h-3" />
             </button>
           </span>
         ))}
-        {values.length === 0 && <p className="text-xs text-white/60">None added</p>}
+        {values.length === 0 && <p className="text-xs text-muted-foreground">None added</p>}
       </div>
       <div className="flex gap-2">
         <Input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
           placeholder={placeholder} className={cn(FIELD_CLS, "flex-1 h-9 text-sm")} />
         <Button type="button" onClick={add} variant="outline"
-          className="border-white/10 bg-white/[0.03] hover:bg-white/[0.07] text-white/60 hover:text-white rounded-lg h-9 px-3 font-bold text-xs">
+          className="border-border bg-card hover:bg-secondary text-muted-foreground hover:text-foreground h-9 px-3 text-xs">
           <Plus className="w-3 h-3 mr-1" /> Add
         </Button>
       </div>
@@ -140,15 +140,15 @@ const TagListEditor = ({
 const Section = ({ icon: Icon, title, children, badge }: {
   icon: React.ElementType; title: string; children: React.ReactNode; badge?: string;
 }) => (
-  <Card className="bg-white/[0.03] border-white/[0.07] overflow-hidden">
-    <CardHeader className="border-b border-white/[0.06] py-3 px-5">
+  <Card className="bg-card border-border-subtle overflow-hidden">
+    <CardHeader className="border-b border-border-subtle py-3 px-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon className="w-3.5 h-3.5 text-accent" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/50">{title}</span>
+          <span className="text-[12px] font-medium uppercase tracking-widest text-muted-foreground">{title}</span>
         </div>
         {badge && (
-          <span className="text-[9px] font-black uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-full border border-accent/20">
+          <span className="text-[12px] font-medium uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-full border border-accent/20">
             {badge}
           </span>
         )}
@@ -301,20 +301,20 @@ const ProjectForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-24">
       <FormHeader
         backTo="/projects"
-        title={isEditMode ? 'Edit Project' : 'New Project'}
+        title={isEditMode ? 'Edit project' : 'New Project'}
         actions={
           <>
             <Button type="submit" disabled={isLoading}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-black rounded-xl h-10 px-6 shadow-[0_0_20px_hsl(var(--accent)/0.28)]">
-              <Save className="w-3.5 h-3.5 mr-2" />
-              {isLoading ? 'Saving…' : 'Save Project'}
+              className="h-10 shadow-[0_0_20px_hsl(var(--accent)/0.28)]">
+              <Save className="w-3.5 h-3.5" />
+              {isLoading ? 'Saving…' : 'Save project'}
             </Button>
             {isEditMode && (
               <Button type="button" variant="ghost" size="icon"
-                className="text-danger/60 hover:bg-danger/10 hover:text-danger rounded-xl w-9 h-9"
+                className="text-danger/60 hover:bg-danger/10 hover:text-danger w-9 h-9"
                 onClick={() => setDeleteDialogOpen(true)} disabled={isLoading}>
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -362,7 +362,7 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Type</label>
                 <Select value={(watch('type') as string) ?? ''} onValueChange={(v) => setValue('type', v)}>
-                  <SelectTrigger className="w-full bg-transparent border border-white/10 rounded-lg px-3 h-10 text-sm text-white focus:ring-2 focus:ring-accent outline-none">
+                  <SelectTrigger className="w-full bg-transparent border border-border rounded-lg px-3 h-10 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
@@ -379,7 +379,7 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Stage</label>
                 <Select value={(watch('stage') as string) ?? ''} onValueChange={(v) => setValue('stage', v)}>
-                  <SelectTrigger className="w-full bg-transparent border border-white/10 rounded-lg px-3 h-10 text-sm text-white focus:ring-2 focus:ring-accent outline-none">
+                  <SelectTrigger className="w-full bg-transparent border border-border rounded-lg px-3 h-10 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
@@ -401,13 +401,13 @@ const ProjectForm = () => {
             <div>
               <label className={LABEL_CLS}>Overview (Detailed)</label>
               <Textarea {...register('overview')} placeholder="Full project overview - goals, outcomes, architecture…"
-                className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/60 focus:ring-2 focus:ring-accent rounded-lg min-h-[120px] resize-none" />
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent rounded-lg min-h-[120px] resize-none" />
               {errors.overview && <p className="text-xs text-danger mt-1">{errors.overview.message}</p>}
             </div>
             <div>
               <label className={LABEL_CLS}>Long Description</label>
               <Textarea {...register('long_description')} placeholder="Extended write-up for the project detail page…"
-                className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/60 focus:ring-2 focus:ring-accent rounded-lg min-h-[100px] resize-none" />
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent rounded-lg min-h-[100px] resize-none" />
             </div>
           </Section>
 
@@ -418,7 +418,7 @@ const ProjectForm = () => {
               onChange={v => setValue('techStack', v)} />
             {errors.techStack && <p className="text-xs text-danger">{errors.techStack.message}</p>}
 
-            <div className="border-t border-white/5 pt-4">
+            <div className="border-t border-border-subtle pt-4">
               <TagListEditor label="Technologies (full list on detail page)"
                 values={technologies} placeholder="e.g. Framer Motion, Firebase…"
                 onChange={v => setValue('technologies', v)} />
@@ -431,7 +431,7 @@ const ProjectForm = () => {
             <TagListEditor label="Challenges faced"
               values={challenges} placeholder="e.g. Achieving 100/100 Lighthouse scores"
               onChange={v => setValue('challenges', v)} />
-            <div className="border-t border-white/5 pt-4">
+            <div className="border-t border-border-subtle pt-4">
               <TagListEditor label="Key Learnings"
                 values={learnings} placeholder="e.g. Performance is a feature, not an afterthought."
                 onChange={v => setValue('learnings', v)} />
@@ -450,12 +450,12 @@ const ProjectForm = () => {
             badge={linkedEducationIds.length + linkedExperienceIds.length > 0
               ? `${linkedEducationIds.length + linkedExperienceIds.length}`
               : undefined}>
-            <p className="text-[10px] text-white/60">
+            <p className="text-[12px] text-muted-foreground">
               Link this project to education entries and work experience. They will display this project as a card strip in their respective public pages.
             </p>
 
             {assocLoading ? (
-              <div className="flex items-center gap-2 text-xs text-white/60 py-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
                 <div className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
                 Loading…
               </div>
@@ -481,19 +481,19 @@ const ProjectForm = () => {
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-all ${
                               isLinked
                                 ? 'border-accent/40 bg-accent/10'
-                                : 'border-white/10 bg-white/[0.02] hover:border-accent/20 hover:bg-white/5'
+                                : 'border-border bg-card hover:border-accent/20 hover:bg-secondary'
                             }`}
                           >
                             <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
-                              isLinked ? 'bg-accent border-accent' : 'border-white/20'
+                              isLinked ? 'bg-accent border-accent' : 'border-border-strong'
                             }`}>
                               {isLinked && <Check className="w-2.5 h-2.5 text-accent-foreground" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-xs font-semibold truncate ${isLinked ? 'text-white' : 'text-white/50'}`}>
+                              <p className={`text-xs font-medium truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>
                                 {edu.school_name ?? edu.institution}
                               </p>
-                              <p className="text-[10px] text-white/60 truncate">
+                              <p className="text-[12px] text-muted-foreground truncate">
                                 {edu.degree}{edu.field_of_study ? ` · ${edu.field_of_study}` : ''}
                               </p>
                             </div>
@@ -524,19 +524,19 @@ const ProjectForm = () => {
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-all ${
                               isLinked
                                 ? 'border-accent/40 bg-accent/10'
-                                : 'border-white/10 bg-white/[0.02] hover:border-accent/20 hover:bg-white/5'
+                                : 'border-border bg-card hover:border-accent/20 hover:bg-secondary'
                             }`}
                           >
                             <div className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
-                              isLinked ? 'bg-accent border-accent' : 'border-white/20'
+                              isLinked ? 'bg-accent border-accent' : 'border-border-strong'
                             }`}>
                               {isLinked && <Check className="w-2.5 h-2.5 text-accent-foreground" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-xs font-semibold truncate ${isLinked ? 'text-white' : 'text-white/50'}`}>
+                              <p className={`text-xs font-medium truncate ${isLinked ? 'text-foreground' : 'text-muted-foreground'}`}>
                                 {exp.company_name ?? exp.company}
                               </p>
-                              <p className="text-[10px] text-white/60 truncate">
+                              <p className="text-[12px] text-muted-foreground truncate">
                                 {exp.employment_type ?? exp.employmentType}
                                 {exp.location ? ` · ${exp.location}` : ''}
                               </p>
@@ -549,7 +549,7 @@ const ProjectForm = () => {
                 )}
 
                 {allEducation.length === 0 && allExperiences.length === 0 && (
-                  <p className="text-xs text-white/60 py-1">No education or experience entries found.</p>
+                  <p className="text-xs text-muted-foreground py-1">No education or experience entries found.</p>
                 )}
               </div>
             )}
@@ -588,7 +588,7 @@ const ProjectForm = () => {
             <div>
               <label className={LABEL_CLS}>YouTube / Video URL</label>
               <div className="relative">
-                <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('video')} placeholder="https://youtube.com/watch?v=…"
                   className={cn(FIELD_CLS, "pl-9")} />
               </div>
@@ -600,7 +600,7 @@ const ProjectForm = () => {
             <div>
               <label className={LABEL_CLS}>Live Demo URL</label>
               <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('liveUrl')} placeholder="https://example.com"
                   className={cn(FIELD_CLS, "pl-9")} />
               </div>
@@ -609,7 +609,7 @@ const ProjectForm = () => {
             <div>
               <label className={LABEL_CLS}>Live Preview (legacy)</label>
               <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('live_preview')} placeholder="https://…"
                   className={cn(FIELD_CLS, "pl-9")} />
               </div>
@@ -617,7 +617,7 @@ const ProjectForm = () => {
             <div>
               <label className={LABEL_CLS}>GitHub Repository</label>
               <div className="relative">
-                <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('githubUrl')} placeholder="https://github.com/…"
                   className={cn(FIELD_CLS, "pl-9")} />
               </div>
@@ -625,7 +625,7 @@ const ProjectForm = () => {
             <div>
               <label className={LABEL_CLS}>GitHub (legacy)</label>
               <div className="relative">
-                <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('github')} placeholder="https://github.com/…"
                   className={cn(FIELD_CLS, "pl-9")} />
               </div>
@@ -638,7 +638,7 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Status</label>
                 <Select value={(watch('status') as string) ?? ''} onValueChange={(v) => setValue('status', v)}>
-                  <SelectTrigger className="w-full bg-transparent border border-white/10 rounded-lg px-3 h-10 text-sm text-white focus:ring-2 focus:ring-accent outline-none">
+                  <SelectTrigger className="w-full bg-transparent border border-border rounded-lg px-3 h-10 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
@@ -660,16 +660,16 @@ const ProjectForm = () => {
                 className={cn(FIELD_CLS, "font-mono text-xs")} />
             </div>
             <label className="flex items-center justify-between cursor-pointer group pt-1">
-              <span className="text-sm font-bold text-white/70 group-hover:text-white transition-colors">Featured Project</span>
+              <span className="text-sm font-medium text-fg-2 group-hover:text-foreground transition-colors">Featured Project</span>
               <input type="checkbox" {...register('featured')}
-                className="w-4 h-4 rounded accent-accent bg-white/5 border-white/10" />
+                className="w-4 h-4 rounded accent-accent " />
             </label>
             <label className="flex items-center justify-between cursor-pointer group pt-1">
-              <span className="text-sm font-bold text-white/70 group-hover:text-white transition-colors">
-                Published <span className="font-normal text-white/40">(unpublish to hide from the public site and sitemap)</span>
+              <span className="text-sm font-medium text-fg-2 group-hover:text-foreground transition-colors">
+                Published <span className="font-normal text-muted-foreground">(unpublish to hide from the public site and sitemap)</span>
               </span>
               <input type="checkbox" {...register('published')}
-                className="w-4 h-4 rounded accent-accent bg-white/5 border-white/10" />
+                className="w-4 h-4 rounded accent-accent " />
             </label>
           </Section>
         </div>
@@ -677,21 +677,21 @@ const ProjectForm = () => {
 
       {/* Delete dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={o => !isLoading && setDeleteDialogOpen(o)}>
-        <AlertDialogContent className="bg-card border-[var(--admin-border-lg)] text-foreground rounded-xl shadow-2xl">
+        <AlertDialogContent className="bg-card border-[hsl(var(--border-subtle))] text-foreground rounded-xl shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-black">Delete Project?</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/50 text-sm">
+            <AlertDialogTitle className="text-lg font-medium">Delete project?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground text-sm">
               This project will be permanently removed. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel disabled={isLoading}
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl font-bold">
+              className="text-foreground hover:bg-surface-3 rounded-xl font-medium">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction disabled={isLoading} onClick={onDelete}
-              className="bg-danger hover:bg-danger/90 text-danger-foreground rounded-xl font-black border-0 shadow-lg shadow-danger/20">
-              {isLoading ? 'Deleting…' : 'Delete Project'}
+              className="bg-danger hover:bg-danger/90 text-danger-foreground rounded-xl font-medium border-0 shadow-lg shadow-danger/20">
+              {isLoading ? 'Deleting…' : 'Delete project'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

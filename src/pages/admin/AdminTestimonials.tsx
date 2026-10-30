@@ -8,6 +8,8 @@ import { Plus, Quote, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -56,6 +58,7 @@ const AdminTestimonials = () => {
     setCurrentTestimonial(null);
     setIsDialogOpen(true);
   };
+  useCreateIntent(handleAdd);
 
   const handleEdit = (test: Testimonial) => {
     setCurrentTestimonial(test);
@@ -90,15 +93,13 @@ const AdminTestimonials = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="SOCIAL PROOF"
         title="Testimonials"
-        subtitle="Manage recommendations from colleagues and clients."
-        backTo="/dashboard"
+        subtitle={plural(testimonials.length, "testimonial")}
         actions={
-          <Button onClick={handleAdd} variant="primary" className="font-semibold h-11 px-6 rounded-lg">
-            <Plus className="w-4 h-4 mr-2" /> Add Testimonial
+          <Button onClick={handleAdd} variant="primary">
+            <Plus className="w-4 h-4" /> Add testimonial
           </Button>
         }
       />
@@ -114,15 +115,15 @@ const AdminTestimonials = () => {
               <CardContent className="p-6">
                 <Quote className="absolute top-4 right-4 w-10 h-10 text-border group-hover:text-accent/10 transition-colors" />
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-accent/10 border border-border flex items-center justify-center text-accent overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center text-fg-2 overflow-hidden">
                     {test.avatar ? (
                       <img src={test.avatar} alt={test.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-lg font-bold">{test.name.charAt(0)}</span>
+                      <span className="text-lg font-medium">{test.name.charAt(0)}</span>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground">{test.name}</h3>
+                    <h3 className="font-medium text-foreground">{test.name}</h3>
                     <p className="text-xs text-muted-foreground">{test.position} at {test.company}</p>
                   </div>
                 </div>
@@ -145,17 +146,17 @@ const AdminTestimonials = () => {
             icon={Quote}
             title="No testimonials yet"
             description="Showcase what people are saying about your work."
-            action={{ label: 'Add Testimonial', onClick: handleAdd }}
+            action={{ label: 'Add testimonial', onClick: handleAdd }}
             className="md:col-span-2"
           />
         )}
       </div>
 
-      <ConfirmDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)} title="Delete Testimonial?" description={`"${deleteTarget?.label}" will be permanently deleted.`} confirmLabel="Delete" onConfirm={handleConfirmDelete} />
+      <ConfirmDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)} title="Delete testimonial?" description={`"${deleteTarget?.label}" will be permanently deleted.`} confirmLabel="Delete" onConfirm={handleConfirmDelete} />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentTestimonial ? 'Edit Testimonial' : 'Add Testimonial'}
+        title={currentTestimonial ? 'Edit testimonial' : 'Add testimonial'}
         fields={testimonialFields}
         schema={testimonialSchema}
         defaultValues={currentTestimonial || {}}

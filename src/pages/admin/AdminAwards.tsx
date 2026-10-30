@@ -8,6 +8,8 @@ import { Plus, Search, Award as AwardIcon, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -57,6 +59,7 @@ const AdminAwards = () => {
     setCurrentAward(null);
     setIsDialogOpen(true);
   };
+  useCreateIntent(handleAdd);
 
   const handleEdit = (award: Award) => {
     setCurrentAward(award);
@@ -96,26 +99,24 @@ const AdminAwards = () => {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="METADATA"
-        title="Awards & Recognition"
-        subtitle="Manage your honors, awards, and certifications."
-        backTo="/dashboard"
+        title="Awards"
+        subtitle={plural(awards.length, "award")}
         actions={
-          <Button onClick={handleAdd} variant="primary" className="font-black h-11 px-6 rounded-lg flex-shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Add Award
+          <Button onClick={handleAdd} variant="primary">
+            <Plus className="w-4 h-4" /> Add award
           </Button>
         }
       />
 
-      <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
+      <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search awards..."
-            className="w-full bg-secondary border border-border rounded-lg pl-11 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-accent outline-none transition-all text-foreground placeholder:text-muted-foreground font-medium"
+            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -129,25 +130,25 @@ const AdminAwards = () => {
           ))
         ) : filteredAwards.length > 0 ? (
           filteredAwards.map((award) => (
-            <Card key={award.id} interactive className="bg-card border-border group rounded-lg shadow-sm">
+            <Card key={award.id} interactive className="group">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2">
                       <AwardIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-black text-foreground text-sm">
+                      <h3 className="font-medium text-foreground text-sm">
                         {award.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-medium">{award.issuer} • {award.date}</p>
+                      <p className="text-xs text-muted-foreground font-medium">{award.issuer} · {award.date}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(award)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(award)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(award.id, award.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(award.id, award.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -160,7 +161,7 @@ const AdminAwards = () => {
             icon={AwardIcon}
             title={searchQuery ? 'No awards found' : 'No awards yet'}
             description={searchQuery ? 'Try a different search.' : 'Add your achievements to get started.'}
-            action={!searchQuery ? { label: 'Add Award', onClick: handleAdd } : undefined}
+            action={!searchQuery ? { label: 'Add award', onClick: handleAdd } : undefined}
           />
         )}
       </div>
@@ -168,15 +169,15 @@ const AdminAwards = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Award?"
+        title="Delete award?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
-        confirmLabel="Delete Award"
+        confirmLabel="Delete award"
         onConfirm={handleConfirmDelete}
       />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentAward ? 'Edit Award' : 'Add New Award'}
+        title={currentAward ? 'Edit award' : 'Add new award'}
         fields={awardFields}
         schema={awardSchema}
         defaultValues={currentAward || {}}

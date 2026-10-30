@@ -11,17 +11,19 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 text-center">
-      <span className="font-display text-6xl font-black tracking-tighter text-accent mb-4">404</span>
-      <h1 className="text-xl font-bold text-foreground mb-2">Page not found</h1>
-      <p className="text-sm text-muted-foreground mb-8">
-        <code className="px-1.5 py-0.5 rounded bg-muted text-accent font-mono">{location.pathname}</code>{" "}
-        doesn't exist in the admin panel.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-5 text-center">
+      <span className="font-mono text-label uppercase text-accent">Error 404</span>
+      <h1 className="mt-4 text-[40px] font-medium leading-none tracking-[-0.03em] text-foreground">
+        Page not found<span className="soft">.</span>
+      </h1>
+      <p className="mt-4 max-w-md text-[15px] text-fg-2">
+        <code className="rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[13px] text-foreground">{location.pathname}</code>{" "}
+        doesn’t exist in the CMS.
       </p>
-      <Button asChild className="gap-2">
+      <Button asChild className="mt-8">
         <Link to="/">
-          <Home className="w-4 h-4" />
-          Back to Dashboard
+          <Home aria-hidden="true" />
+          Back to dashboard
         </Link>
       </Button>
     </div>

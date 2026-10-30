@@ -9,6 +9,8 @@ import { Plus, Search, Lightbulb, Edit2, Trash2, ExternalLink } from 'lucide-rea
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -68,6 +70,7 @@ const AdminPatents = () => {
   };
 
   const handleAdd = () => { setCurrent(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (p: Patent) => { setCurrent(p); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -103,26 +106,24 @@ const AdminPatents = () => {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="METADATA"
         title="Patents"
-        subtitle="Inventions and intellectual property filings."
-        backTo="/dashboard"
+        subtitle={patents.length ? plural(patents.length, "patent") : "0 patents · hidden on the site until you add one"}
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Add Patent
+          <Button onClick={handleAdd}>
+            <Plus className="w-4 h-4" /> Add patent
           </Button>
         }
       />
 
-      <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
+      <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search patents..."
-            className="w-full bg-secondary border border-border rounded-lg pl-11 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-accent outline-none transition-all text-foreground placeholder:text-muted-foreground font-medium"
+            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -140,12 +141,12 @@ const AdminPatents = () => {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0 mt-0.5">
+                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2 flex-shrink-0 mt-0.5">
                       <Lightbulb className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-black text-foreground text-sm">
+                        <h3 className="font-medium text-foreground text-sm">
                           {patent.title}
                         </h3>
                         <Badge variant={getStatusVariant(patent.status)}>
@@ -170,10 +171,10 @@ const AdminPatents = () => {
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(patent)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(patent)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(patent.id, patent.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(patent.id, patent.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -193,15 +194,15 @@ const AdminPatents = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Patent?"
+        title="Delete patent?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
-        confirmLabel="Delete Patent"
+        confirmLabel="Delete patent"
         onConfirm={handleConfirmDelete}
       />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={current ? 'Edit Patent' : 'Add Patent'}
+        title={current ? 'Edit patent' : 'Add patent'}
         fields={patentFields}
         schema={patentSchema}
         defaultValues={current || {}}

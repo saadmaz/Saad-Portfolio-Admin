@@ -51,7 +51,7 @@ const toSlug = (s: string) =>
 
 /* ── Shared label style ──────────────────────────────────────────── */
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <span className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5"
+  <span className="block text-[12px] font-medium uppercase tracking-widest mb-1.5"
         style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
     {children}
   </span>
@@ -78,13 +78,13 @@ const StyledInput = React.forwardRef<
       props.className,
     )}
     style={{
-      background: 'var(--admin-surface-md)',
-      border:     '1px solid var(--admin-surface-xl)',
+      background: 'hsl(var(--secondary))',
+      border:     '1px solid hsl(var(--border))',
       color:      'hsl(var(--foreground) / 0.85)',
       ...props.style,
     }}
     onFocus={e => { e.currentTarget.style.borderColor = 'hsl(var(--accent) / 0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px hsl(var(--accent) / 0.08)'; }}
-    onBlur={e  => { e.currentTarget.style.borderColor = 'var(--admin-surface-xl)'; e.currentTarget.style.boxShadow = 'none'; }}
+    onBlur={e  => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.boxShadow = 'none'; }}
   />
 ));
 StyledInput.displayName = 'StyledInput';
@@ -99,13 +99,13 @@ const StyledTextarea = React.forwardRef<
     {...props}
     className={cn('w-full px-3 py-2.5 rounded-lg text-[13px] outline-none transition-all duration-150 resize-none', props.className)}
     style={{
-      background: 'var(--admin-surface-md)',
-      border:     '1px solid var(--admin-surface-xl)',
+      background: 'hsl(var(--secondary))',
+      border:     '1px solid hsl(var(--border))',
       color:      'hsl(var(--foreground) / 0.85)',
       ...props.style,
     }}
     onFocus={e => { e.currentTarget.style.borderColor = 'hsl(var(--accent) / 0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px hsl(var(--accent) / 0.08)'; }}
-    onBlur={e  => { e.currentTarget.style.borderColor = 'var(--admin-surface-xl)'; e.currentTarget.style.boxShadow = 'none'; }}
+    onBlur={e  => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.boxShadow = 'none'; }}
   />
 ));
 StyledTextarea.displayName = 'StyledTextarea';
@@ -118,14 +118,14 @@ const SectionCard = ({
 }: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) => (
   <div
     className="rounded-xl overflow-hidden"
-    style={{ background: 'hsl(var(--card))', border: '1px solid var(--admin-border-sm)' }}
+    style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border-subtle))' }}
   >
     <div
       className="flex items-center gap-2 px-4 py-3"
-      style={{ borderBottom: '1px solid var(--admin-border-sm)' }}
+      style={{ borderBottom: '1px solid hsl(var(--border-subtle))' }}
     >
       <Icon className="w-3.5 h-3.5 text-accent" />
-      <span className="text-[11px] font-semibold uppercase tracking-widest"
+      <span className="text-[12px] font-medium uppercase tracking-widest"
             style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
         {title}
       </span>
@@ -144,9 +144,9 @@ const ToolbarBtn = ({
     onClick={onClick}
     className={cn(
       'p-1.5 rounded-md transition-all flex items-center justify-center',
-      active ? 'bg-accent/20 text-accent' : 'hover:bg-white/[0.06]',
+      active ? 'bg-accent/20 text-accent' : 'hover:bg-secondary',
     )}
-    style={{ color: active ? 'hsl(var(--accent-bright))' : 'hsl(var(--foreground) / 0.60)' }}
+    style={{ color: active ? 'hsl(var(--accent-hover))' : 'hsl(var(--foreground) / 0.60)' }}
   >
     {children}
   </button>
@@ -154,7 +154,7 @@ const ToolbarBtn = ({
 
 /* ── Divider ─────────────────────────────────────────────────────── */
 const ToolbarDivider = () => (
-  <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'var(--admin-surface-xl)' }} />
+  <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'hsl(var(--border))' }} />
 );
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -202,17 +202,17 @@ const BlogForm = () => {
         heading:       { levels: [2, 3] },
         bulletList:    { HTMLAttributes: { class: 'list-disc pl-5 space-y-1' } },
         orderedList:   { HTMLAttributes: { class: 'list-decimal pl-5 space-y-1' } },
-        code:          { HTMLAttributes: { class: 'bg-white/10 rounded px-1.5 py-0.5 font-mono text-sm text-accent' } },
-        codeBlock:     { HTMLAttributes: { class: 'bg-black/40 rounded-xl p-4 font-mono text-sm border border-white/10 my-3' } },
-        blockquote:    { HTMLAttributes: { class: 'border-l-4 border-accent/50 pl-4 text-white/60 my-3 italic' } },
-        horizontalRule:{ HTMLAttributes: { class: 'border-white/10 my-5' } },
+        code:          { HTMLAttributes: { class: 'bg-surface-3 rounded px-1.5 py-0.5 font-mono text-sm text-accent' } },
+        codeBlock:     { HTMLAttributes: { class: 'bg-black/40 rounded-xl p-4 font-mono text-sm border border-border my-3' } },
+        blockquote:    { HTMLAttributes: { class: 'border-l-4 border-accent/50 pl-4 text-muted-foreground my-3 italic' } },
+        horizontalRule:{ HTMLAttributes: { class: 'border-border my-5' } },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: { class: 'text-accent underline underline-offset-4 hover:text-accent-hover', target: '_blank' },
       }),
       Image.configure({
-        HTMLAttributes: { class: 'rounded-xl max-w-full my-4 border border-white/10' },
+        HTMLAttributes: { class: 'rounded-xl max-w-full my-4 border border-border' },
       }),
       Placeholder.configure({
         placeholder: 'Start writing your post here. Use the toolbar above for formatting…',
@@ -391,7 +391,7 @@ const BlogForm = () => {
       >
         <FormHeader
           backTo="/blogs"
-          title={isEditMode ? 'Edit Post' : 'New Blog Post'}
+          title={isEditMode ? 'Edit post' : 'New Blog Post'}
           subtitle={isEditMode ? 'Update content and metadata.' : 'Write something worth reading.'}
           actions={
             <>
@@ -399,25 +399,25 @@ const BlogForm = () => {
                 type="button"
                 variant="outline"
                 onClick={handlePreview}
-                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg h-9 px-3 text-xs font-medium"
+                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground h-9 px-3 text-xs"
               >
-                <Eye className="w-3.5 h-3.5 mr-1.5" /> Preview
+                <Eye className="w-3.5 h-3.5" /> Preview
               </Button>
 
               <Button
                 type="submit"
                 variant="outline"
                 disabled={isLoading}
-                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg h-9 px-3 text-xs font-medium"
+                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground h-9 px-3 text-xs"
               >
-                <Save className="w-3.5 h-3.5 mr-1.5" /> Save Draft
+                <Save className="w-3.5 h-3.5" /> Save draft
               </Button>
 
               <Button
                 type="button"
                 onClick={handleSubmit(d => onSubmit(d, publishMode === 'publish'))}
                 disabled={isLoading}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg h-9 px-4 text-xs font-semibold shadow-[0_0_18px_hsl(var(--accent)/0.28)]"
+                className="h-9 px-4 text-xs shadow-[0_0_18px_hsl(var(--accent)/0.28)]"
               >
                 <Send className="w-3.5 h-3.5 mr-1.5" />
                 {isLoading ? 'Saving…' : isEditMode ? 'Update' : publishMode === 'publish' ? 'Publish' : 'Save'}
@@ -429,7 +429,7 @@ const BlogForm = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowDeleteModal(true)}
-                  className="text-destructive/60 hover:bg-destructive/10 hover:text-destructive rounded-lg w-9 h-9"
+                  className="text-destructive/60 hover:bg-destructive/10 hover:text-destructive w-9 h-9"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -448,7 +448,7 @@ const BlogForm = () => {
           {/* Title + slug + excerpt */}
           <div
             className="rounded-xl overflow-hidden"
-            style={{ background: 'hsl(var(--card))', border: '1px solid var(--admin-border-sm)' }}
+            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border-subtle))' }}
           >
             <div className="p-5 space-y-4">
               {/* Title */}
@@ -456,7 +456,7 @@ const BlogForm = () => {
                 <input
                   {...register('title')}
                   placeholder="Post title…"
-                  className="w-full bg-transparent border-none text-[22px] font-bold placeholder:opacity-20 focus:outline-none leading-snug"
+                  className="w-full bg-transparent border-none text-[22px] font-medium placeholder:opacity-20 focus:outline-none leading-snug"
                   style={{ color: 'hsl(var(--foreground) / 0.92)', letterSpacing: '-0.02em' }}
                 />
               </Field>
@@ -464,9 +464,9 @@ const BlogForm = () => {
               {/* Slug */}
               <div
                 className="flex items-center gap-2 pt-3"
-                style={{ borderTop: '1px solid var(--admin-surface-lg)' }}
+                style={{ borderTop: '1px solid hsl(var(--border-subtle))' }}
               >
-                <span className="text-[11px] font-medium flex-shrink-0" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
+                <span className="text-[12px] font-medium flex-shrink-0" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
                   /blog/
                 </span>
                 <input
@@ -482,11 +482,11 @@ const BlogForm = () => {
             {/* Excerpt */}
             <div
               className="px-5 pb-5"
-              style={{ borderTop: '1px solid var(--admin-surface-lg)' }}
+              style={{ borderTop: '1px solid hsl(var(--border-subtle))' }}
             >
               <div className="flex items-center justify-between pt-4 mb-2">
                 <Label>Excerpt</Label>
-                <span className="text-[10px]" style={{ color: excerptLen > 280 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground) / 0.60)' }}>
+                <span className="text-[12px]" style={{ color: excerptLen > 280 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground) / 0.60)' }}>
                   {excerptLen}/300
                 </span>
               </div>
@@ -504,13 +504,13 @@ const BlogForm = () => {
           {/* Rich text editor */}
           <div
             className="rounded-xl overflow-hidden"
-            style={{ background: 'hsl(var(--card))', border: '1px solid var(--admin-border-sm)' }}
+            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border-subtle))' }}
           >
             {/* Toolbar */}
             {editor && (
               <div
                 className="flex flex-wrap items-center gap-0.5 p-2"
-                style={{ borderBottom: '1px solid var(--admin-border-sm)' }}
+                style={{ borderBottom: '1px solid hsl(var(--border-subtle))' }}
               >
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
                   <Bold className="w-3.5 h-3.5" />
@@ -540,7 +540,7 @@ const BlogForm = () => {
                   <Code className="w-3.5 h-3.5" />
                 </ToolbarBtn>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="Code Block">
-                  <span className="text-[10px] font-bold font-mono leading-none px-0.5">{'{ }'}</span>
+                  <span className="text-[12px] font-medium font-mono leading-none px-0.5">{'{ }'}</span>
                 </ToolbarBtn>
                 <ToolbarDivider />
                 <ToolbarBtn onClick={handleSetLink} active={editor.isActive('link')} title="Insert Link">
@@ -588,7 +588,7 @@ const BlogForm = () => {
             {/* Publish mode selector */}
             <div
               className="grid grid-cols-3 gap-1 p-1 rounded-lg"
-              style={{ background: 'var(--admin-surface-sm)' }}
+              style={{ background: 'hsl(var(--secondary) / 0.6)' }}
             >
               {(['draft', 'publish', 'schedule'] as const).map(mode => (
                 <button
@@ -598,7 +598,7 @@ const BlogForm = () => {
                     setPublishMode(mode);
                     setValue('published', mode === 'publish');
                   }}
-                  className="py-1.5 rounded-md text-[11px] font-semibold capitalize transition-all"
+                  className="py-1.5 rounded-md text-[12px] font-medium capitalize transition-all"
                   style={{
                     background:   publishMode === mode ? 'hsl(var(--accent))' : 'transparent',
                     color:        publishMode === mode ? 'hsl(var(--accent-foreground))' : 'hsl(var(--foreground) / 0.60)',
@@ -625,7 +625,7 @@ const BlogForm = () => {
             {/* Status indicator */}
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: 'var(--admin-surface-sm)', border: '1px solid var(--admin-border-sm)' }}
+              style={{ background: 'hsl(var(--secondary) / 0.6)', border: '1px solid hsl(var(--border-subtle))' }}
             >
               <span
                 className="w-2 h-2 rounded-full flex-shrink-0"
@@ -635,7 +635,7 @@ const BlogForm = () => {
                     : 'hsl(var(--foreground) / 0.60)',
                 }}
               />
-              <span className="text-[11px] font-medium" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
+              <span className="text-[12px] font-medium" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
                 {publishMode === 'publish' ? 'Will go live immediately'
                   : publishMode === 'schedule' ? (schedDate ? `Scheduled for ${new Date(schedDate).toLocaleDateString()}` : 'Pick a date above')
                   : 'Saved as draft'}
@@ -657,7 +657,7 @@ const BlogForm = () => {
             <Field error={errors.metaDescription?.message}>
               <div className="flex items-center justify-between mb-1.5">
                 <Label>Meta Description</Label>
-                <span className="text-[10px]" style={{ color: metaLen > 150 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground) / 0.60)' }}>
+                <span className="text-[12px]" style={{ color: metaLen > 150 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground) / 0.60)' }}>
                   {metaLen}/160
                 </span>
               </div>
@@ -674,7 +674,7 @@ const BlogForm = () => {
                 {...register('keywords')}
                 placeholder="react, typescript, web dev"
               />
-              <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
+              <p className="text-[12px] mt-1" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
                 Comma-separated primary &amp; secondary keywords
               </p>
             </Field>
@@ -692,13 +692,13 @@ const BlogForm = () => {
               <Label>Tags</Label>
               <div
                 className="flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg"
-                style={{ background: 'var(--admin-surface-md)', border: '1px solid var(--admin-surface-xl)' }}
+                style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
               >
                 {tags.map(tag => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium"
-                    style={{ background: 'hsl(var(--accent) / 0.12)', color: 'hsl(var(--accent-bright))', border: '1px solid hsl(var(--accent) / 0.20)' }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[12px] font-medium"
+                    style={{ background: 'hsl(var(--accent) / 0.12)', color: 'hsl(var(--accent-hover))', border: '1px solid hsl(var(--accent) / 0.20)' }}
                   >
                     {tag}
                     <button type="button" onClick={() => removeTag(tag)} className="opacity-60 hover:opacity-100">
@@ -716,7 +716,7 @@ const BlogForm = () => {
                   style={{ color: 'hsl(var(--foreground) / 0.75)', minWidth: 80 }}
                 />
               </div>
-              <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
+              <p className="text-[12px] mt-1" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
                 Press Enter or comma to add
               </p>
             </div>
@@ -739,11 +739,11 @@ const BlogForm = () => {
         >
           <div
             className="w-full max-w-sm rounded-xl p-6 space-y-4"
-            style={{ background: 'hsl(var(--card))', border: '1px solid var(--admin-surface-xl)', boxShadow: 'var(--shadow-xl)' }}
+            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 24px 64px -12px rgb(0 0 0 / 0.6)' }}
             onClick={e => e.stopPropagation()}
           >
             <div>
-              <h3 className="text-base font-bold mb-1" style={{ color: 'hsl(var(--foreground) / 0.90)' }}>Delete Post?</h3>
+              <h3 className="text-base font-medium mb-1" style={{ color: 'hsl(var(--foreground) / 0.90)' }}>Delete post?</h3>
               <p className="text-[13px]" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
                 This post will be permanently deleted and cannot be recovered.
               </p>
@@ -754,7 +754,7 @@ const BlogForm = () => {
                 disabled={isLoading}
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all"
-                style={{ background: 'var(--admin-surface-lg)', color: 'hsl(var(--foreground) / 0.65)', border: '1px solid var(--admin-surface-xl)' }}
+                style={{ background: 'hsl(var(--border-subtle))', color: 'hsl(var(--foreground) / 0.65)', border: '1px solid hsl(var(--border))' }}
               >
                 Cancel
               </button>
@@ -762,10 +762,10 @@ const BlogForm = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={onDelete}
-                className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all disabled:opacity-50"
                 style={{ background: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))', boxShadow: '0 4px 12px hsl(var(--destructive) / 0.25)' }}
               >
-                {isLoading ? 'Deleting…' : 'Delete Post'}
+                {isLoading ? 'Deleting…' : 'Delete post'}
               </button>
             </div>
           </div>

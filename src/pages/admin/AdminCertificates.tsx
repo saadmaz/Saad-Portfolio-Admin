@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +80,7 @@ const SEED_DATA: SeedCert[] = [
   { title: "Introduction to Career Skills in Data Analytics", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-26", expiry_date: null, does_not_expire: true, credential_id: "edd7af5ca4af81109d6c768d3c673a9388c93aa03af81712985757e3258c5932", credential_url: "https://www.linkedin.com/learning/certificates/edd7af5ca4af81109d6c768d3c673a9388c93aa03af81712985757e3258c5932", description: "Successfully completed 'Introduction to Career Skills in Data Analytics' by Robin Hunt.", skills: ["Data Analytics", "Tech Career Skills"], category: "Technology & Web Development", type: "course", tags: ["Data Analytics", "Career Development", "Tech Skills", "Data Science Foundations"], pdf_document_link: "/certificates/intro-career-skills-data-analytics.pdf", is_verifiable: true, is_featured: false },
   { title: "AI Pair Programming with GitHub Copilot", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/Github.svg", issue_date: "2025-10-24", expiry_date: null, does_not_expire: true, credential_id: "54e4975777de59bb2b735a17db2f336f6fd691afb38e4b1a939743ef18fe3f05", credential_url: "https://www.linkedin.com/learning/certificates/54e4975777de59bb2b735a17db2f336f6fd691afb38e4b1a939743ef18fe3f05", description: "Successfully completed 'AI Pair Programming with GitHub Copilot' by Ronnie Sheer.", skills: ["GitHub Copilot", "Artificial Intelligence (AI)"], category: "Technology & Web Development", type: "course", tags: ["AI Coding", "GitHub Copilot", "Pair Programming", "DevTools"], pdf_document_link: "/Certificates/29 - CertificateOfCompletion_AI Pair Programming with GitHub Copilot.pdf", is_verifiable: true, is_featured: true },
   { title: "CompTIA Security+ (SY0-701) Cert Prep", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-31", expiry_date: null, does_not_expire: true, credential_id: "679b8d79fd3e84668b50a992f45df7efe2c0a16a6bd082b8750e95a71af0309c", credential_url: "https://www.linkedin.com/learning/certificates/679b8d79fd3e84668b50a992f45df7efe2c0a16a6bd082b8750e95a71af0309c", description: "Successfully completed 'CompTIA Security+ (SY0-701) Cert Prep' by Infosec Institute.", skills: ["Security Monitoring", "Enterprise Security", "Threat & Vulnerability Management"], category: "Cloud & DevOps", type: "course", tags: ["Cybersecurity", "CompTIA", "Security+", "Network Security"], pdf_document_link: "/Certificates/30 - CertificateOfCompletion_CompTIA Security SY0701 Cert Prep.pdf", is_verifiable: true, is_featured: true },
-  { title: "Create LinkedIn Posts that Stand Out with Jamé Jackson", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-31", expiry_date: null, does_not_expire: true, credential_id: "fcc09c6d76201f2b93ef322298dad424c0a7cc06ec6c2805b65037a0d6ec0383", credential_url: "https://www.linkedin.com/learning/certificates/fcc09c6d76201f2b93ef322298dad424c0a7cc06ec6c2805b65037a0d6ec0383", description: "Successfully completed 'Create LinkedIn Posts that Stand Out with Jamé Jackson' by LinkedIn News.", skills: ["LinkedIn", "Personal Branding", "Business Networking"], category: "Business & Strategy", type: "course", tags: ["LinkedIn", "Content Creation", "Personal Branding", "Networking"], pdf_document_link: "/Certificates/31 - CertificateOfCompletion_Create LinkedIn Posts that Stand Out with Jamé Jackson.pdf", is_verifiable: true, is_featured: false },
+  { title: "Create LinkedIn Posts that Stand Out with Jamé Jackson", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-31", expiry_date: null, does_not_expire: true, credential_id: "fcc09c6d76201f2b93ef322298dad424c0a7cc06ec6c2805b65037a0d6ec0383", credential_url: "https://www.linkedin.com/learning/certificates/fcc09c6d76201f2b93ef322298dad424c0a7cc06ec6c2805b65037a0d6ec0383", description: "Successfully completed 'Create LinkedIn posts that Stand Out with Jamé Jackson' by LinkedIn News.", skills: ["LinkedIn", "Personal Branding", "Business Networking"], category: "Business & Strategy", type: "course", tags: ["LinkedIn", "Content Creation", "Personal Branding", "Networking"], pdf_document_link: "/Certificates/31 - CertificateOfCompletion_Create LinkedIn Posts that Stand Out with Jamé Jackson.pdf", is_verifiable: true, is_featured: false },
   { title: "Building an Adaptability Mindset in the Age of AI", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-31", expiry_date: null, does_not_expire: true, credential_id: "71d7285689d240b39c39150a3568102311fb22a4e9d19b5cda59cb1de8f7b70b", credential_url: "https://www.linkedin.com/learning/certificates/71d7285689d240b39c39150a3568102311fb22a4e9d19b5cda59cb1de8f7b70b", description: "Successfully completed 'Building an Adaptability Mindset in the Age of AI' by Chris Shipley.", skills: ["Critical Thinking", "AI Productivity", "Artificial Intelligence (AI)"], category: "AI/ML", type: "course", tags: ["Adaptability", "Future of Work", "Mindset", "AI Strategy"], pdf_document_link: "/Certificates/32 - CertificateOfCompletion_Building an Adaptability Mindset in the Age of AI.pdf", is_verifiable: true, is_featured: false },
   { title: "Video Without Cameras: Text-to-Video Tools and Trends", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-31", expiry_date: null, does_not_expire: true, credential_id: "94277040657e6568aa4a045c368285f7d6f4ce287ed1ae0a7b3b385dd92c64de", credential_url: "https://www.linkedin.com/learning/certificates/94277040657e6568aa4a045c368285f7d6f4ce287ed1ae0a7b3b385dd92c64de", description: "Successfully completed 'Video Without Cameras: Text-to-Video Tools and Trends' by Ashley Kennedy.", skills: ["Video Generation", "Artificial Intelligence for Design", "Artificial Intelligence (AI)"], category: "AI/ML", type: "course", tags: ["AI Video", "Generative AI", "Video Production", "Design Trends"], pdf_document_link: "/Certificates/33 - CertificateOfCompletion_Video Without Cameras TexttoVideo Tools and Trends.pdf", is_verifiable: true, is_featured: false },
   { title: "What Is Generative AI?", issuer: "LinkedIn Learning", platform: "LinkedIn Learning", issuer_logo: "/Logo/linkedin.svg", issue_date: "2025-10-30", expiry_date: null, does_not_expire: true, credential_id: "1bd2746bc0d7e03f38282ae33a8622a157514d1736379e31bcd3a7efd7d8ead6", credential_url: "https://www.linkedin.com/learning/certificates/1bd2746bc0d7e03f38282ae33a8622a157514d1736379e31bcd3a7efd7d8ead6", description: "Successfully completed 'What Is Generative AI?' by Pinar Seyhan Demirdag.", skills: ["Generative AI Tools", "Artificial Intelligence (AI)", "Generative AI"], category: "AI/ML", type: "course", tags: ["Generative AI", "AI Foundations", "Machine Learning", "Innovation"], pdf_document_link: "/Certificates/34 - CertificateOfCompletion_What Is Generative AI.pdf", is_verifiable: true, is_featured: false },
@@ -286,12 +287,10 @@ const AdminCertificates = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="CREDENTIALS"
-        title="Certificates"
-        subtitle="Showcase your verified achievements and professional learning."
-        backTo="/dashboard"
+        title="Certifications"
+        subtitle={`${plural(certificates.length, "certificate")} · ${certificates.filter((c) => c.is_featured).length} featured`}
         actions={
           <>
             {!isLoading && certificates.length === 0 && (
@@ -299,16 +298,16 @@ const AdminCertificates = () => {
                 variant="outline"
                 onClick={handleSeed}
                 disabled={isSeedLoading}
-                className="border-accent/30 hover:bg-accent/10 rounded-lg h-11 px-5 text-accent hover:text-accent transition-all shadow-sm font-black"
+                className="border-accent/30 hover:bg-accent/10 px-5 text-accent hover:text-accent"
               >
                 <DatabaseZap className="w-4 h-4 mr-2" /> {isSeedLoading ? 'Seeding...' : 'Seed Default Data'}
               </Button>
             )}
             <Button
               onClick={() => openSheet(null)}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg"
+             
             >
-              <Plus className="w-4 h-4 mr-2" /> Add Certificate
+              <Plus className="w-4 h-4" /> Add certificate
             </Button>
           </>
         }
@@ -356,14 +355,14 @@ const AdminCertificates = () => {
               {/* Content — fills remaining height */}
               <div className="p-4 flex flex-col flex-1 min-h-0">
                 <h3
-                  className="font-black text-foreground text-sm line-clamp-2 group-hover:text-accent transition-colors leading-snug"
+                  className="font-medium text-foreground text-sm line-clamp-2 group-hover:text-accent transition-colors leading-snug"
                 >
                   {cert.title}
                 </h3>
-                <p className="text-xs text-muted-foreground font-semibold mt-0.5 truncate">{cert.issuer}</p>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">{cert.issuer}</p>
 
                 <div className="mt-auto flex items-center justify-between pt-2 border-t border-border">
-                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                  <span className="text-[12px] text-muted-foreground font-medium flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-accent/70" />
                     {cert.issue_date}
                   </span>
@@ -371,7 +370,7 @@ const AdminCertificates = () => {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); window.open(cert.credential_url, '_blank'); }}
-                      className="text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
+                      className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
                     >
                       Verify <ExternalLink className="w-2.5 h-2.5" />
                     </button>
@@ -386,7 +385,7 @@ const AdminCertificates = () => {
               icon={Award}
               title="No certificates added"
               description="Showcase your verified achievements and professional learning."
-              action={{ label: 'Add Certificate', onClick: () => openSheet(null) }}
+              action={{ label: 'Add certificate', onClick: () => openSheet(null) }}
             />
           </div>
         )}
@@ -399,8 +398,8 @@ const AdminCertificates = () => {
           className="w-full sm:max-w-[480px] bg-card border-l border-border text-foreground flex flex-col p-0"
         >
           <SheetHeader className="px-6 py-4 border-b border-border flex-shrink-0">
-            <SheetTitle className="text-xl font-black text-foreground">
-              {editCert ? 'Edit Certificate' : 'Add Certificate'}
+            <SheetTitle className="text-xl font-medium text-foreground">
+              {editCert ? 'Edit certificate' : 'Add certificate'}
             </SheetTitle>
           </SheetHeader>
 
@@ -546,19 +545,19 @@ const AdminCertificates = () => {
               type="submit"
               form="cert-sheet-form"
               disabled={isSaving}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11"
+              className="w-full"
             >
-              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Save className="w-4 h-4 mr-2" /> Save Changes
+              {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+              <Save className="w-4 h-4" /> Save changes
             </Button>
             {editCert && (
               <Button
                 type="button"
                 variant="ghost"
                 onClick={handleDeleteRequest}
-                className="w-full text-danger-fg hover:bg-danger-subtle hover:text-danger-fg border border-danger/20 font-black"
+                className="w-full text-danger-fg hover:bg-danger-subtle hover:text-danger-fg border border-danger/20"
               >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete Entry
+                <Trash2 className="w-4 h-4" /> Delete entry
               </Button>
             )}
           </div>
@@ -568,7 +567,7 @@ const AdminCertificates = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Certificate?"
+        title="Delete certificate?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}

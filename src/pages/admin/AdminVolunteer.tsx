@@ -8,6 +8,8 @@ import { Plus, Heart, Edit2, Trash2, Calendar } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import { LightboxModal } from '@/components/ui/LightboxModal';
 import * as z from 'zod';
@@ -58,6 +60,7 @@ const AdminVolunteer = () => {
   };
 
   const handleAdd = () => { setCurrentExp(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (exp: VolunteerExperience) => { setCurrentExp(exp); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -88,15 +91,13 @@ const AdminVolunteer = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="COMMUNITY"
-        title="Volunteer Work"
-        subtitle="Manage your community service and volunteer experiences."
-        backTo="/dashboard"
+        title="Volunteer"
+        subtitle={plural(volunteer.length, "role")}
         actions={
-          <Button onClick={handleAdd} variant="primary" className="font-semibold h-11 px-6 rounded-lg">
-            <Plus className="w-4 h-4 mr-2" /> Add Experience
+          <Button onClick={handleAdd} variant="primary">
+            <Plus className="w-4 h-4" /> Add experience
           </Button>
         }
       />
@@ -132,11 +133,11 @@ const AdminVolunteer = () => {
                         </div>
                       )}
                       <div>
-                        <h3 className="font-bold text-foreground text-lg">{exp.role}</h3>
+                        <h3 className="font-medium text-foreground text-lg">{exp.role}</h3>
                         <p className="text-accent font-medium">{exp.organization}</p>
                         <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-accent" /> {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
+                            <Calendar className="w-3.5 h-3.5 text-accent" /> {exp.startDate} – {exp.isCurrent ? 'Present' : exp.endDate}
                           </span>
                         </div>
                       </div>
@@ -159,7 +160,7 @@ const AdminVolunteer = () => {
             icon={Heart}
             title="No volunteer work added"
             description="Highlight your contributions to the community."
-            action={{ label: 'Add Experience', onClick: handleAdd }}
+            action={{ label: 'Add experience', onClick: handleAdd }}
           />
         )}
       </div>
@@ -174,7 +175,7 @@ const AdminVolunteer = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Experience?"
+        title="Delete experience?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}
@@ -183,7 +184,7 @@ const AdminVolunteer = () => {
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentExp ? 'Edit Experience' : 'Add Experience'}
+        title={currentExp ? 'Edit experience' : 'Add experience'}
         fields={volunteerFields}
         schema={volunteerSchema}
         defaultValues={currentExp || {}}

@@ -94,7 +94,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           {value.map((url, i) => (
             <div
               key={`${url}-${i}`}
-              className="relative group aspect-video rounded-lg overflow-hidden border border-white/10 bg-white/5"
+              className="relative group aspect-video rounded-lg overflow-hidden border "
             >
               <img
                 src={url}
@@ -112,7 +112,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                 </button>
               </div>
               {/* Index badge */}
-              <div className="absolute top-1.5 left-1.5 bg-black/60 text-white/70 text-[9px] font-bold px-1.5 py-0.5 rounded">
+              <div className="absolute top-1.5 left-1.5 bg-black/60 text-fg-2 text-[12px] font-medium px-1.5 py-0.5 rounded">
                 {i + 1}
               </div>
             </div>
@@ -123,10 +123,10 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-video rounded-lg border-2 border-dashed border-white/10 hover:border-accent/40 hover:bg-white/[0.03] transition-all flex flex-col items-center justify-center gap-1 text-white/60 hover:text-accent"
+              className="aspect-video rounded-lg border-2 border-dashed border-border hover:border-accent/40 hover:bg-card transition-all flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-accent"
             >
               <Plus className="w-5 h-5" />
-              <span className="text-[9px] font-bold uppercase tracking-wide">Add</span>
+              <span className="text-[12px] font-medium uppercase tracking-wide">Add</span>
             </button>
           )}
         </div>
@@ -143,26 +143,26 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           onClick={() => !uploading && fileInputRef.current?.click()}
           onKeyDown={(e) => { if (!uploading && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fileInputRef.current?.click(); } }}
           className={cn(
-            'rounded-xl border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-accent/30 transition-all flex flex-col items-center justify-center gap-2 py-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+            'rounded-xl border-2 border-dashed border-border bg-card hover:bg-secondary hover:border-accent/30 transition-all flex flex-col items-center justify-center gap-2 py-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
           )}
         >
           {uploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-accent animate-spin" />
-              <p className="text-xs text-white/50 font-medium">
+              <p className="text-xs text-muted-foreground font-medium">
                 Uploading {uploadCount}/{totalCount}…
               </p>
             </div>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center">
                 <ImageIcon className="w-6 h-6 text-accent" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-bold text-white/60 hover:text-accent transition-colors">
+                <p className="text-sm font-medium text-muted-foreground hover:text-accent transition-colors">
                   Drop images here or click to upload
                 </p>
-                <p className="text-[10px] text-white/60 mt-0.5">
+                <p className="text-[12px] text-muted-foreground mt-0.5">
                   Up to {maxImages} images · JPG, PNG, WebP · Max 10 MB each
                 </p>
               </div>
@@ -175,7 +175,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       {uploading && value.length > 0 && (
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20">
           <Loader2 className="w-4 h-4 text-accent animate-spin flex-shrink-0" />
-          <span className="text-xs font-bold text-accent">
+          <span className="text-xs font-medium text-accent">
             Uploading {uploadCount}/{totalCount}…
           </span>
         </div>
@@ -183,14 +183,14 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
       {/* Footer row with count + upload button */}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-white/60 font-medium">
+        <span className="text-[12px] text-muted-foreground font-medium">
           {value.length}/{maxImages} images
         </span>
         {canAdd && value.length > 0 && !uploading && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-accent/70 hover:text-accent transition-colors"
+            className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wider text-accent/70 hover:text-accent transition-colors"
           >
             <Upload className="w-3 h-3" />
             Upload More

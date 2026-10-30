@@ -1,134 +1,70 @@
-/* Google Fonts loaded asynchronously via <link rel="preload"> in index.html - no @import needed */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   ADMIN DESIGN TOKENS — SINGLE SOURCE OF TRUTH
-   ==========================================================================
-   This app is dark-only (no theme toggle exists — confirmed no ThemeProvider
-   is mounted anywhere in src/app). Previously this file shipped THREE
-   contradictory token systems (:root light theme, .dark theme, and a
-   .admin-panel override) — only .admin-panel ever actually rendered for
-   authenticated routes, while /login and the 404 page silently fell back to
-   the dead :root theme as a routing-tree accident. This block replaces all
-   three with one definition so every route gets the same theme.
-
-   RULES for anyone editing this block:
-   - Exactly ONE accent color (teal, hue 174). Do not add a second brand hue.
-   - Color elsewhere is reserved for semantic state: --success/--warning/
-     --danger/--info. No decorative per-category colors.
-   - Neutral ramp stays at or below 8% saturation, hue 220 (slight cool cast).
-   - Shadows are neutral (rgba black) — no colored glow shadows.
-   - All pairings below are contrast-checked (WCAG relative-luminance
-     formula) against their actual usage — see docs/ui-audit.md section 9
-     for the method. Don't loosen a value without rechecking contrast.
-   ========================================================================== */
-
+/* Graphite + ember. Dark only; values match the Figma variables shared with the public site. */
 @layer base {
   :root {
-    /* --- Neutral ramp (hue 220, sat ≤8%) --- */
-    --background: 220 8% 6%;
-    --foreground: 220 8% 94%;              /* 16.7:1 on background */
+    --background: 240 4% 10%;          /* #19191B */
+    --foreground: 60 7% 92%;           /* #EDEDEA */
 
-    --card: 220 8% 11%;
-    --card-foreground: 220 8% 94%;
+    --card: 240 4% 13.5%;              /* #212124 */
+    --card-foreground: 60 7% 92%;
 
-    --popover: 220 8% 14%;
-    --popover-foreground: 220 8% 94%;
+    --popover: 240 5% 17%;             /* #29292D */
+    --popover-foreground: 60 7% 92%;
 
-    --primary: 220 8% 94%;
-    --primary-foreground: 220 8% 6%;
+    --primary: 60 7% 92%;
+    --primary-foreground: 240 5% 8%;
 
-    --secondary: 220 8% 16%;
-    --secondary-foreground: 220 8% 94%;
+    --secondary: 240 5% 17%;           /* #29292D */
+    --secondary-foreground: 60 7% 92%;
+    --surface-3: 240 5% 21%;           /* #323237 */
 
-    --muted: 220 8% 16%;
-    --muted-foreground: 220 6% 58%;        /* 6.1:1 on background */
+    --muted: 240 5% 17%;
+    --muted-foreground: 60 2% 55%;     /* #8E8E89 */
+    --fg-2: 60 3% 63%;                 /* #A3A39E */
 
-    /* --- The one accent: muted teal, near-monochrome philosophy ---
-       A brief detour to a slate-blue accent (225°) proved the discipline
-       right — accent reserved for the single primary action + focus rings,
-       neutral everywhere else — but the hue itself wasn't the point.
-       Restored teal on request, at roughly 2/3 the original saturation
-       (was 72%, now 50%) so it reads as a considered, muted color rather
-       than the bright, saturated teal that's become an "AI SaaS dashboard"
-       cliché. Same usage rules as before: primary action + focus ring
-       only, never wayfinding/branding chrome. */
-    --accent: 174 50% 45%;
-    --accent-foreground: 220 8% 6%;        /* 6.9:1 on accent */
-    --accent-hover: 174 52% 52%;           /* 9.0:1 for accent-foreground on hover */
-    --accent-bright: var(--accent-hover);  /* legacy alias — consumed by AdminLayout.tsx, BlogForm.tsx, AdminLoginPage.tsx */
-    --accent-subtle: 174 35% 14%;
+    --accent: 14 100% 62%;             /* #FF6A3D */
+    --accent-hover: 15 100% 67%;       /* #FF8259 */
+    --accent-foreground: 240 5% 8%;
+    --accent-subtle: 14 60% 17%;
 
-    /* --- Semantic state colors (the ONLY other colors permitted) --- */
-    --destructive: 0 65% 46%;
-    --destructive-foreground: 220 8% 94%;  /* 5.0:1 on destructive */
-    --danger: var(--destructive);
-    --danger-subtle: 0 40% 16%;
-    --danger-fg: 0 65% 64%;                /* 4.8:1 on danger-subtle */
+    --destructive: 358 86% 64%;
+    --destructive-foreground: 240 5% 8%;
+    --danger: 358 86% 64%;
+    --danger-subtle: 358 45% 17%;
+    --danger-fg: 358 86% 66%;          /* #F2555A */
 
-    --success: 152 55% 30%;
-    --success-foreground: 220 8% 94%;      /* 4.8:1 on success */
-    --success-subtle: 152 35% 14%;
-    --success-fg: 152 55% 58%;             /* 7.2:1 on success-subtle */
+    --success: 142 69% 58%;
+    --success-foreground: 240 5% 8%;
+    --success-subtle: 142 35% 14%;
+    --success-fg: 142 69% 58%;         /* #4ADE80 */
 
-    --warning: 38 80% 38%;
-    --warning-foreground: 220 8% 6%;       /* 4.9:1 on warning */
-    --warning-subtle: 38 45% 16%;
-    --warning-fg: 38 80% 62%;              /* 7.0:1 on warning-subtle */
+    --warning: 38 80% 50%;
+    --warning-foreground: 240 5% 8%;
+    --warning-subtle: 38 45% 15%;
+    --warning-fg: 38 85% 62%;
 
-    --info: 210 70% 42%;
-    --info-foreground: 220 8% 94%;         /* 4.8:1 on info */
+    --info: 210 70% 52%;
+    --info-foreground: 240 5% 8%;
     --info-subtle: 210 40% 15%;
-    --info-fg: 210 70% 64%;                /* 5.8:1 on info-subtle */
+    --info-fg: 210 75% 66%;
 
-    /* --- Borders & focus --- */
-    /* Was 1.3:1 (near-invisible) when this was scoped inside .admin-panel at
-       lightness 17%. Raised to the lightness that actually clears the 3:1
-       WCAG non-text-contrast minimum against both --background and --card. */
-    --border: 220 8% 42%;                  /* 3.4:1 on background, 3.1:1 on card */
-    --input: 220 8% 42%;
-    --border-strong: 220 8% 55%;           /* hover / active borders */
-    --ring: var(--accent);                 /* was a stray gold hue — collapsed into the one accent */
+    --border: 240 4% 22%;              /* hairline, ~white 9% on background */
+    --border-subtle: 240 4% 18%;       /* ~white 7% */
+    --input: 240 3% 32%;
+    --border-strong: 240 3% 40%;
+    --ring: 14 100% 62%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* --- Neutral elevation — no colored glow --- */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.45);
-    --shadow-card: 0 0 0 1px hsl(var(--border) / 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-card-hover: 0 0 0 1px hsl(var(--border-strong)), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --status-create: var(--success);
+    --status-update: var(--accent);
+    --status-delete: var(--danger);
+    --status-default: var(--muted-foreground);
 
-    /* --- Admin surface/border/foreground overlay tokens (used by AdminLayout,
-       AdminLoginPage, AdminDashboard, BlogForm) — now derived from
-       --foreground instead of a hardcoded white literal, so they track the
-       palette instead of duplicating it. --admin-fg-35 removed (zero refs). */
-    --admin-border:     hsl(var(--foreground) / 0.055);
-    --admin-border-sm:  hsl(var(--foreground) / 0.07);
-    --admin-border-md:  hsl(var(--foreground) / 0.08);
-    --admin-border-lg:  hsl(var(--foreground) / 0.10);
-    --admin-surface-xs: hsl(var(--foreground) / 0.03);
-    --admin-surface-sm: hsl(var(--foreground) / 0.04);
-    --admin-surface-md: hsl(var(--foreground) / 0.05);
-    --admin-surface-lg: hsl(var(--foreground) / 0.06);
-    --admin-surface-xl: hsl(var(--foreground) / 0.09);
-    --admin-fg-22: hsl(var(--foreground) / 0.22);
-    --admin-fg-60: hsl(var(--foreground) / 0.60);
-
-    /* --- Admin status-indicator colors — repointed to the semantic tokens
-       above instead of raw arbitrary hues (was: emerald/blue-400/red-400/
-       violet-400 picked independently of the rest of the palette). --status-*
-       still exists because AdminDashboard.tsx consumes it directly; not
-       renamed to avoid touching that component file in this pass. */
-    --status-create:  var(--success);
-    --status-update:  var(--info);
-    --status-delete:  var(--danger);
-    --status-default: var(--accent);
-
+    color-scheme: dark;
   }
 }
 
@@ -138,155 +74,84 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* Native system-font stack — no webfont at all, set once here so it
-     applies to every route including /login and the 404 page. This is a
-     deliberate reversal of an earlier attempt to fix "the fonts look AI"
-     with a different webfont (Geist): researched the specific premium CMS
-     admin the user asked to match (Payload CMS) and confirmed it uses
-     system fonts, not a custom typeface — on Mac this renders San
-     Francisco, on Windows Segoe UI, on Linux/Android the platform's own
-     UI font. That's arguably *why* it reads as native software rather
-     than "a website with a font choice": there's no webfont signature to
-     recognize as generated, no font-loading flash, and it matches
-     whatever the user's own OS chrome already looks like. */
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "ss01";
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply text-foreground;
-    font-style: normal;
   }
 
-  h1 { @apply text-h1; }
-  h2 { @apply text-h2; }
-  h3 { @apply text-h3; }
-  h4 { @apply text-h3; }
+  ::selection {
+    background-color: hsl(var(--accent) / 0.3);
+    color: inherit;
+  }
 
-  p { @apply leading-relaxed; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground) / 0.08);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background-color: hsl(var(--foreground) / 0.16); }
+}
+
+@layer components {
+  /* Mono uppercase eyebrow / group label. */
+  .label {
+    @apply font-mono text-label uppercase text-muted-foreground;
+  }
+
+  /* Two-tone headline: the light, muted half. */
+  .soft {
+    @apply font-light text-muted-foreground;
+  }
+
+  .meta {
+    @apply font-mono text-meta text-muted-foreground;
+  }
 }
 
 @layer utilities {
-  /* UNIFIED WHITE UTILITY */
-  .bg-white {
-    background-color: hsl(var(--card)) !important;
-  }
-
-  /* THEME TRANSITION: smooth cross-fade when toggling dark/light */
-  html {
-    transition: background-color 0.5s ease, color 0.5s ease;
-  }
-
-  /* Apply to any metric, table cell, count, badge, date, or ID so digits
-     don't shift width as they change (docs/ui-audit.md section 5: found in
-     only 4 places app-wide despite numeric displays throughout — dashboard
-     stat tiles, test scores, table rows, dates). Not applied globally
-     because most running text should stay proportional. */
   .tabular {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Section-eyebrow / sidebar-group-label treatment (docs/ui-audit.md
-     section 5: this pattern existed with several different ad hoc tracking
-     values — 0.005em, 0.12em, 0.14em, 0.15em, 0.18em — picked per
-     component). One treatment, used verbatim, not restyled per page. */
-  .label {
-    @apply text-caption uppercase text-muted-foreground;
-  }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     .admin-panel — no longer a competing theme (see the token block above,
-     which is now the single source of truth for every route including
-     /login and the 404 page). This class still exists because AdminLayout
-     applies it and the utility-override rules below still key off it;
-     it just no longer redefines the core palette.
-  ═══════════════════════════════════════════════════════════════════ */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+}
 
-  .admin-panel {
-    background-color: hsl(var(--background));
-    color:            hsl(var(--foreground));
-  }
+/* TipTap rich-text editor */
+.ProseMirror h2 { @apply mb-2 mt-6 text-xl font-medium tracking-tight text-foreground; }
+.ProseMirror h3 { @apply mb-2 mt-5 text-lg font-medium text-foreground; }
+.ProseMirror p,
+.ProseMirror ul,
+.ProseMirror ol { @apply mb-3 leading-relaxed text-fg-2; }
+.ProseMirror ul,
+.ProseMirror ol { @apply pl-5; }
+.ProseMirror ul { @apply list-disc; }
+.ProseMirror ol { @apply list-decimal; }
+.ProseMirror a { @apply text-foreground underline decoration-accent underline-offset-4; }
+.ProseMirror blockquote { @apply border-l-2 border-accent pl-4 text-foreground; }
+.ProseMirror hr { @apply my-5 border-border; }
+.ProseMirror .is-editor-empty::before {
+  content: attr(data-placeholder);
+  @apply pointer-events-none float-left h-0 text-muted-foreground;
+}
 
-  /* ── Text selection (site-wide emerald) ─────────────────────── */
-  ::selection {
-    background-color: hsl(var(--accent) / 0.28);
-    color: inherit;
-  }
-  .admin-panel ::selection {
-    background-color: hsl(var(--accent) / 0.25);
-    color: inherit;
-  }
-
-  /* .admin-panel no longer needs its own font-stack layer: `body` (see
-     @layer base above) now sets the system font for the whole app, so it
-     inherits everywhere without a `.admin-panel *` universal selector. This also
-     retires two dead rules: `.admin-mono` (components actually use
-     Tailwind's `font-mono` utility, now pointed at this stack directly —
-     see tailwind.config.ts) and `.admin-editorial` (its selector required
-     an `.admin-panel` ancestor, but its only real call site,
-     AdminLoginPage.tsx, renders outside that wrapper, so the rule never
-     matched where it was used). */
-
-  /* ── text-white → warm ivory (stops the cold-white look) ───── */
-  .admin-panel .text-white          { color: hsl(var(--foreground))          !important; }
-  .admin-panel .text-white\/90      { color: hsl(var(--foreground) / 0.90)   !important; }
-  .admin-panel .text-white\/80      { color: hsl(var(--foreground) / 0.80)   !important; }
-  .admin-panel .text-white\/70      { color: hsl(var(--foreground) / 0.70)   !important; }
-  .admin-panel .text-white\/60      { color: hsl(var(--foreground) / 0.60)   !important; }
-  .admin-panel .text-white\/50      { color: hsl(var(--foreground) / 0.50)   !important; }
-  .admin-panel .text-white\/40      { color: hsl(var(--foreground) / 0.40)   !important; }
-  .admin-panel .text-white\/30      { color: hsl(var(--foreground) / 0.30)   !important; }
-  .admin-panel .text-white\/25      { color: hsl(var(--foreground) / 0.25)   !important; }
-  .admin-panel .text-white\/20      { color: hsl(var(--foreground) / 0.20)   !important; }
-  .admin-panel .text-white\/15      { color: hsl(var(--foreground) / 0.15)   !important; }
-  .admin-panel .text-white\/10      { color: hsl(var(--foreground) / 0.10)   !important; }
-
-  /* ── bg-white/* → card surface (stops transparent-glass floats) ─────
-     These two rules hardcoded the pre-token-reset palette's literal HSL
-     values (222 45% 12%, 220 40% 16%) and were never updated when the
-     token layer was consolidated — pointing them at the live tokens
-     instead so they can't drift out of sync with the palette again. */
-  .admin-panel .bg-white\/\[0\.03\],
-  .admin-panel .bg-white\/\[0\.02\] { background-color: hsl(var(--card)) !important; }
-  .admin-panel .bg-white\/\[0\.04\],
-  .admin-panel .bg-white\/\[0\.05\],
-  .admin-panel .bg-white\/\[0\.06\] { background-color: hsl(var(--secondary)) !important; }
-
-  /* ── Scrollbar ───────────────────────────────────────────────── */
-  .admin-panel ::-webkit-scrollbar       { width: 5px; height: 5px; }
-  .admin-panel ::-webkit-scrollbar-track { background: transparent; }
-  .admin-panel ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.09);
-    border-radius: 3px;
-  }
-  .admin-panel ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--accent) / 0.30);
-  }
-
-  /* ── TipTap rich-text editor ────────────────────────────────── */
-  /* Was an italic Playfair Display serif accent — a "blog editorial" tell
-     with no place in an admin tool's editor chrome. Bold system-font
-     instead, consistent with every other heading in the app. */
-  .admin-panel .ProseMirror h2,
-  .admin-panel .ProseMirror h3 {
-    font-style: normal;
-    color: hsl(var(--foreground));
-  }
-  .admin-panel .ProseMirror h2 { @apply text-xl font-semibold mt-6 mb-2; }
-  .admin-panel .ProseMirror h3 { @apply text-lg  font-semibold mt-5 mb-2; }
-  .admin-panel .ProseMirror p,
-  .admin-panel .ProseMirror ul,
-  .admin-panel .ProseMirror ol  { @apply mb-3 leading-relaxed; color: hsl(var(--foreground) / 0.60); }
-  .admin-panel .ProseMirror ul,
-  .admin-panel .ProseMirror ol  { @apply pl-5; }
-  .admin-panel .ProseMirror hr  { border-color: var(--admin-surface-lg); @apply my-5; }
-  .admin-panel .ProseMirror .is-editor-empty::before {
-    content: attr(data-placeholder);
-    color: hsl(var(--foreground) / 0.22);
-    @apply pointer-events-none float-left h-0;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }

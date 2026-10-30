@@ -52,7 +52,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
         role="button"
         tabIndex={0}
         aria-label={value ? `Replace ${label}` : `Upload ${label}`}
-        className="relative group flex-shrink-0 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="relative group flex-shrink-0 rounded-xl border flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         style={{ width: size, height: size }}
         onClick={() => !isUploading && fileInputRef.current?.click()}
         onKeyDown={(e) => { if (!isUploading && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fileInputRef.current?.click(); } }}
@@ -62,19 +62,19 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
             <img src={value} alt="Logo" className="w-full h-full object-contain p-1" />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity flex items-center justify-center">
               {isUploading ? (
-                <span className="text-[9px] font-bold text-accent">{progress}%</span>
+                <span className="text-[12px] font-medium text-accent">{progress}%</span>
               ) : (
-                <Upload className="w-4 h-4 text-white" />
+                <Upload className="w-4 h-4 text-foreground" />
               )}
             </div>
           </>
         ) : isUploading ? (
           <div className="flex flex-col items-center gap-1">
             <Loader2 className="w-5 h-5 text-accent animate-spin" />
-            <span className="text-[9px] text-accent font-bold">{progress}%</span>
+            <span className="text-[12px] text-accent font-medium">{progress}%</span>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1 text-white/60 hover:text-accent/60 transition-colors">
+          <div className="flex flex-col items-center gap-1 text-muted-foreground hover:text-accent/60 transition-colors">
             <Building2 className="w-6 h-6" />
             <Upload className="w-3 h-3" />
           </div>
@@ -82,16 +82,16 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <p className="text-xs font-bold text-white/70">
+        <p className="text-xs font-medium text-fg-2">
           {label} {required && <span className="text-danger">*</span>}
         </p>
-        <p className="text-[10px] text-white/60">JPG, PNG, WebP · Max 5 MB</p>
+        <p className="text-[12px] text-muted-foreground">JPG, PNG, WebP · Max 5 MB</p>
         <div className="flex gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 text-[10px] font-bold bg-white/5 border-white/10 hover:bg-white/10 text-white/60 hover:text-white"
+            className="h-7 text-[12px] hover:bg-surface-3 text-muted-foreground hover:text-foreground"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
           >
@@ -102,7 +102,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 text-[10px] text-danger hover:text-danger-fg hover:bg-danger-subtle"
+              className="h-7 text-[12px] text-danger hover:text-danger-fg hover:bg-danger-subtle"
               onClick={() => onChange('')}
               disabled={isUploading}
             >

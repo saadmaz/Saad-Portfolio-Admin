@@ -1,320 +1,384 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import {
-  Code, BookOpen, Briefcase, Zap, FileCheck, Award,
-  CalendarDays, Newspaper, Globe, Trophy, Quote,
-  BookMarked, FileText, Lightbulb, Building2, Heart,
-  GraduationCap, Mail, Clock, ArrowRight, ChevronDown,
+  ArrowRight, BadgeCheck, BookOpen, CheckCircle2, Code2, ImageIcon, Inbox, PenLine,
 } from 'lucide-react';
-import { ProjectService } from '@/services/project-service';
-import { BlogService } from '@/services/blog-service';
+import type { LucideIcon } from 'lucide-react';
 import { CommonService } from '@/shared/services/common-service';
+import { cn, plural, toJsDate } from '@/shared/lib/utils';
+import { createActions } from '@/components/admin/navConfig';
+import { useAdminOverview } from '@/components/admin/useAdminOverview';
 import type { ActivityLog } from '@/types';
-import { toast } from 'sonner';
-import { format, formatDistanceToNow } from 'date-fns';
-import { Card } from '@/components/ui/card';
-import EmptyState from '@/components/admin/EmptyState';
-import { toJsDate } from '@/shared/lib/utils';
-
-/* ── The 4 metrics that are actually acted on day to day ─────────── */
-const PRIMARY_METRICS = [
-  { key: 'projects', label: 'Projects',        icon: Code,     path: '/projects' },
-  { key: 'blogs',    label: 'Blog Posts',      icon: BookOpen, path: '/blogs' },
-  { key: 'certs',    label: 'Certifications',  icon: FileCheck,path: '/certificates' },
-  { key: 'messages', label: 'Unread Messages', icon: Mail,     path: '/messages' },
-] as const;
-
-/* ── Everything else — dense list, not equally-weighted tiles ────── */
-const SECONDARY_METRICS = [
-  { key: 'experience',    label: 'Experience',      icon: Briefcase,     path: '/experience' },
-  { key: 'skills',        label: 'Skills & Tools',  icon: Zap,           path: '/skills' },
-  { key: 'awards',        label: 'Awards',          icon: Award,         path: '/awards' },
-  { key: 'events',        label: 'Events',          icon: CalendarDays,  path: '/events' },
-  { key: 'newsletters',   label: 'Newsletters',     icon: Newspaper,     path: '/newsletters' },
-  { key: 'languages',     label: 'Languages',       icon: Globe,         path: '/languages' },
-  { key: 'hackathons',    label: 'Hackathons',      icon: Trophy,        path: '/hackathons' },
-  { key: 'testimonials',  label: 'Testimonials',    icon: Quote,         path: '/testimonials' },
-  { key: 'courses',       label: 'Courses',         icon: BookMarked,    path: '/courses' },
-  { key: 'publications',  label: 'Publications',    icon: FileText,      path: '/publications' },
-  { key: 'patents',       label: 'Patents',         icon: Lightbulb,     path: '/patents' },
-  { key: 'organizations', label: 'Organizations',   icon: Building2,     path: '/organizations' },
-  { key: 'volunteer',     label: 'Volunteer',       icon: Heart,         path: '/volunteer' },
-  { key: 'education',     label: 'Education',       icon: GraduationCap, path: '/education' },
-] as const;
-
-/* ── Quick actions ─────────────────────────────────────────────── */
-const QUICK_ACTIONS = [
-  { label: 'Add Project',      sub: 'Upload a new project entry',      icon: Code,          path: '/projects/new' },
-  { label: 'Write Blog',       sub: 'Publish an article',              icon: BookOpen,      path: '/blogs/new' },
-  { label: 'Add Event',        sub: 'Log a speaking or attended event',icon: CalendarDays,  path: '/events' },
-  { label: 'Add Hackathon',    sub: 'Record a hackathon entry',        icon: Trophy,        path: '/hackathons' },
-  { label: 'Add Experience',   sub: 'Add a work experience entry',     icon: Briefcase,     path: '/experience/new' },
-  { label: 'Manage Education', sub: 'Edit your academic background',   icon: GraduationCap, path: '/education' },
-];
 
 /* ── Helpers ───────────────────────────────────────────────────── */
-const actionDotColor = (action: string) => {
-  if (action === 'CREATE') return 'hsl(var(--status-create))';
-  if (action === 'UPDATE') return 'hsl(var(--status-update))';
-  if (action === 'DELETE') return 'hsl(var(--status-delete))';
-  return 'hsl(var(--status-default))';
+
+const DAY = 24 * 60 * 60 * 1000;
+
+const parseDate = (value: unknown): Date | null => {
+  if (!value) return null;
+  const d = typeof value === 'object' && value !== null && 'toDate' in value
+    ? (value as { toDate: () => Date }).toDate()
+    : new Date(value as string | number);
+  return Number.isNaN(d.getTime()) ? null : d;
 };
 
-const actionVerb = (action: string) => {
-  if (action === 'CREATE') return 'Added';
-  if (action === 'UPDATE') return 'Updated';
-  if (action === 'DELETE') return 'Deleted';
-  return action;
+/** "2h", "3d", "1w" for tight meta columns. */
+const shortAgo = (date: Date) => {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.max(1, Math.round(diff / 60000));
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 9) return `${weeks}w`;
+  return format(date, 'MMM yyyy');
 };
+
+/** Cumulative count at the end of each of the last `months` months. Null when no item has a date. */
+const growthSeries = (dates: (Date | null)[], months = 12): number[] | null => {
+  const known = dates.filter((d): d is Date => d !== null);
+  if (known.length < 2) return null;
+  const undated = dates.length - known.length;
+  const now = new Date();
+  return Array.from({ length: months }, (_, i) => {
+    const end = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i) + 1, 1);
+    return undated + known.filter((d) => d < end).length;
+  });
+};
+
+const countSince = (dates: (Date | null)[], days: number) =>
+  dates.filter((d) => d && Date.now() - d.getTime() <= days * DAY).length;
+
+const actionVerb: Record<string, string> = { CREATE: 'Added', UPDATE: 'Updated', DELETE: 'Deleted' };
+const actionDot: Record<string, string> = {
+  CREATE: 'bg-[hsl(var(--status-create))]',
+  UPDATE: 'bg-[hsl(var(--status-update))]',
+  DELETE: 'bg-[hsl(var(--status-delete))]',
+};
+
+/* ── Pieces ────────────────────────────────────────────────────── */
+
+const Sparkline = ({ points }: { points: number[] }) => {
+  const w = 98;
+  const h = 22;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const d = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'}${((i / (points.length - 1)) * w).toFixed(1)},${(h - 1 - ((p - min) / span) * (h - 2)).toFixed(1)}`)
+    .join(' ');
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none" className="shrink-0 overflow-visible" aria-hidden="true">
+      <path d={d} stroke="hsl(var(--accent))" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+};
+
+interface KpiProps {
+  label: string;
+  icon: LucideIcon;
+  value: number | undefined;
+  note: string;
+  tone?: 'live' | 'muted' | 'accent';
+  to: string;
+  highlight?: boolean;
+  series?: number[] | null;
+}
+
+const Kpi = ({ label, icon: Icon, value, note, tone = 'muted', to, highlight, series }: KpiProps) => (
+  <Link
+    to={to}
+    className={cn(
+      'group flex flex-col gap-3.5 rounded-2xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:p-5',
+      highlight
+        ? 'border-accent bg-background hover:bg-card'
+        : 'border-border-subtle bg-card hover:border-border',
+    )}
+  >
+    <div className="flex items-center justify-between gap-2">
+      <span className="label truncate">{label}</span>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-fg-2">
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      </span>
+    </div>
+    <div className="flex items-end justify-between gap-3">
+      {value === undefined ? (
+        <span className="h-11 w-14 animate-pulse rounded-lg bg-secondary" />
+      ) : (
+        <span className="text-[36px] font-medium leading-none tracking-[-0.035em] text-foreground tabular md:text-[44px]">{value}</span>
+      )}
+      {series && <span className="hidden sm:block"><Sparkline points={series} /></span>}
+    </div>
+    <span
+      className={cn(
+        'truncate font-mono text-[13px]',
+        tone === 'live' && 'text-success-fg',
+        tone === 'accent' && 'text-accent',
+        tone === 'muted' && 'text-muted-foreground',
+      )}
+    >
+      {value === undefined ? ' ' : note}
+    </span>
+  </Link>
+);
+
+interface AttentionItem {
+  key: string;
+  icon: LucideIcon;
+  title: string;
+  meta: string;
+  cta: string;
+  to: string;
+  accent?: boolean;
+}
+
+const Panel = ({ title, aside, children, className }: {
+  title: string; aside?: React.ReactNode; children: React.ReactNode; className?: string;
+}) => (
+  <section className={cn('rounded-2xl border border-border-subtle bg-card p-5', className)}>
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <h2 className="text-h2 text-foreground">{title}</h2>
+      {aside}
+    </div>
+    {children}
+  </section>
+);
 
 /* ══════════════════════════════════════════════════════════════════
    DASHBOARD
    ══════════════════════════════════════════════════════════════════ */
 const AdminDashboard = () => {
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [
-          projects, blogs, experience, skills, certs, awards,
-          events, newsletters, languages, hackathons, testimonials,
-          courses, publications, patents, organizations, volunteer,
-          education, messages, activityLogs,
-        ] = await Promise.all([
-          ProjectService.getAll(),
-          BlogService.getAll(),
-          CommonService.getWorkExperience(),
-          CommonService.getSkills(),
-          CommonService.getCertificates(),
-          CommonService.getAwards(),
-          CommonService.getEvents(),
-          CommonService.getNewsletters(),
-          CommonService.getLanguages(),
-          CommonService.getHackathons(),
-          CommonService.getTestimonials(),
-          CommonService.getCourses(),
-          CommonService.getPublications(),
-          CommonService.getPatents(),
-          CommonService.getOrganizations(),
-          CommonService.getVolunteerExperience(),
-          CommonService.getEducation(),
-          CommonService.getMessages(),
-          CommonService.getActivityLogs(),
-        ]);
-
-        setCounts({
-          projects:      projects.length,
-          blogs:         blogs.length,
-          experience:    experience.length,
-          skills:        skills.length,
-          certs:         certs.length,
-          awards:        awards.length,
-          events:        events.length,
-          newsletters:   newsletters.length,
-          languages:     languages.length,
-          hackathons:    hackathons.length,
-          testimonials:  testimonials.length,
-          courses:       courses.length,
-          publications:  publications.length,
-          patents:       patents.length,
-          organizations: organizations.length,
-          volunteer:     volunteer.length,
-          education:     education.length,
-          messages:      messages.filter((m) => !m.read).length,
-        });
-        setLogs([...activityLogs].reverse().slice(0, 8));
-      } catch {
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const { data, isLoading } = useAdminOverview();
+  const { data: logs = [], isLoading: logsLoading } = useQuery({
+    queryKey: ['admin-logs'],
+    queryFn: () => CommonService.getActivityLogs(),
+    select: (all: ActivityLog[]) =>
+      [...all].sort((a, b) => toJsDate(b.timestamp).getTime() - toJsDate(a.timestamp).getTime()),
+  });
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const dateStr = format(now, 'EEEE, MMMM d');
+  const greeting = hour < 12 ? 'Good morning,' : hour < 18 ? 'Good afternoon,' : 'Good evening,';
+  const lastChange = logs[0] ? toJsDate(logs[0].timestamp) : null;
 
-  const populatedSecondary = SECONDARY_METRICS.filter((m) => (counts[m.key] ?? 0) > 0);
-  const emptySecondary = SECONDARY_METRICS.filter((m) => (counts[m.key] ?? 0) === 0);
+  const stats = useMemo(() => {
+    if (!data) return null;
+    const { projects, blogs, certificates, messages } = data;
+
+    const projectDates = projects.map((p) => parseDate(p.date));
+    const blogDates = blogs.map((b) => parseDate(b.publishedAt || b.date));
+    const certDates = certificates.map((c) => parseDate(c.issue_date));
+
+    const unread = messages
+      .filter((m) => !m.read)
+      .map((m) => ({ m, at: toJsDate(m.created_at) }))
+      .sort((a, b) => a.at.getTime() - b.at.getTime());
+    const drafts = blogs.filter((b) => !b.published);
+    const missingAlt = projects.filter((p) => (p.heroImage || p.image) && !p.altText?.trim());
+    const missingCred = certificates.filter((c) => !c.credential_url?.trim());
+
+    const attention: AttentionItem[] = [];
+    if (unread.length) {
+      const oldest = unread[0];
+      attention.push({
+        key: 'unread', icon: Inbox, accent: true,
+        title: plural(unread.length, 'unread message'),
+        meta: `Oldest from ${oldest.m.name} · ${formatDistanceToNowStrict(oldest.at, { addSuffix: true })}`,
+        cta: 'Open inbox', to: '/messages',
+      });
+    }
+    if (drafts.length) {
+      attention.push({
+        key: 'drafts', icon: PenLine,
+        title: `${plural(drafts.length, 'blog draft')} waiting`,
+        meta: drafts.slice(0, 2).map((b) => `“${b.title.length > 28 ? `${b.title.slice(0, 28)}…` : b.title}”`).join(', '),
+        cta: 'Review', to: drafts.length === 1 ? `/blogs/${drafts[0].id}` : '/blogs',
+      });
+    }
+    if (missingAlt.length) {
+      attention.push({
+        key: 'alt', icon: ImageIcon,
+        title: `${plural(missingAlt.length, 'project')} missing alt text`,
+        meta: missingAlt.slice(0, 3).map((p) => p.title).join(', '),
+        cta: 'Fix', to: missingAlt.length === 1 ? `/projects/${missingAlt[0].id}` : '/projects',
+      });
+    }
+    if (missingCred.length) {
+      const issuers = [...new Set(missingCred.map((c) => c.issuer).filter(Boolean))];
+      attention.push({
+        key: 'cred', icon: BadgeCheck,
+        title: `${plural(missingCred.length, 'certificate')} without a credential URL`,
+        meta: issuers.length ? `${issuers.slice(0, 2).join(', ')}${issuers.length > 2 ? ` +${issuers.length - 2}` : ''}` : 'Visitors can’t verify them',
+        cta: 'Add links', to: '/certificates',
+      });
+    }
+
+    const newProjects = countSince(projectDates, 30);
+    const newCerts = countSince(certDates, 30);
+    const issuers = new Set(certificates.map((c) => c.issuer).filter(Boolean)).size;
+
+    return {
+      attention,
+      projects: {
+        note: newProjects ? `+${newProjects} this month` : `${projects.filter((p) => p.featured).length} featured`,
+        tone: newProjects ? 'live' : 'muted',
+        series: growthSeries(projectDates),
+      },
+      blogs: {
+        note: drafts.length ? `${plural(drafts.length, 'draft')} waiting` : `${blogs.length - drafts.length} published`,
+        tone: 'muted',
+        series: growthSeries(blogDates),
+      },
+      certs: {
+        note: newCerts ? `+${newCerts} this month` : plural(issuers, 'issuer'),
+        tone: newCerts ? 'live' : 'muted',
+        series: growthSeries(certDates),
+      },
+      unread: {
+        count: unread.length,
+        note: unread.length ? `Oldest: ${formatDistanceToNowStrict(unread[0].at)} ago` : 'Inbox zero',
+      },
+    } as const;
+  }, [data]);
 
   return (
-    <div className="space-y-6">
-
-      {/* ── Greeting — one line ────────────────────────────────── */}
-      <p className="text-h3 text-foreground">
-        {greeting}, Saad <span className="text-muted-foreground">· {dateStr}</span>
-      </p>
-
-      {/* ── Primary metrics (4) ────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {PRIMARY_METRICS.map((metric) => (
-          <Link key={metric.key} to={metric.path}>
-            <Card interactive className="p-4 h-full">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground mb-3">
-                <metric.icon className="h-4 w-4" aria-hidden="true" />
-              </div>
-              <p className="text-body-sm text-muted-foreground mb-0.5">{metric.label}</p>
-              <p className="text-display tabular text-foreground">
-                {loading ? (
-                  <span className="inline-block h-7 w-10 rounded-md bg-secondary animate-pulse align-middle" />
-                ) : (
-                  counts[metric.key] ?? 0
-                )}
-              </p>
-            </Card>
-          </Link>
-        ))}
+    <div className="space-y-8">
+      {/* Greeting */}
+      <div>
+        <h1 className="text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-foreground md:text-[44px]">
+          {greeting} <span className="soft">Saad</span>
+        </h1>
+        <p className="meta mt-2.5">
+          {format(now, 'EEEE, d MMMM')}
+          {lastChange && <> · Last change {formatDistanceToNowStrict(lastChange, { addSuffix: true })}</>}
+        </p>
       </div>
 
-      {/* ── Bottom row ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <Kpi
+          label="Projects" icon={Code2} to="/projects"
+          value={data?.counts.projects}
+          note={stats?.projects.note ?? ''} tone={stats?.projects.tone} series={stats?.projects.series}
+        />
+        <Kpi
+          label="Blog posts" icon={BookOpen} to="/blogs"
+          value={data?.counts.blogs}
+          note={stats?.blogs.note ?? ''} tone={stats?.blogs.tone} series={stats?.blogs.series}
+        />
+        <Kpi
+          label="Certificates" icon={BadgeCheck} to="/certificates"
+          value={data?.counts.certificates}
+          note={stats?.certs.note ?? ''} tone={stats?.certs.tone} series={stats?.certs.series}
+        />
+        <Kpi
+          label="Unread" icon={Inbox} to="/messages"
+          value={data?.counts.unread}
+          note={stats?.unread.note ?? ''}
+          tone={stats?.unread.count ? 'accent' : 'live'}
+          highlight={!!stats?.unread.count}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Needs attention */}
+        <Panel
+          title="Needs attention"
+          aside={stats && <span className="font-mono text-[13px] text-muted-foreground">{plural(stats.attention.length, 'item')}</span>}
+          className="self-start"
+        >
+          {isLoading || !stats ? (
+            <div className="space-y-3 pt-1">
+              {[0, 1, 2].map((i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-secondary" />)}
+            </div>
+          ) : stats.attention.length === 0 ? (
+            <div className="flex items-center gap-3 border-t border-border-subtle pt-5 text-sm text-fg-2">
+              <CheckCircle2 className="h-5 w-5 text-success-fg" aria-hidden="true" />
+              All clear. Nothing is waiting on you.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border-subtle border-t border-border-subtle">
+              {stats.attention.map((item) => (
+                <li key={item.key}>
+                  <Link
+                    to={item.to}
+                    className="group -mx-2 flex items-center gap-3.5 rounded-xl px-2 py-4 transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span
+                      className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                        item.accent ? 'bg-accent-subtle text-accent' : 'bg-secondary text-fg-2',
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-foreground">{item.title}</span>
+                      <span className="block truncate font-mono text-[13px] text-muted-foreground">{item.meta}</span>
+                    </span>
+                    <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm text-foreground transition-colors group-hover:border-border-strong sm:inline-flex">
+                      {item.cta} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground sm:hidden" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
 
         <div className="space-y-4">
-          {/* Secondary metrics — dense list */}
-          <Card className="p-5">
-            <h2 className="label mb-3">Content</h2>
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-9 rounded-md bg-secondary animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                  {populatedSecondary.map((metric) => (
-                    <Link
-                      key={metric.key}
-                      to={metric.path}
-                      className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-secondary"
-                    >
-                      <metric.icon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
-                      <span className="text-body-sm text-foreground flex-1 truncate">{metric.label}</span>
-                      <span className="text-body-sm tabular text-muted-foreground">{counts[metric.key]}</span>
-                      <ArrowRight className="h-3 w-3 text-muted-foreground/0 group-hover:text-foreground transition-colors" aria-hidden="true" />
-                    </Link>
-                  ))}
-                </div>
-                {emptySecondary.length > 0 && (
-                  <details className="mt-2 group">
-                    <summary className="flex items-center gap-1.5 cursor-pointer text-body-sm text-muted-foreground hover:text-foreground list-none px-2 py-1.5 -mx-2 rounded-md hover:bg-secondary">
-                      <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
-                      Not yet added ({emptySecondary.length})
-                    </summary>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-1">
-                      {emptySecondary.map((metric) => (
-                        <Link
-                          key={metric.key}
-                          to={metric.path}
-                          className="flex items-center gap-2.5 rounded-md px-2 py-1.5 -mx-2 transition-colors hover:bg-secondary text-muted-foreground/70 hover:text-foreground"
-                        >
-                          <metric.icon className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
-                          <span className="text-body-sm flex-1 truncate">{metric.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </details>
-                )}
-              </>
-            )}
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="p-5">
-            <h2 className="label mb-3">Quick Actions</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-              {QUICK_ACTIONS.map((action) => (
-                <Link key={action.path} to={action.path}>
-                  <div className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-secondary">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary text-muted-foreground">
-                      <action.icon className="w-4 h-4" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-body-sm font-semibold text-foreground">{action.label}</p>
-                      <p className="text-body-sm text-muted-foreground truncate">{action.sub}</p>
-                    </div>
-                  </div>
+          {/* Quick create */}
+          <Panel title="Quick create" className="hidden md:block">
+            <div className="grid grid-cols-2 gap-2">
+              {createActions.slice(0, 6).map((action) => (
+                <Link
+                  key={action.path}
+                  to={action.path}
+                  className="flex flex-col gap-3 rounded-xl bg-secondary/70 p-3.5 text-sm text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <action.icon className="h-4 w-4 text-fg-2" aria-hidden="true" />
+                  {action.noun}
                 </Link>
               ))}
             </div>
-          </Card>
-        </div>
+          </Panel>
 
-        {/* Recent Activity */}
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="text-h3 text-foreground">Recent Activity</h2>
-            {logs.length > 0 && (
-              <Link
-                to="/messages"
-                className="text-body-sm font-semibold flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                View all <ArrowRight className="w-3 h-3" />
+          {/* Activity */}
+          <Panel
+            title="Activity"
+            aside={
+              <Link to="/logs" className="flex items-center gap-1 text-sm text-fg-2 transition-colors hover:text-foreground">
+                View all <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
+            }
+          >
+            {logsLoading ? (
+              <div className="space-y-3 pt-1">
+                {[0, 1, 2, 3].map((i) => <div key={i} className="h-5 animate-pulse rounded bg-secondary" />)}
+              </div>
+            ) : logs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Changes you make will show up here.</p>
+            ) : (
+              <ul className="space-y-4 pt-1">
+                {logs.slice(0, 5).map((log) => (
+                  <li key={log.id} className="flex items-center gap-3 text-sm">
+                    <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', actionDot[log.action] ?? 'bg-muted-foreground')} aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate text-fg-2">
+                      {actionVerb[log.action] ?? log.action}{' '}
+                      <span className="text-foreground">{log.entityType}</span>
+                    </span>
+                    <span className="shrink-0 font-mono text-[13px] text-muted-foreground">{shortAgo(toJsDate(log.timestamp))}</span>
+                  </li>
+                ))}
+              </ul>
             )}
-          </div>
-
-          {loading ? (
-            <div className="p-4 space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg flex-shrink-0 animate-pulse bg-secondary" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-2.5 rounded-full animate-pulse bg-secondary" style={{ width: '65%' }} />
-                    <div className="h-2 rounded-full animate-pulse bg-secondary" style={{ width: '40%' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : logs.length > 0 ? (
-            <div>
-              {logs.map((log) => {
-                const dotColor = actionDotColor(log.action);
-                const ts = toJsDate(log.timestamp);
-                return (
-                  <div
-                    key={log.id}
-                    className="flex items-start gap-3 px-5 py-3.5 border-b border-border last:border-b-0"
-                  >
-                    <div
-                      className="w-2 h-2 rounded-full flex-shrink-0 mt-[5px]"
-                      style={{ background: dotColor }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body-sm font-medium text-foreground">
-                        {actionVerb(log.action)}{' '}
-                        <span style={{ color: dotColor }}>{log.entityType}</span>
-                      </p>
-                      {log.details && (
-                        <p className="text-body-sm truncate mt-0.5 text-muted-foreground">
-                          {log.details}
-                        </p>
-                      )}
-                      <p className="text-body-sm mt-0.5 flex items-center gap-1 text-muted-foreground">
-                        <Clock className="w-2.5 h-2.5" />
-                        {formatDistanceToNow(ts, { addSuffix: true })}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="p-6">
-              <EmptyState
-                icon={Clock}
-                title="No recent activity"
-                description="Changes you make across the admin panel will show up here."
-              />
-            </div>
-          )}
-        </Card>
+          </Panel>
+        </div>
       </div>
     </div>
   );

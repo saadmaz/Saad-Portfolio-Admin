@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 
 type FilterTab = 'all' | 'current' | 'past' | 'featured';
@@ -67,29 +68,29 @@ const AdminExperience = () => {
         is_featured: false,
       }));
       await CommonService.createExperience(payload);
-      toast.success('Duplicated — edit the copy to update details');
+      toast.success('Duplicated, edit the copy to update details');
       fetchExperience();
     } catch {
       toast.error('Duplicate failed');
     }
   };
 
-  const getCompanyName = (exp: Experience) => exp.company_name ?? exp.company ?? '—';
+  const getCompanyName = (exp: Experience) => exp.company_name ?? exp.company ?? '·';
   const getFirstRole = (exp: Experience) => {
     if (exp.roles && exp.roles.length > 0) return exp.roles[0].role_title;
-    return exp.position ?? '—';
+    return exp.position ?? '·';
   };
   const getIsCurrentFlag = (exp: Experience) =>
     exp.is_current ?? exp.isCurrent ??
     (exp.roles ? exp.roles.some(r => r.role_is_current) : false);
   const getStartDateDisplay = (exp: Experience) => {
     if (exp.start_month && exp.start_year) return `${exp.start_month.slice(0, 3)} ${exp.start_year}`;
-    return exp.startDate ?? '—';
+    return exp.startDate ?? '·';
   };
   const getEndDateDisplay = (exp: Experience) => {
     if (getIsCurrentFlag(exp)) return 'Present';
     if (exp.end_month && exp.end_year) return `${exp.end_month.slice(0, 3)} ${exp.end_year}`;
-    return exp.endDate ?? '—';
+    return exp.endDate ?? '·';
   };
 
   const filtered = useMemo(() => {
@@ -126,18 +127,16 @@ const AdminExperience = () => {
   }), [experience]);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="CAREER"
         title="Experience"
-        subtitle="Manage your professional career timeline and roles."
-        backTo="/dashboard"
+        subtitle={plural(experience.length, "company", "companies")}
         actions={
           <Button
             onClick={() => navigate('/experience/new')}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+            className="hover:scale-105"
           >
-            <Plus className="w-5 h-5 mr-2" /> Add Experience
+            <Plus className="w-5 h-5" /> Add experience
           </Button>
         }
       />
@@ -158,14 +157,14 @@ const AdminExperience = () => {
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                 filter === tab.key
                   ? 'bg-accent text-accent-foreground border-accent'
                   : 'bg-card border-border text-muted-foreground hover:border-accent/40 hover:text-foreground'
               }`}
             >
               {tab.label}
-              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[12px] ${
                 filter === tab.key ? 'bg-black/20 text-accent-foreground' : 'bg-secondary text-muted-foreground'
               }`}>
                 {counts[tab.key]}
@@ -188,7 +187,7 @@ const AdminExperience = () => {
             const roleCount = exp.roles?.length ?? 1;
             const isCurrent = getIsCurrentFlag(exp);
             const logo = exp.company_logo ?? exp.companyLogo;
-            const location = exp.location ?? '—';
+            const location = exp.location ?? '·';
 
             return (
               <Card
@@ -198,7 +197,7 @@ const AdminExperience = () => {
               >
                 <CardContent className="p-5 flex items-center gap-5">
                   {/* Logo or fallback icon */}
-                  <div className="w-14 h-14 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+                  <div className="w-14 h-14 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
                     {logo ? (
                       <img src={logo} alt={name} className="w-10 h-10 object-contain" />
                     ) : (
@@ -209,7 +208,7 @@ const AdminExperience = () => {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-foreground text-lg group-hover:text-accent transition-colors truncate">
+                      <h3 className="font-medium text-foreground text-lg group-hover:text-accent transition-colors truncate">
                         {name}
                       </h3>
                       {isCurrent && (
@@ -221,7 +220,7 @@ const AdminExperience = () => {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-muted-foreground font-semibold text-sm mb-2">
+                    <p className="text-muted-foreground font-medium text-sm mb-2">
                       {firstRoleTitle}
                       {roleCount > 1 && (
                         <span className="ml-2 text-caption text-muted-foreground font-normal">
@@ -246,28 +245,28 @@ const AdminExperience = () => {
                   {/* Actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary active:scale-90 transition-all flex-shrink-0">
+                      <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-secondary">
                         <MoreVertical className="w-4 h-4 text-muted-foreground" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-card border-border text-foreground rounded-xl shadow-xl p-1 min-w-[160px]">
                       <DropdownMenuItem
-                        className="hover:bg-accent/10 hover:text-accent cursor-pointer rounded-lg m-1 py-2 font-semibold"
+                        className="hover:bg-accent/10 hover:text-accent cursor-pointer rounded-lg m-1 py-2 font-medium"
                         onClick={() => navigate(`/experience/${exp.id}`)}
                       >
-                        <Edit2 className="w-4 h-4 mr-2" /> Edit Details
+                        <Edit2 className="w-4 h-4" /> Edit details
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="hover:bg-secondary cursor-pointer rounded-lg m-1 py-2 font-semibold text-muted-foreground"
+                        className="hover:bg-secondary cursor-pointer rounded-lg m-1 py-2 font-medium text-muted-foreground"
                         onClick={() => handleDuplicate(exp)}
                       >
-                        <Copy className="w-4 h-4 mr-2" /> Duplicate
+                        <Copy className="w-4 h-4" /> Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-lg m-1 py-2 font-semibold"
+                        className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-lg m-1 py-2 font-medium"
                         onClick={() => handleDelete(exp.id, getCompanyName(exp))}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        <Trash2 className="w-4 h-4" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -291,7 +290,7 @@ const AdminExperience = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Experience?"
+        title="Delete experience?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}
