@@ -4,19 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 font-mono text-[12px] leading-[1.4] transition-colors",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-        // Semantic status variants — the only colors a badge should ever
-        // need. Pair a low-alpha "subtle" background with a bright "fg"
-        // text color, both contrast-verified against each other (see
-        // docs/ui-audit.md section 9 for the method used).
+        default: "border-transparent bg-secondary text-fg-2",
+        secondary: "border-transparent bg-secondary text-fg-2",
+        destructive: "border-transparent bg-danger-subtle text-danger-fg",
+        outline: "border-border bg-transparent text-fg-2",
         neutral: "border-transparent bg-secondary text-muted-foreground",
+        accent: "border-transparent bg-accent-subtle text-accent",
         success: "border-transparent bg-success-subtle text-success-fg",
         warning: "border-transparent bg-warning-subtle text-warning-fg",
         danger: "border-transparent bg-danger-subtle text-danger-fg",
@@ -29,10 +26,18 @@ const badgeVariants = cva(
   },
 );
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {
+  /** Leading status dot in the current text colour. */
+  dot?: boolean;
+}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+function Badge({ className, variant, dot, children, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props}>
+      {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />}
+      {children}
+    </div>
+  );
 }
 
 export { Badge, badgeVariants };

@@ -8,6 +8,8 @@ import { Plus, Trophy, Edit2, Trash2, Calendar, Layout } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import { LightboxModal } from '@/components/ui/LightboxModal';
 import * as z from 'zod';
@@ -61,6 +63,7 @@ const AdminHackathons = () => {
   };
 
   const handleAdd = () => { setCurrentHackathon(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (hack: Hackathon) => { setCurrentHackathon(hack); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -91,15 +94,13 @@ const AdminHackathons = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="COMPETITIONS"
         title="Hackathons"
-        subtitle="Manage your hackathon participations and achievements."
-        backTo="/dashboard"
+        subtitle={plural(hackathons.length, "hackathon")}
         actions={
-          <Button onClick={handleAdd} variant="primary" className="font-semibold h-11 px-6 rounded-lg">
-            <Plus className="w-4 h-4 mr-2" /> Add Hackathon
+          <Button onClick={handleAdd} variant="primary">
+            <Plus className="w-4 h-4" /> Add hackathon
           </Button>
         }
       />
@@ -136,9 +137,9 @@ const AdminHackathons = () => {
                       )}
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-foreground text-lg">{hack.name}</h3>
+                          <h3 className="font-medium text-foreground text-lg">{hack.name}</h3>
                           {hack.achievement && (
-                            <span className="px-2 py-0.5 rounded bg-accent/15 text-accent text-[10px] font-bold uppercase tracking-wider border border-accent/20">
+                            <span className="px-2 py-0.5 rounded bg-accent/15 text-accent text-[12px] font-medium uppercase tracking-wider border border-accent/20">
                               {hack.achievement}
                             </span>
                           )}
@@ -150,7 +151,7 @@ const AdminHackathons = () => {
                         </div>
                         {hack.projectTitle && (
                           <p className="mt-2 text-sm text-muted-foreground font-medium">
-                            Project: <span className="text-foreground font-semibold">{hack.projectTitle}</span>
+                            Project: <span className="text-foreground font-medium">{hack.projectTitle}</span>
                           </p>
                         )}
                       </div>
@@ -173,7 +174,7 @@ const AdminHackathons = () => {
             icon={Trophy}
             title="No hackathons listed"
             description="Add your hackathon experiences to highlight your rapid prototyping skills."
-            action={{ label: 'Add Hackathon', onClick: handleAdd }}
+            action={{ label: 'Add hackathon', onClick: handleAdd }}
           />
         )}
       </div>
@@ -188,7 +189,7 @@ const AdminHackathons = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Hackathon?"
+        title="Delete hackathon?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}
@@ -197,7 +198,7 @@ const AdminHackathons = () => {
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentHackathon ? 'Edit Hackathon' : 'Add Hackathon'}
+        title={currentHackathon ? 'Edit hackathon' : 'Add hackathon'}
         fields={hackathonFields}
         schema={hackathonSchema}
         defaultValues={currentHackathon || {}}

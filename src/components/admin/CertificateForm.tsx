@@ -104,27 +104,27 @@ const CertificateForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-20">
       <FormHeader
         backTo="/certificates"
-        title={isEditMode ? 'Edit Certificate' : 'Add Achievement'}
+        title={isEditMode ? 'Edit certificate' : 'Add achievement'}
         subtitle='"Your hard work is your unique signature."'
         actions={
           <Button
             type="submit"
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold px-8"
+           
             disabled={isLoading}
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save Achievement
+            <Save className="w-4 h-4" />
+            Save achievement
           </Button>
         }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader className="border-b border-white/5">
+          <Card>
+            <CardHeader className="border-b border-border-subtle">
                 <CardTitle className="text-lg flex items-center gap-2">
                     <Award className="w-4 h-4 text-accent" />
                     Credential Essentials
@@ -133,19 +133,19 @@ const CertificateForm = () => {
             <CardContent className="p-6 space-y-4">
               <Field label="Certificate Title" error={errors.title?.message}>
                 {(bind) => (
-                  <Input {...register('title')} {...bind} placeholder="e.g. Google Cloud Professional Engineer" className="bg-white/5 border-white/10" />
+                  <Input {...register('title')} {...bind} placeholder="e.g. Google Cloud Professional Engineer" />
                 )}
               </Field>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Issuer / Authority" error={errors.issuer?.message}>
                   {(bind) => (
-                    <Input {...register('issuer')} {...bind} placeholder="e.g. Google" className="bg-white/5 border-white/10" />
+                    <Input {...register('issuer')} {...bind} placeholder="e.g. Google" />
                   )}
                 </Field>
                 <Field label="Platform">
                   {(bind) => (
-                    <Input {...register('platform')} {...bind} placeholder="e.g. Coursera" className="bg-white/5 border-white/10" />
+                    <Input {...register('platform')} {...bind} placeholder="e.g. Coursera" />
                   )}
                 </Field>
               </div>
@@ -158,14 +158,14 @@ const CertificateForm = () => {
                 />
                 <Field label="Brief Description">
                   {(bind) => (
-                    <Textarea {...register('description')} {...bind} className="bg-white/5 border-white/10 min-h-[100px]" />
+                    <Textarea {...register('description')} {...bind} className="min-h-[100px]" />
                   )}
                 </Field>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader className="border-b border-white/5">
+          <Card>
+            <CardHeader className="border-b border-border-subtle">
                 <CardTitle className="text-lg flex items-center gap-2">
                     <LinkIcon className="w-4 h-4 text-accent" />
                     Validation Links
@@ -174,12 +174,12 @@ const CertificateForm = () => {
             <CardContent className="p-6 space-y-4">
               <Field label="Verifiable Credential URL" error={errors.credential_url?.message}>
                 {(bind) => (
-                  <Input {...register('credential_url')} {...bind} placeholder="https://..." className="bg-white/5 border-white/10" />
+                  <Input {...register('credential_url')} {...bind} placeholder="https://..." />
                 )}
               </Field>
               <Field label="PDF Document Link (Optional)">
                 {(bind) => (
-                  <Input {...register('pdf_document_link')} {...bind} placeholder="https://..." className="bg-white/5 border-white/10" />
+                  <Input {...register('pdf_document_link')} {...bind} placeholder="https://..." />
                 )}
               </Field>
             </CardContent>
@@ -187,9 +187,9 @@ const CertificateForm = () => {
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader className="border-b border-white/5">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Card>
+            <CardHeader className="border-b border-border-subtle">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-accent" />
                     Timing
                 </CardTitle>
@@ -197,15 +197,15 @@ const CertificateForm = () => {
             <CardContent className="p-4 space-y-4">
               <Field label="Issue Date">
                 {(bind) => (
-                  <Input {...register('issue_date')} {...bind} placeholder="e.g. Jan 2024" className="bg-white/5 border-white/10 h-8" />
+                  <Input {...register('issue_date')} {...bind} placeholder="e.g. Jan 2024" className="h-8" />
                 )}
               </Field>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader className="border-b border-white/5">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Card>
+            <CardHeader className="border-b border-border-subtle">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <FileBadge className="w-4 h-4 text-accent" />
                     Classification
                 </CardTitle>
@@ -213,12 +213,12 @@ const CertificateForm = () => {
             <CardContent className="p-4 space-y-4">
                <Field label="Category">
                   {(bind) => (
-                    <Input {...register('category')} {...bind} className="bg-white/5 border-white/10 h-8 text-sm" />
+                    <Input {...register('category')} {...bind} className="h-8 text-sm" />
                   )}
                </Field>
                <Field label="Type">
                   {(bind) => (
-                    <Input {...register('type')} {...bind} className="bg-white/5 border-white/10 h-8 text-sm" />
+                    <Input {...register('type')} {...bind} className="h-8 text-sm" />
                   )}
                </Field>
                <div className="flex items-center justify-between pt-2">

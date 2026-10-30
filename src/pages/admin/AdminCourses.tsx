@@ -8,6 +8,8 @@ import { Plus, Search, BookMarked, Edit2, Trash2, ExternalLink } from 'lucide-re
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -54,6 +56,7 @@ const AdminCourses = () => {
   };
 
   const handleAdd = () => { setCurrent(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (c: Course) => { setCurrent(c); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -89,26 +92,24 @@ const AdminCourses = () => {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="CONTENT"
         title="Courses"
-        subtitle="Courses and programs you have completed."
-        backTo="/dashboard"
+        subtitle={plural(courses.length, "course")}
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Add Course
+          <Button onClick={handleAdd}>
+            <Plus className="w-4 h-4" /> Add course
           </Button>
         }
       />
 
-      <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
+      <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search courses..."
-            className="w-full bg-secondary border border-border rounded-lg pl-11 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-accent outline-none transition-all text-foreground placeholder:text-muted-foreground font-medium"
+            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -126,11 +127,11 @@ const AdminCourses = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2 flex-shrink-0">
                       <BookMarked className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-black text-foreground text-sm truncate">
+                      <h3 className="font-medium text-foreground text-sm truncate">
                         {course.name}
                       </h3>
                       <p className="text-xs text-muted-foreground font-medium">
@@ -144,10 +145,10 @@ const AdminCourses = () => {
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(course)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(course)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id, course.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id, course.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -167,15 +168,15 @@ const AdminCourses = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Course?"
+        title="Delete course?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
-        confirmLabel="Delete Course"
+        confirmLabel="Delete course"
         onConfirm={handleConfirmDelete}
       />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={current ? 'Edit Course' : 'Add Course'}
+        title={current ? 'Edit course' : 'Add course'}
         fields={courseFields}
         schema={courseSchema}
         defaultValues={current || {}}

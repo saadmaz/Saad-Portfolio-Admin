@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Plus, GraduationCap, Edit2, Calendar, Copy, MoreVertical, Star } from 'lucide-react';
 import { toast } from "sonner";
 import PageHeader from '@/components/admin/PageHeader';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -20,7 +21,7 @@ const MONTHS = [
 ];
 
 function getSchoolName(edu: Education): string {
-  return edu.school_name ?? edu.institution ?? '—';
+  return edu.school_name ?? edu.institution ?? '·';
 }
 
 function getLogoUrl(edu: Education): string | undefined {
@@ -30,7 +31,7 @@ function getLogoUrl(edu: Education): string | undefined {
 function getDisplayStartDate(edu: Education): string {
   if (edu.start_month && edu.start_year) return `${edu.start_month.slice(0, 3)} ${edu.start_year}`;
   if (edu.startDate) return edu.startDate;
-  return '—';
+  return '·';
 }
 
 function getDisplayEndDate(edu: Education): string {
@@ -38,7 +39,7 @@ function getDisplayEndDate(edu: Education): string {
   if (isCurrent) return 'Present';
   if (edu.end_month && edu.end_year) return `${edu.end_month.slice(0, 3)} ${edu.end_year}`;
   if (edu.endDate) return edu.endDate;
-  return '—';
+  return '·';
 }
 
 function isExpectedGrad(edu: Education): boolean {
@@ -91,7 +92,7 @@ const AdminEducation = () => {
         is_published: false,
         is_featured: false,
       });
-      toast.success('Duplicated as draft — edit the copy to update details');
+      toast.success('Duplicated as a draft, edit the copy to update details');
       fetchEducation();
     } catch { toast.error('Duplicate failed'); }
   };
@@ -108,18 +109,16 @@ const AdminEducation = () => {
   }, [education]);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="ACADEMIC"
         title="Education"
-        subtitle="Manage your academic background and degrees."
-        backTo="/dashboard"
+        subtitle={plural(education.length, "entry", "entries")}
         actions={
           <Button
             onClick={() => navigate('/education/new')}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0"
+            className="flex-shrink-0"
           >
-            <Plus className="w-4 h-4 mr-2" /> Add Education
+            <Plus className="w-4 h-4" /> Add education
           </Button>
         }
       />
@@ -152,10 +151,10 @@ const AdminEducation = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-card border-border text-foreground" align="end">
                       <DropdownMenuItem onClick={() => navigate(`/education/${edu.id}`)} className="cursor-pointer">
-                        <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit
+                        <Edit2 className="w-3.5 h-3.5" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleDuplicate(edu)} className="cursor-pointer">
-                        <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
+                        <Copy className="w-3.5 h-3.5" /> Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setDeleteTarget({ id: edu.id, label: getSchoolName(edu) })}
@@ -205,20 +204,20 @@ const AdminEducation = () => {
                   onClick={() => navigate(`/education/${edu.id}`)}
                 >
                   <h3
-                    className="font-black text-foreground text-sm line-clamp-1 group-hover:text-accent transition-colors leading-snug"
+                    className="font-medium text-foreground text-sm line-clamp-1 group-hover:text-accent transition-colors leading-snug"
                   >
                     {edu.degree ? `${edu.degree}${edu.field_of_study ? ` · ${edu.field_of_study}` : ''}` : getSchoolName(edu)}
                   </h3>
-                  <p className="text-xs text-accent font-semibold mt-0.5 truncate">{getSchoolName(edu)}</p>
+                  <p className="text-xs text-accent font-medium mt-0.5 truncate">{getSchoolName(edu)}</p>
 
                   <div className="mt-auto flex items-center justify-between pt-2 border-t border-border">
-                    <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                    <span className="text-[12px] text-muted-foreground font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3 text-accent/70" />
                       {getDisplayStartDate(edu)} – {endDate}
                       {expectedGrad && <span className="ml-1 text-warning-fg/80">(Expected)</span>}
                     </span>
                     {edu.grade && edu.show_grade_publicly !== false && (
-                      <span className="text-[10px] font-mono bg-secondary px-1.5 py-0.5 rounded border border-border text-foreground truncate max-w-[80px]">
+                      <span className="text-[12px] font-mono bg-secondary px-1.5 py-0.5 rounded border border-border text-foreground truncate max-w-[80px]">
                         {edu.grade}
                       </span>
                     )}
@@ -233,7 +232,7 @@ const AdminEducation = () => {
               icon={GraduationCap}
               title="No education history"
               description="Add your degrees and institutions to complete your profile."
-              action={{ label: 'Add Education', onClick: () => navigate('/education/new') }}
+              action={{ label: 'Add education', onClick: () => navigate('/education/new') }}
             />
           </div>
         )}
@@ -242,7 +241,7 @@ const AdminEducation = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Education?"
+        title="Delete education?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}

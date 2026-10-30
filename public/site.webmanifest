@@ -1,13 +1,19 @@
 {
-  "name": "Saad Mazhar Admin",
-  "short_name": "Admin",
-  "description": "Admin panel for saadmaz.com",
+  "name": "Saad Mazhar CMS",
+  "short_name": "CMS",
+  "description": "Content admin for saadmaz.com",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fafcfc",
-  "theme_color": "#0c2029",
+  "background_color": "#19191B",
+  "theme_color": "#19191B",
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/logo.png",
       "sizes": "500x500",

@@ -12,8 +12,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-5 w-5 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-label="Loading" />
       </div>
     );
   }

@@ -8,6 +8,8 @@ import { Plus, Globe, Edit2, Trash2 } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -63,6 +65,7 @@ const AdminLanguages = () => {
     setCurrentLanguage(null);
     setIsDialogOpen(true);
   };
+  useCreateIntent(handleAdd);
 
   const handleEdit = (lang: Language) => {
     setCurrentLanguage(lang);
@@ -97,15 +100,13 @@ const AdminLanguages = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="COMMUNICATION"
         title="Languages"
-        subtitle="Manage the languages you speak and your proficiency levels."
-        backTo="/dashboard"
+        subtitle={plural(languages.length, "language")}
         actions={
-          <Button onClick={handleAdd} variant="primary" className="font-semibold h-11 px-6 rounded-lg">
-            <Plus className="w-4 h-4 mr-2" /> Add New Language
+          <Button onClick={handleAdd} variant="primary">
+            <Plus className="w-4 h-4" /> Add new language
           </Button>
         }
       />
@@ -125,7 +126,7 @@ const AdminLanguages = () => {
                       <Globe className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground text-lg">{lang.name}</h3>
+                      <h3 className="font-medium text-foreground text-lg">{lang.name}</h3>
                       <p className="text-sm text-accent">{lang.level}</p>
                     </div>
                   </div>
@@ -158,17 +159,17 @@ const AdminLanguages = () => {
             icon={Globe}
             title="No languages added"
             description="Add languages to showcase your communication skills."
-            action={{ label: 'Add New Language', onClick: handleAdd }}
+            action={{ label: 'Add new language', onClick: handleAdd }}
             className="md:col-span-2"
           />
         )}
       </div>
 
-      <ConfirmDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)} title="Delete Language?" description={`"${deleteTarget?.label}" will be permanently deleted.`} confirmLabel="Delete" onConfirm={handleConfirmDelete} />
+      <ConfirmDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)} title="Delete language?" description={`"${deleteTarget?.label}" will be permanently deleted.`} confirmLabel="Delete" onConfirm={handleConfirmDelete} />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentLanguage ? 'Edit Language' : 'Add New Language'}
+        title={currentLanguage ? 'Edit language' : 'Add new language'}
         fields={languageFields}
         schema={languageSchema}
         defaultValues={currentLanguage || { percentage: 80 }}

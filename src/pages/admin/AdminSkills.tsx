@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
+import { plural } from '@/shared/lib/utils';
 import { SkillSet, Skill } from '@/types';
 import { toast } from "sonner";
 
@@ -96,27 +97,25 @@ const AdminSkills = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="EXPERTISE"
-        title="Skills & Tools"
-        subtitle="Manage your technical expertise and group them by category."
-        backTo="/dashboard"
+        title="Skills & tools"
+        subtitle={`${plural(skillSets.reduce((n, s) => n + s.skills.length, 0), "skill")} · ${plural(skillSets.length, "category", "categories")}`}
         actions={
           <>
             <Button
               variant="outline"
               onClick={addCategory}
-              className="border-border hover:bg-secondary rounded-xl px-4 py-2 text-muted-foreground hover:text-foreground transition-all shadow-sm"
+              className="border-border hover:bg-secondary px-4 py-2 text-muted-foreground hover:text-foreground"
             >
-              <Plus className="w-4 h-4 mr-2" /> Add Category
+              <Plus className="w-4 h-4" /> Add category
             </Button>
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+              className="hover:scale-105"
             >
-              <Save className="w-4 h-4 mr-2" /> {isSaving ? 'Saving...' : 'Save All Changes'}
+              <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save all changes'}
             </Button>
           </>
         }
@@ -138,20 +137,20 @@ const AdminSkills = () => {
                       next[catIndex].category = e.target.value;
                       setSkillSets(next);
                     }}
-                    className="bg-transparent border-none text-xl font-bold p-0 h-auto focus-visible:ring-0 text-foreground placeholder:text-muted-foreground"
+                    className="bg-transparent border-none text-xl font-medium p-0 h-auto focus-visible:ring-0 text-foreground placeholder:text-muted-foreground"
                     placeholder="Enter category name..."
                   />
                   <div className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-focus-within/input:w-full" />
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'up')} disabled={catIndex === 0}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'up')} disabled={catIndex === 0}>
                   <ChevronUp className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'down')} disabled={catIndex === skillSets.length - 1}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'down')} disabled={catIndex === skillSets.length - 1}>
                   <ChevronDown className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-danger-fg hover:text-danger-fg hover:bg-danger-subtle rounded-lg ml-1" onClick={() => removeCategory(catIndex)}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-danger-fg hover:text-danger-fg hover:bg-danger-subtle ml-1" onClick={() => removeCategory(catIndex)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -164,7 +163,7 @@ const AdminSkills = () => {
                       <Input
                         value={skill.name}
                         onChange={(e) => updateSkill(catIndex, skillIndex, 'name', e.target.value)}
-                        className="bg-transparent border-none font-bold p-0 h-auto focus-visible:ring-0 text-sm text-foreground"
+                        className="bg-transparent border-none font-medium p-0 h-auto focus-visible:ring-0 text-sm text-foreground"
                         placeholder="Skill name"
                       />
                       <button
@@ -179,7 +178,7 @@ const AdminSkills = () => {
                         value={skill.level}
                         onValueChange={(v) => updateSkill(catIndex, skillIndex, 'level', v)}
                       >
-                        <SelectTrigger className="bg-card border border-border rounded-lg px-2 py-1.5 text-[10px] font-bold text-muted-foreground h-auto focus:ring-accent">
+                        <SelectTrigger className="bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] font-medium text-muted-foreground h-auto focus:ring-accent">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border text-foreground">
@@ -200,7 +199,7 @@ const AdminSkills = () => {
                         />
                         <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-accent" />
                         {skill.startYear > 0 && (
-                          <span className="absolute -top-4 right-0 text-[9px] text-accent/70 font-mono">
+                          <span className="absolute -top-4 right-0 text-[12px] text-accent/70 font-mono">
                             {new Date().getFullYear() - skill.startYear}y
                           </span>
                         )}
@@ -213,7 +212,7 @@ const AdminSkills = () => {
                   className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-border hover:border-accent hover:text-accent transition-all text-sm text-muted-foreground gap-1 min-h-[82px]"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Skill
+                  Add skill
                 </button>
               </div>
             </CardContent>
@@ -224,7 +223,7 @@ const AdminSkills = () => {
       <ConfirmDialog
         open={deleteCatIndex !== null}
         onOpenChange={(o) => !o && setDeleteCatIndex(null)}
-        title="Remove Category?"
+        title="Remove category?"
         description={deleteCatIndex !== null ? `"${skillSets[deleteCatIndex]?.category}" and all its skills will be permanently removed.` : ''}
         confirmLabel="Remove"
         onConfirm={handleConfirmRemoveCategory}

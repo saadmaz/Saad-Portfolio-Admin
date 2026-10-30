@@ -1,493 +1,487 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
-  LogOut, Menu, X, ShieldCheck, ChevronLeft, ChevronRight,
-  ChevronDown, ExternalLink, Search,
+  ChevronDown, ExternalLink, History, Inbox, Layers, LayoutGrid, LogOut, MoreHorizontal,
+  PanelLeft, Plus, Search,
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/shared/lib/utils";
-import { auth } from '@/lib/firebase';
-import { CommonService } from '@/shared/services/common-service';
-import { ProjectService } from '@/services/project-service';
-import { BlogService } from '@/services/blog-service';
-import { navGroups, type NavGroup } from './navConfig';
+} from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { cn } from '@/shared/lib/utils';
+import { useAuth } from '@/shared/contexts/AuthContext';
+import {
+  createActions, findNavItem, navGroups, openCommandMenu, SITE_URL,
+  type NavGroup, type NavItem,
+} from './navConfig';
+import { OVERVIEW_QUERY_KEY, useAdminOverview } from './useAdminOverview';
+import { BrandAppIcon } from './BrandMark';
 import CommandMenu from './CommandMenu';
 
-/* ─── Palette ────────────────────────────────────────────────── */
 const SIDEBAR_KEY = 'admin_sidebar_collapsed';
-const GROUPS_KEY = 'admin_sidebar_open_groups';
+const MORE_KEY = 'admin_sidebar_more_open';
 
-/* Overview/Content stay always-expanded (single item; and the categories
- * used daily). The rest are collapsible so infrequently-used sections CAN
- * be tucked away, but default OPEN — every nav item is visible on first
- * load, nothing is hidden unless the user explicitly collapses a group
- * themselves (that choice is then remembered via localStorage). */
-const COLLAPSIBLE_GROUPS = new Set(['Metadata', 'Profile', 'Admin']);
+const readFlag = (key: string) => {
+  try { return localStorage.getItem(key) === 'true'; } catch { return false; }
+};
+const writeFlag = (key: string, value: boolean) => {
+  try { localStorage.setItem(key, String(value)); } catch { /* storage unavailable */ }
+};
 
-/* ─── Main layout ────────────────────────────────────────────── */
-const AdminLayout = () => {
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    try { return localStorage.getItem(SIDEBAR_KEY) === 'true'; } catch { return false; }
-  });
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem(GROUPS_KEY) ?? '{}'); } catch { return {}; }
-  });
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [navCounts, setNavCounts] = useState<Record<string, number>>({});
-  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
-  const mobileSidebarRef = useRef<HTMLElement>(null);
+const isActivePath = (pathname: string, path: string) => pathname === path || pathname.startsWith(path + '/');
 
-  const navigate = useNavigate();
-  const location = useLocation();
+const contentPaths = navGroups.find((g) => g.label === 'Content')!.items.map((i) => i.path);
 
-  useEffect(() => {
-    try { localStorage.setItem(SIDEBAR_KEY, String(collapsed)); } catch { /* localStorage unavailable (private mode, quota) - ignore */ }
-  }, [collapsed]);
+/** "Projects / New", "Inbox", etc. for the top bar. */
+function useBreadcrumb() {
+  const { pathname } = useLocation();
+  if (pathname === '/' || pathname === '/dashboard') return { group: 'Overview', page: 'Dashboard', detail: undefined };
+  if (pathname === '/more') return { group: 'Overview', page: 'More', detail: undefined };
+  const item = findNavItem(pathname);
+  if (!item) return { group: 'Overview', page: 'Dashboard', detail: undefined };
+  const rest = pathname.slice(item.path.length + 1);
+  const detail = rest ? (rest === 'new' ? 'New' : 'Edit') : undefined;
+  return { group: item.group === 'More collections' ? 'More' : item.group, page: item.label, detail };
+}
 
-  useEffect(() => {
-    try { localStorage.setItem(GROUPS_KEY, JSON.stringify(openGroups)); } catch { /* localStorage unavailable (private mode, quota) - ignore */ }
-  }, [openGroups]);
+const initialsOf = (name?: string | null, email?: string | null) => {
+  const source = name || email?.split('@')[0] || 'Admin';
+  return source.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
+};
 
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged((user) => {
-      if (!user && location.pathname !== '/login') navigate('/login');
+const Avatar = ({ initials, className }: { initials: string; className?: string }) => (
+  <span
+    className={cn(
+      'flex shrink-0 items-center justify-center rounded-full border border-border bg-gradient-to-b from-surface-3 to-secondary font-mono text-[12px] text-foreground',
+      className,
+    )}
+    aria-hidden="true"
+  >
+    {initials}
+  </span>
+);
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+  counts: Partial<Record<string, number>>;
+  userName: string;
+  userEmail: string;
+  initials: string;
+  onSignOut: () => void;
+}
+
+const Sidebar = ({ collapsed, onToggle, counts, userName, userEmail, initials, onSignOut }: SidebarProps) => {
+  const { pathname } = useLocation();
+  const moreGroup = navGroups.find((g) => g.collapsible)!;
+  const moreActive = moreGroup.items.some((i) => isActivePath(pathname, i.path));
+  const [moreOpen, setMoreOpen] = useState(() => readFlag(MORE_KEY));
+  const showMore = moreOpen || moreActive;
+
+  const toggleMore = () => {
+    setMoreOpen((open) => {
+      writeFlag(MORE_KEY, !open);
+      return !open;
     });
-    return unsub;
-  }, [navigate, location.pathname]);
-
-  useEffect(() => {
-    Promise.all([
-      ProjectService.getAll(),
-      BlogService.getAll(),
-      CommonService.getMessages(),
-      CommonService.getWorkExperience(),
-      CommonService.getSkills(),
-      CommonService.getCertificates(),
-      CommonService.getAwards(),
-      CommonService.getEvents(),
-      CommonService.getTestimonials(),
-      CommonService.getCourses(),
-      CommonService.getPublications(),
-      CommonService.getPatents(),
-      CommonService.getOrganizations(),
-      CommonService.getCauses(),
-      CommonService.getTestScores(),
-    ]).then(([projects, blogs, messages, experience, skills, certs, awards, events, testimonials, courses, publications, patents, organizations, causes, testScores]) => {
-      const unread = messages.filter((m) => !m.read).length;
-      setUnreadCount(unread);
-      setNavCounts({
-        projects:      projects.length,
-        blogs:         blogs.length,
-        experience:    experience.length,
-        skills:        skills.length,
-        certificates:  certs.length,
-        awards:        awards.length,
-        events:        events.length,
-        testimonials:  testimonials.length,
-        messages:      unread,
-        courses:       courses.length,
-        publications:  publications.length,
-        patents:       patents.length,
-        organizations: organizations.length,
-        causes:        causes.length,
-        testScores:    testScores.length,
-      });
-    }).catch(() => {});
-  }, [location.pathname]);
-
-  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
-
-  useEffect(() => {
-    if (!mobileOpen) return;
-    mobileSidebarRef.current?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setMobileOpen(false);
-        mobileMenuButtonRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [mobileOpen]);
-
-  const currentPageLabel = navGroups
-    .flatMap(g => g.items)
-    .find(i => location.pathname === i.path || location.pathname.startsWith(i.path + '/'))
-    ?.label ?? 'Dashboard';
-
-  const isGroupOpen = (group: NavGroup) => {
-    if (!COLLAPSIBLE_GROUPS.has(group.label)) return true;
-    return openGroups[group.label] ?? true;
   };
 
-  const toggleGroup = (label: string) => {
-    setOpenGroups(prev => ({ ...prev, [label]: !isGroupOpen({ label, items: navGroups.find(g => g.label === label)!.items }) }));
-  };
-
-  /* ── Sidebar content ────────────────────────────────────────── */
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-
-      {/* Logo / brand */}
-      <div className={cn(
-        "flex items-center h-14 border-b flex-shrink-0 transition-all duration-300",
-        "border-[var(--admin-border)]",
-        collapsed ? "justify-center px-0" : "justify-between px-4"
-      )}>
-        {!collapsed && (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-secondary border border-border">
-              <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
-            </div>
-            <span className="text-[13px] font-semibold text-foreground">
-              Admin
-            </span>
-          </div>
+  const renderItem = (item: NavItem) => {
+    const count = item.countKey ? counts[item.countKey] : undefined;
+    const active = isActivePath(pathname, item.path) || (item.path === '/dashboard' && pathname === '/');
+    const link = (
+      <Link
+        to={item.path}
+        aria-current={active ? 'page' : undefined}
+        className={cn(
+          'group flex items-center gap-2.5 rounded-lg px-2 py-[7px] text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
+          collapsed && 'justify-center px-0',
+          active ? 'bg-secondary text-foreground' : 'text-fg-2 hover:bg-secondary/60 hover:text-foreground',
         )}
-        {collapsed && (
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-secondary border border-border">
-            <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-expanded={!collapsed}
-          className={cn(
-            "hidden md:flex items-center justify-center w-5 h-5 rounded-md transition-colors duration-200 flex-shrink-0",
-            "text-[var(--admin-fg-22)] hover:text-[var(--admin-fg-60)] hover:bg-secondary",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            collapsed && "absolute left-[52px] top-[20px] z-10 border shadow-xl rounded-full"
-          )}
-          style={collapsed ? { background: 'hsl(var(--card))', borderColor: 'var(--admin-border-md)' } : {}}
-        >
-          {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
-        </button>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar px-2 space-y-0">
-        <TooltipProvider delayDuration={0}>
-          {navGroups.map((group) => {
-            const collapsible = COLLAPSIBLE_GROUPS.has(group.label);
-            const open = isGroupOpen(group);
-            const showItems = collapsed || open;
-
-            return (
-            <div key={group.label} className="mb-4">
-              {!collapsed && collapsible && (
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group.label)}
-                  aria-expanded={open}
-                  className="w-full flex items-center gap-1 px-2.5 pb-1.5 pt-0.5 rounded-md select-none label hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <ChevronDown className={cn("h-3 w-3 transition-transform flex-shrink-0", !open && "-rotate-90")} aria-hidden="true" />
-                  {group.label}
-                </button>
-              )}
-              {!collapsed && !collapsible && (
-                <p className="label px-2.5 pb-1.5 pt-0.5 select-none">
-                  {group.label}
-                </p>
-              )}
-              {collapsed && (
-                <div className="my-2 mx-2" style={{ borderTop: '1px solid var(--admin-surface-md)' }} />
-              )}
-
-              {showItems && group.items.map((item) => {
-                const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
-                const hasBadge = Boolean(item.badge) && unreadCount > 0;
-                const count = item.countKey ? navCounts[item.countKey] : undefined;
-
-                const linkEl = (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-lg transition-colors duration-150 group relative mb-0.5 outline-none",
-                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                      collapsed ? "justify-center px-0 py-2.5" : "px-2.5 py-2",
-                      isActive
-                        ? "bg-secondary text-foreground font-medium"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                    )}
-                  >
-                    {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground/50" />
-                    )}
-
-                    <div className="relative flex-shrink-0">
-                      <item.icon className="w-[15px] h-[15px] transition-transform duration-150 group-hover:scale-105" />
-                      {hasBadge && collapsed && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[13px] h-[13px] px-0.5 rounded-full bg-danger text-danger-foreground text-[8px] font-bold flex items-center justify-center leading-none tabular">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </div>
-
-                    {!collapsed && (
-                      <>
-                        <span className={cn("text-body-sm truncate flex-1 transition-colors duration-150", isActive ? "text-foreground font-medium" : "text-muted-foreground")}>
-                          {item.label}
-                        </span>
-                        {hasBadge ? (
-                          <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-danger-subtle text-danger-fg text-[9px] font-bold flex items-center justify-center border border-danger/20 tabular">
-                            {unreadCount > 9 ? '9+' : unreadCount}
-                          </span>
-                        ) : count !== undefined && count > 0 ? (
-                          <span className="ml-auto text-body-sm text-muted-foreground tabular">
-                            {count}
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </Link>
-                );
-
-                if (collapsed) {
-                  return (
-                    <Tooltip key={item.path}>
-                      <TooltipTrigger asChild>{linkEl}</TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className="text-xs font-medium flex items-center gap-2"
-                        style={{ background: 'hsl(var(--card))', borderColor: 'var(--admin-border-lg)', color: 'hsl(var(--foreground))' }}
-                      >
-                        {item.label}
-                        {count !== undefined && (
-                          <span style={{ color: 'hsl(var(--foreground) / 0.55)' }}>{count}</span>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                }
-                return linkEl;
-              })}
-            </div>
-            );
-          })}
-        </TooltipProvider>
-      </nav>
-
-      {/* User profile + sign out */}
-      <div
-        className="flex-shrink-0"
-        style={{ borderTop: '1px solid var(--admin-border)' }}
       >
-        {/* User row */}
+        <span className="relative">
+          <item.icon
+            className={cn('h-4 w-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground group-hover:text-fg-2')}
+            aria-hidden="true"
+          />
+          {collapsed && item.badge && !!count && (
+            <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent ring-2 ring-card" />
+          )}
+        </span>
         {!collapsed && (
-          <div className="flex items-center gap-2.5 px-3 py-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold bg-secondary border border-border text-foreground">
-              SM
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11.5px] font-semibold truncate text-foreground/80">
-                Saad Mazhar
-              </p>
-              <p className="text-[9.5px] truncate text-muted-foreground">
-                saadmazaa@gmail.com
-              </p>
-            </div>
-          </div>
-        )}
-        {collapsed && (
-          <div className="flex justify-center py-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold bg-secondary border border-border text-foreground">
-              SM
-            </div>
-          </div>
-        )}
-
-        {/* Sign out */}
-        <div className={cn("pb-3", collapsed ? "px-2" : "px-3")}>
-          <TooltipProvider delayDuration={0}>
-            {collapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={async () => { try { await auth.signOut(); } catch { /* ignore, still navigate away */ } navigate('/login'); }}
-                    className="w-full flex items-center justify-center p-2 rounded-lg transition-colors text-muted-foreground hover:bg-danger-subtle hover:text-danger-fg"
-                  >
-                    <LogOut className="w-[15px] h-[15px]" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-xs" style={{ background: 'hsl(var(--card))', borderColor: 'var(--admin-border-lg)', color: 'hsl(var(--foreground))' }}>
-                  Sign Out
-                </TooltipContent>
-              </Tooltip>
+          <>
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {item.badge ? (
+              !!count && (
+                <span className="rounded-full bg-accent px-[7px] font-mono text-[12px] leading-[1.5] text-accent-foreground tabular">
+                  {count > 99 ? '99+' : count}
+                </span>
+              )
             ) : (
-              <button
-                onClick={async () => { try { await auth.signOut(); } catch { /* ignore, still navigate away */ } navigate('/login'); }}
-                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-body-sm font-medium text-muted-foreground hover:bg-danger-subtle hover:text-danger-fg"
-              >
-                <LogOut className="w-[14px] h-[14px] flex-shrink-0" />
-                Sign Out
-              </button>
+              count !== undefined && (
+                <span className="px-[7px] font-mono text-[13px] text-muted-foreground tabular">{count}</span>
+              )
             )}
-          </TooltipProvider>
-        </div>
-      </div>
+          </>
+        )}
+      </Link>
+    );
+
+    if (!collapsed) return <li key={item.path}>{link}</li>;
+    return (
+      <li key={item.path}>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>{link}</TooltipTrigger>
+          <TooltipContent side="right" className="flex items-center gap-2">
+            {item.label}
+            {count !== undefined && <span className="font-mono text-muted-foreground">{count}</span>}
+          </TooltipContent>
+        </Tooltip>
+      </li>
+    );
+  };
+
+  const renderGroup = (group: NavGroup) => (
+    <div key={group.label}>
+      {!collapsed && <p className="label px-2 pb-2">{group.label}</p>}
+      <ul className="space-y-0.5">{group.items.map(renderItem)}</ul>
     </div>
   );
 
-  /* ── Root render ──────────────────────────────────────────── */
   return (
-    <div className="admin-panel min-h-screen flex" style={{ background: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}>
-        <CommandMenu />
-
-        {/* Desktop sidebar */}
-        <aside
-          className={cn(
-            "hidden md:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out relative",
-            collapsed ? "w-[60px]" : "w-[220px]"
-          )}
-          style={{ background: 'hsl(var(--card))', borderRight: '1px solid var(--admin-border)' }}
-        >
-          <SidebarContent />
-        </aside>
-
-        {/* Mobile overlay */}
-        {mobileOpen && (
-          <div
-            className="fixed inset-0 z-40 backdrop-blur-sm md:hidden"
-            style={{ background: 'hsl(var(--background) / 0.75)' }}
-            onClick={() => setMobileOpen(false)}
-          />
+    <div className="flex h-full flex-col">
+      {/* Brand */}
+      <div className={cn('flex items-center gap-2.5 py-[18px] pl-5 pr-4', collapsed && 'flex-col px-0')}>
+        <BrandAppIcon className="h-7 w-7" />
+        {!collapsed && (
+          <div className="min-w-0 flex-1 leading-none">
+            <p className="text-sm font-medium tracking-[-0.01em] text-foreground">Saad Mazhar</p>
+            <p className="mt-1 font-mono text-[13px] leading-none text-muted-foreground">CMS · v2</p>
+          </div>
         )}
-
-        {/* Mobile sidebar */}
-        <aside
-          ref={mobileSidebarRef}
-          tabIndex={-1}
-          className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[220px] transition-all duration-300 ease-in-out md:hidden flex flex-col focus:outline-none",
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-          style={{ background: 'hsl(var(--card))', borderRight: '1px solid var(--admin-border)' }}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <SidebarContent />
-        </aside>
+          <PanelLeft className="h-4 w-4" />
+        </button>
+      </div>
 
-        {/* Main content */}
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Search */}
+      <div className={cn('px-3 pb-2', collapsed && 'flex justify-center')}>
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={openCommandMenu}
+            aria-label="Search"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={openCommandMenu}
+            className="flex w-full items-center gap-2 rounded-[10px] border border-border bg-background py-2 pl-2.5 pr-2 text-left text-sm text-muted-foreground transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Search className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="flex-1">Search…</span>
+            <kbd className="rounded-md border border-border bg-secondary px-1.5 py-px font-mono text-[12px] text-fg-2">⌘K</kbd>
+          </button>
+        )}
+      </div>
 
-          {/* Top bar */}
-          <header className="h-14 flex items-center justify-between px-4 md:px-5 z-40 flex-shrink-0 gap-3 bg-card border-b border-border">
-            {/* Mobile menu */}
-            <Button
-              ref={mobileMenuButtonRef}
-              variant="ghost"
-              size="icon"
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={mobileOpen}
-              className="md:hidden rounded-lg w-7 h-7 hover:bg-secondary flex-shrink-0"
-              onClick={() => setMobileOpen(!mobileOpen)}
-            >
-              {mobileOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
-            </Button>
+      {/* Nav */}
+      <nav aria-label="Main" className="no-scrollbar flex-1 space-y-[18px] overflow-y-auto px-3 py-2">
+        {navGroups.filter((g) => !g.collapsible).map(renderGroup)}
 
-            {/* Breadcrumb */}
-            <div className="hidden md:flex items-baseline gap-1.5 flex-shrink-0 min-w-0">
-              <span className="text-body-sm text-muted-foreground">Admin</span>
-              <span aria-hidden="true" className="text-foreground/10 text-body-sm">/</span>
-              <span className="text-h3 text-foreground truncate">{currentPageLabel}</span>
-            </div>
-
-            {/* Search / command palette trigger */}
+        <div>
+          {!collapsed ? (
             <button
               type="button"
-              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              className="hidden lg:flex items-center gap-2 text-body-sm text-muted-foreground px-3 py-1.5 rounded-md border border-border bg-background hover:bg-secondary hover:text-foreground transition-colors w-56 flex-shrink-0"
+              onClick={toggleMore}
+              aria-expanded={showMore}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-[7px] text-sm text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Search className="w-3.5 h-3.5" aria-hidden="true" />
-              <span className="flex-1 text-left">Search…</span>
-              <kbd className="text-caption text-muted-foreground bg-secondary border border-border rounded px-1.5 py-0.5">⌘K</kbd>
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              <span className="flex-1 text-left">{moreGroup.label}</span>
+              <span className="font-mono text-[13px]">{moreGroup.items.length}</span>
+              <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', showMore && 'rotate-180')} aria-hidden="true" />
             </button>
+          ) : (
+            <div className="mx-2 mb-2 border-t border-border-subtle" />
+          )}
+          {(showMore || collapsed) && <ul className="mt-0.5 space-y-0.5">{moreGroup.items.map(renderItem)}</ul>}
+        </div>
+      </nav>
 
-            {/* Right actions */}
-            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Search"
-                className="lg:hidden w-7 h-7"
-                onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              >
-                <Search className="w-3.5 h-3.5" />
-              </Button>
+      {/* User */}
+      <div className={cn('flex items-center gap-2.5 border-t border-border-subtle px-4 py-3.5', collapsed && 'flex-col px-0')}>
+        <Avatar initials={initials} className="h-8 w-8" />
+        {!collapsed && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-foreground">{userName}</p>
+            <p className="truncate font-mono text-[12px] text-muted-foreground">{userEmail}</p>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={onSignOut}
+          aria-label="Sign out"
+          title="Sign out"
+          className="-mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <LogOut className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
-              <a
-                href="https://www.saadmaz.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-md font-medium tracking-wide transition-colors duration-200 bg-secondary text-muted-foreground hover:text-foreground border border-border"
-              >
-                <ExternalLink className="w-2.5 h-2.5" />
-                View site
+/* ── Mobile tab bar ──────────────────────────────────────────── */
+
+const TabLink = ({ to, label, icon: Icon, active, badge }: {
+  to: string; label: string; icon: typeof Inbox; active: boolean; badge?: number;
+}) => (
+  <NavLink
+    to={to}
+    aria-current={active ? 'page' : undefined}
+    className={cn(
+      'flex w-16 flex-col items-center gap-1 pt-1 font-mono text-[12px] transition-colors',
+      active ? 'text-foreground' : 'text-muted-foreground',
+    )}
+  >
+    <span className="relative">
+      <Icon className={cn('h-[22px] w-[22px]', active && 'text-accent')} strokeWidth={1.6} aria-hidden="true" />
+      {!!badge && (
+        <span className="absolute -top-1 left-3.5 rounded-full bg-accent px-[5px] font-mono text-[12px] leading-[1.35] text-accent-foreground">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+    </span>
+    {label}
+  </NavLink>
+);
+
+/* ── Layout ──────────────────────────────────────────────────── */
+
+const AdminLayout = () => {
+  const [collapsed, setCollapsed] = useState(() => readFlag(SIDEBAR_KEY));
+  const [createOpen, setCreateOpen] = useState(false);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { currentUser, logout } = useAuth();
+  const { data } = useAdminOverview();
+  const counts = data?.counts ?? {};
+  const unread = counts.unread ?? 0;
+  const crumb = useBreadcrumb();
+
+  const userEmail = currentUser?.email ?? 'saadmazaa@gmail.com';
+  const userName = currentUser?.displayName || 'Saad Mazhar';
+  const initials = initialsOf(currentUser?.displayName || 'Saad Mazhar', userEmail);
+
+  useEffect(() => { writeFlag(SIDEBAR_KEY, collapsed); }, [collapsed]);
+
+  // Keep counts fresh as you move between collections.
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: OVERVIEW_QUERY_KEY });
+  }, [pathname, queryClient]);
+
+  const signOut = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const isHome = pathname === '/' || pathname === '/dashboard';
+  const isContent = contentPaths.some((p) => isActivePath(pathname, p));
+  const isInbox = isActivePath(pathname, '/messages');
+  const isMore = !isHome && !isContent && !isInbox;
+
+  return (
+    <div className="flex min-h-screen bg-background text-foreground">
+      <CommandMenu />
+
+      {/* Desktop sidebar */}
+      <aside
+        className={cn(
+          'sticky top-0 hidden h-screen shrink-0 border-r border-border-subtle bg-card transition-[width] duration-200 ease-out md:block',
+          collapsed ? 'w-[72px]' : 'w-[264px]',
+        )}
+      >
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((c) => !c)}
+          counts={counts}
+          userName={userName}
+          userEmail={userEmail}
+          initials={initials}
+          onSignOut={signOut}
+        />
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Desktop top bar */}
+        <header className="sticky top-0 z-30 hidden h-16 items-center gap-3 border-b border-border-subtle bg-background/85 px-8 backdrop-blur-md md:flex">
+          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-sm">
+            <span className="text-muted-foreground">{crumb.group}</span>
+            <span className="text-muted-foreground/60" aria-hidden="true">/</span>
+            <span className={cn('truncate', crumb.detail ? 'text-muted-foreground' : 'text-foreground')}>{crumb.page}</span>
+            {crumb.detail && (
+              <>
+                <span className="text-muted-foreground/60" aria-hidden="true">/</span>
+                <span className="text-foreground">{crumb.detail}</span>
+              </>
+            )}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="hidden gap-1.5 lg:inline-flex">
+              <a href={SITE_URL} target="_blank" rel="noopener noreferrer">
+                View site <ExternalLink className="!size-3.5" aria-hidden="true" />
               </a>
+            </Button>
 
-              <div className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-md font-medium bg-success-subtle text-success-fg border border-success/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                Live
-              </div>
-
-              {/* Avatar menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer relative transition-colors duration-150 text-[10px] font-bold bg-secondary border border-border text-foreground hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    aria-label="Account menu"
-                  >
-                    SM
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-danger text-danger-foreground text-[7px] font-bold flex items-center justify-center border-[1.5px] border-background tabular">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <p className="text-body-sm text-foreground">Saad Mazhar</p>
-                    <p className="text-body-sm text-muted-foreground font-normal">saadmazaa@gmail.com</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="https://www.saadmaz.com" target="_blank" rel="noopener noreferrer" className="cursor-pointer">
-                      <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                      View site
-                    </a>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="gap-1.5 pl-3.5">
+                  <Plus aria-hidden="true" /> New
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {createActions.map((action) => (
+                  <DropdownMenuItem key={action.path} onSelect={() => navigate(action.path)} className="gap-2.5">
+                    <action.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    {action.noun}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-danger focus:text-danger-fg focus:bg-danger-subtle cursor-pointer"
-                    onClick={async () => { try { await auth.signOut(); } catch { /* ignore, still navigate away */ } navigate('/login'); }}
-                  >
-                    <LogOut className="mr-2 h-3.5 w-3.5" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </header>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Page content */}
-          <div
-            className="flex-1 overflow-y-auto custom-scrollbar bg-background"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Account menu"
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <Avatar initials={initials} className="h-9 w-9" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel className="font-normal">
+                  <p className="text-sm text-foreground">{userName}</p>
+                  <p className="truncate font-mono text-[12px] text-muted-foreground">{userEmail}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="gap-2.5">
+                  <a href={SITE_URL} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> View site
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => navigate('/logs')} className="gap-2.5">
+                  <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> Activity log
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={signOut} className="gap-2.5 text-danger-fg focus:text-danger-fg">
+                  <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* Mobile top bar */}
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2.5 border-b border-border-subtle bg-background/90 px-4 backdrop-blur-md md:hidden">
+          <Link to="/dashboard" aria-label="Dashboard">
+            <BrandAppIcon className="h-8 w-8" />
+          </Link>
+          <p className="min-w-0 flex-1 truncate text-[17px] font-medium tracking-[-0.01em]">
+            {crumb.detail ? `${crumb.page} · ${crumb.detail}` : crumb.page}
+          </p>
+          <button
+            type="button"
+            onClick={openCommandMenu}
+            aria-label="Search"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-fg-2"
           >
-            <div className="p-5 md:p-7 max-w-[1400px] mx-auto">
-              <Outlet />
-            </div>
+            <Search className="h-4 w-4" />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" aria-label="Account menu" className="rounded-full">
+                <Avatar initials={initials} className="h-9 w-9" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel className="font-normal">
+                <p className="text-sm text-foreground">{userName}</p>
+                <p className="truncate font-mono text-[12px] text-muted-foreground">{userEmail}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={signOut} className="gap-2.5 text-danger-fg focus:text-danger-fg">
+                <LogOut className="h-4 w-4" aria-hidden="true" /> Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+
+        <main className="flex-1 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-6 md:px-8 md:py-9">
+            <Outlet />
           </div>
         </main>
       </div>
+
+      {/* Mobile tab bar */}
+      <nav
+        aria-label="Primary"
+        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-card/90 backdrop-blur-md md:hidden"
+      >
+        <div className="mx-auto flex h-[68px] max-w-md items-start justify-between px-3 pt-2">
+          <TabLink to="/dashboard" label="Home" icon={LayoutGrid} active={isHome} />
+          <TabLink to="/projects" label="Content" icon={Layers} active={isContent} />
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            aria-label="Create"
+            className="-mt-3 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-accent text-accent-foreground shadow-ember transition-colors active:bg-accent-hover"
+          >
+            <Plus className="h-[22px] w-[22px]" strokeWidth={2} />
+          </button>
+          <TabLink to="/messages" label="Inbox" icon={Inbox} active={isInbox} badge={unread} />
+          <TabLink to="/more" label="More" icon={MoreHorizontal} active={isMore} />
+        </div>
+      </nav>
+
+      {/* Mobile create sheet */}
+      <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl border-t border-border px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-3">
+          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-surface-3" aria-hidden="true" />
+          <SheetTitle className="mb-4 text-h2">Create</SheetTitle>
+          <div className="grid grid-cols-2 gap-2">
+            {createActions.map((action) => (
+              <button
+                key={action.path}
+                type="button"
+                onClick={() => { setCreateOpen(false); navigate(action.path); }}
+                className="flex flex-col items-start gap-3 rounded-xl bg-secondary p-4 text-left text-sm text-foreground transition-colors active:bg-surface-3"
+              >
+                <action.icon className="h-4 w-4 text-fg-2" aria-hidden="true" />
+                {action.noun}
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 };
 

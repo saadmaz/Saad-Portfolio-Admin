@@ -8,6 +8,8 @@ import { Plus, Search, Building2, Edit2, Trash2, ExternalLink, Calendar } from '
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
+import { useCreateIntent } from '@/components/admin/useAdminOverview';
+import { plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -57,6 +59,7 @@ const AdminOrganizations = () => {
   };
 
   const handleAdd = () => { setCurrent(null); setIsDialogOpen(true); };
+  useCreateIntent(handleAdd);
   const handleEdit = (o: Organization) => { setCurrent(o); setIsDialogOpen(true); };
   const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
 
@@ -92,26 +95,24 @@ const AdminOrganizations = () => {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="PROFILE"
         title="Organizations"
-        subtitle="Professional associations, clubs, and memberships."
-        backTo="/dashboard"
+        subtitle={plural(organizations.length, "organization")}
         actions={
-          <Button onClick={handleAdd} className="bg-accent hover:bg-accent/90 text-accent-foreground font-black h-11 px-6 rounded-lg flex-shrink-0">
-            <Plus className="w-4 h-4 mr-2" /> Add Organization
+          <Button onClick={handleAdd}>
+            <Plus className="w-4 h-4" /> Add organization
           </Button>
         }
       />
 
-      <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-border shadow-sm">
+      <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search organizations..."
-            className="w-full bg-secondary border border-border rounded-lg pl-11 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-accent outline-none transition-all text-foreground placeholder:text-muted-foreground font-medium"
+            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -136,12 +137,12 @@ const AdminOrganizations = () => {
                   <div className="flex-1 p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
                       {!org.image && (
-                        <div className="w-12 h-12 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2 flex-shrink-0">
                           <Building2 className="w-5 h-5" />
                         </div>
                       )}
                       <div className="min-w-0">
-                        <h3 className="font-black text-foreground text-sm">{org.name}</h3>
+                        <h3 className="font-medium text-foreground text-sm">{org.name}</h3>
                         {org.position && <p className="text-xs text-accent font-medium">{org.position}</p>}
                         {(org.startDate || org.endDate) && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -157,10 +158,10 @@ const AdminOrganizations = () => {
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(org)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(org)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(org.id, org.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg rounded-lg">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(org.id, org.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -181,15 +182,15 @@ const AdminOrganizations = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete Organization?"
+        title="Delete organization?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
-        confirmLabel="Delete Organization"
+        confirmLabel="Delete organization"
         onConfirm={handleConfirmDelete}
       />
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={current ? 'Edit Organization' : 'Add Organization'}
+        title={current ? 'Edit organization' : 'Add organization'}
         fields={organizationFields}
         schema={organizationSchema}
         defaultValues={current || {}}

@@ -13,30 +13,24 @@ interface FieldProps {
   children: (bind: { id: string; 'aria-describedby'?: string; 'aria-invalid'?: boolean }) => React.ReactNode;
 }
 
-/**
- * One wrapper for label + control + helper/error text, so form pages stop
- * hand-assembling this per field (docs/ui-audit.md section 7 flagged
- * "repeated form-field wrappers" as duplicated across every form component).
- * Takes a render-prop child so it works with Input, Textarea, Select, or any
- * custom control without this component needing to know which one.
- */
+/** Label + control + helper/error text. Render-prop child so it works with any control. */
 const Field: React.FC<FieldProps> = ({ label, hint, error, required, className, children }) => {
   const id = useId();
   const messageId = error || hint ? `${id}-message` : undefined;
 
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn('space-y-2', className)}>
       <Label htmlFor={id}>
         {label}
-        {required && <span className="text-danger"> *</span>}
+        {required && <span className="text-accent"> *</span>}
       </Label>
       {children({ id, 'aria-describedby': messageId, 'aria-invalid': !!error })}
       {error ? (
-        <p id={messageId} className="text-body-sm text-danger">
+        <p id={messageId} className="text-[13px] text-danger-fg">
           {error}
         </p>
       ) : hint ? (
-        <p id={messageId} className="text-body-sm text-muted-foreground">
+        <p id={messageId} className="text-[13px] text-muted-foreground">
           {hint}
         </p>
       ) : null}

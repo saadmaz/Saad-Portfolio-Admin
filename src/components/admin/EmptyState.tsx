@@ -1,48 +1,53 @@
 import React from 'react';
-import { type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/lib/utils';
+
+interface EmptyStateAction {
+  label: string;
+  onClick: () => void;
+}
 
 interface EmptyStateProps {
   icon: LucideIcon;
   title: string;
   description?: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  action?: EmptyStateAction;
+  secondaryAction?: EmptyStateAction;
   className?: string;
 }
 
-/**
- * Shared empty state for list pages with no items yet. Replaces the
- * ~15 near-identical hand-rolled copies found in docs/ui-audit.md section 7
- * (`<div className="rounded-lg border border-border bg-card p-12 text-center
- * shadow-sm">`, repeated per page) with one component future list-page
- * migrations can adopt directly.
- */
-const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, description, action, className }) => {
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card p-12 text-center',
-        className,
-      )}
-    >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-h3 text-foreground">{title}</p>
-        {description && <p className="text-body-sm text-muted-foreground">{description}</p>}
-      </div>
-      {action && (
-        <Button type="button" variant="primary" size="sm" onClick={action.onClick} className="mt-1">
-          {action.label}
-        </Button>
-      )}
+/** Dashed empty state for lists with nothing in them yet (or no search matches). */
+const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, description, action, secondaryAction, className }) => (
+  <div
+    className={cn(
+      'flex flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-border px-6 py-16 text-center md:py-24',
+      className,
+    )}
+  >
+    <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl border border-border-subtle bg-secondary text-fg-2 md:h-[88px] md:w-[88px]">
+      <Icon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
     </div>
-  );
-};
+    <div className="max-w-md space-y-2">
+      <p className="text-h2 text-foreground">{title}</p>
+      {description && <p className="text-[15px] leading-relaxed text-fg-2">{description}</p>}
+    </div>
+    {(action || secondaryAction) && (
+      <div className="flex flex-wrap items-center justify-center gap-2.5">
+        {action && (
+          <Button type="button" onClick={action.onClick}>
+            {action.label}
+            <ArrowUpRight aria-hidden="true" />
+          </Button>
+        )}
+        {secondaryAction && (
+          <Button type="button" variant="outline" onClick={secondaryAction.onClick}>
+            {secondaryAction.label}
+          </Button>
+        )}
+      </div>
+    )}
+  </div>
+);
 
 export default EmptyState;

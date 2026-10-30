@@ -42,7 +42,6 @@ export default defineConfig({
           if (id.includes("node_modules")) {
             if (id.includes("firebase/storage")) return "vendor-firebase-storage";
             if (id.includes("firebase"))         return "vendor-firebase";
-            if (id.includes("framer-motion"))    return "vendor-motion";
             if (id.includes("@tanstack"))         return "vendor-query";
             if (id.includes("@radix-ui"))         return "vendor-radix";
             if (id.includes("@tiptap") || id.includes("prosemirror")) return "vendor-editor";
