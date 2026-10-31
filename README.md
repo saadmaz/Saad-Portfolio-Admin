@@ -1,4 +1,5 @@
-# Saad-Portfolio-Admin
+# Saad-Portfolio-Admin 
+write a readme for this as well
 
 Admin CMS for [saadmaz.com](https://www.saadmaz.com), split out of the main
 [Saad-Portfolio](https://github.com/saadmaz/Saad-Portfolio) repo so the public
