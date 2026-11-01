@@ -14,7 +14,7 @@ import {
   List, ListOrdered, Code, Minus, Link as LinkIcon,
   Undo, Redo, Quote, Image as ImageIcon, Tag as TagIcon,
   Search, Globe,
-  X, Loader2,
+  X, Loader2, Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FormHeader from './FormHeader';
@@ -22,6 +22,7 @@ import { BlogService } from '@/services/blog-service';
 import { uploadImage } from '@/services/storage';
 import { toast } from 'sonner';
 import ImageUpload from './ImageUpload';
+import { PromptBlock } from './PromptBlock';
 import { cn } from '@/shared/lib/utils';
 
 /* ── Schema ──────────────────────────────────────────────────────── */
@@ -214,8 +215,12 @@ const BlogForm = () => {
       Image.configure({
         HTMLAttributes: { class: 'rounded-xl max-w-full my-4 border border-border' },
       }),
+      PromptBlock,
       Placeholder.configure({
-        placeholder: 'Start writing your post here. Use the toolbar above for formatting…',
+        placeholder: ({ node }) =>
+          node.type.name === 'prompt'
+            ? 'Write or paste the prompt readers can copy…'
+            : 'Start writing your post here. Use the toolbar above for formatting…',
       }),
     ],
     editorProps: {
@@ -541,6 +546,9 @@ const BlogForm = () => {
                 </ToolbarBtn>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="Code Block">
                   <span className="text-[12px] font-medium font-mono leading-none px-0.5">{'{ }'}</span>
+                </ToolbarBtn>
+                <ToolbarBtn onClick={() => editor.chain().focus().togglePrompt().run()} active={editor.isActive('prompt')} title="Copyable Prompt (Ctrl+Alt+P)">
+                  <Sparkles className="w-3.5 h-3.5" />
                 </ToolbarBtn>
                 <ToolbarDivider />
                 <ToolbarBtn onClick={handleSetLink} active={editor.isActive('link')} title="Insert Link">
