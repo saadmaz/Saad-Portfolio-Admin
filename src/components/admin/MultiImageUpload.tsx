@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon, Plus } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, Plus, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
 import { uploadImage } from '@/services/storage';
 import { toast } from 'sonner';
 import { cn } from '@/shared/lib/utils';
@@ -9,6 +9,8 @@ interface MultiImageUploadProps {
   onChange: (urls: string[]) => void;
   maxImages?: number;
   folder?: string;
+  /** Label the first image "Cover" (when it's used as the cover). */
+  firstIsCover?: boolean;
 }
 
 const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
@@ -16,11 +18,15 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   onChange,
   maxImages = 10,
   folder = 'uploads',
+  firstIsCover = false,
 }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Reordering: the tile being dragged and the tile it's hovering over.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const handleFiles = async (files: FileList) => {
     const remaining = maxImages - value.length;
@@ -84,6 +90,19 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     onChange(value.filter((_, i) => i !== index));
   };
 
+  const move = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= value.length) return;
+    const next = [...value];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
+  };
+
+  const endDrag = () => {
+    setDragIndex(null);
+    setOverIndex(null);
+  };
+
   const canAdd = value.length < maxImages;
 
   return (
@@ -94,27 +113,73 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           {value.map((url, i) => (
             <div
               key={`${url}-${i}`}
-              className="relative group aspect-video rounded-lg overflow-hidden border "
+              draggable={!uploading}
+              onDragStart={(e) => {
+                setDragIndex(i);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(i));
+              }}
+              onDragOver={(e) => {
+                if (dragIndex === null) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (overIndex !== i) setOverIndex(i);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIndex !== null) move(dragIndex, i);
+                endDrag();
+              }}
+              onDragEnd={endDrag}
+              className={cn(
+                'relative group aspect-video rounded-lg overflow-hidden border cursor-grab active:cursor-grabbing transition-[opacity,box-shadow]',
+                dragIndex === i && 'opacity-40',
+                overIndex === i && dragIndex !== null && dragIndex !== i && 'ring-2 ring-accent',
+              )}
             >
               <img
                 src={url}
-                alt={`Screenshot ${i + 1}`}
+                alt={`Photo ${i + 1}`}
+                draggable={false}
                 className="w-full h-full object-cover"
               />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center">
+              {/* Overlay: reorder and remove */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => move(i, i - 1)}
+                  disabled={i === 0}
+                  aria-label={`Move photo ${i + 1} earlier`}
+                  className="w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-foreground hover:bg-black/80 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
                 <button
                   type="button"
                   onClick={() => remove(i)}
+                  aria-label={`Remove photo ${i + 1}`}
                   className="w-7 h-7 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground hover:bg-destructive/90 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, i + 1)}
+                  disabled={i === value.length - 1}
+                  aria-label={`Move photo ${i + 1} later`}
+                  className="w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-foreground hover:bg-black/80 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
               {/* Index badge */}
               <div className="absolute top-1.5 left-1.5 bg-black/60 text-fg-2 text-[12px] font-medium px-1.5 py-0.5 rounded">
-                {i + 1}
+                {firstIsCover && i === 0 ? 'Cover' : i + 1}
               </div>
+              <GripVertical
+                aria-hidden="true"
+                className="absolute top-1.5 right-1.5 w-4 h-4 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow"
+              />
             </div>
           ))}
 
@@ -185,6 +250,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       <div className="flex items-center justify-between">
         <span className="text-[12px] text-muted-foreground font-medium">
           {value.length}/{maxImages} images
+          {value.length > 1 && ' · Drag to reorder'}
         </span>
         {canAdd && value.length > 0 && !uploading && (
           <button

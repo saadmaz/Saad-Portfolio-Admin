@@ -221,6 +221,7 @@ function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawer
                     onChange={(urls) => form.setValue('images', urls, { shouldValidate: true })}
                     maxImages={20}
                     folder="events"
+                    firstIsCover
                   />
                   <FormMessage />
                 </FormItem>
