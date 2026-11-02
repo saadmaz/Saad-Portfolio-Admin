@@ -140,6 +140,8 @@ export interface Experience {
 
 export interface Certificate {
   id: string;
+  /** Readable URL segment, set from the title on first save. */
+  slug?: string;
   title: string;
   issuer: string;
   platform: string;
@@ -351,6 +353,8 @@ export interface Message {
 
 export interface Event {
   id: string;
+  /** Readable URL segment, set from the title on first save. */
+  slug?: string;
   title: string;
   organizer: string;
   date: string;

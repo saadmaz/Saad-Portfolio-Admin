@@ -92,6 +92,41 @@ async function updateDoc_<T>(col: string, id: string | number, data: Partial<T>)
   return { id, ...clean } as T;
 }
 
+/** "48th Big Debate" → "48th-big-debate". Mirrors the portfolio's backfill script. */
+function toSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+    .replace(/-+$/, "");
+}
+
+/**
+ * Gives a doc a readable, unique URL slug from its title, once. An existing
+ * slug is never changed, so shared links survive renaming the item.
+ */
+async function withSlug<T extends { title?: string; slug?: string }>(
+  col: string,
+  data: Partial<T>,
+  id?: string,
+): Promise<Partial<T>> {
+  if (data.slug) return data;
+  const snap = await getDocs(collection(db, col));
+  const current = id ? snap.docs.find((d) => d.id === id)?.data() : undefined;
+  if (current?.slug) return data;
+  const title = data.title ?? (current?.title as string | undefined);
+  if (!title) return data;
+  const taken = new Set(snap.docs.filter((d) => d.id !== id).map((d) => d.data().slug as string));
+  const base = toSlug(title) || "item";
+  let slug = base;
+  for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+  return { ...data, slug };
+}
+
 /** Generic delete helper. */
 async function deleteDoc_(col: string, id: string | number): Promise<void> {
   await deleteDoc(doc(db, col, String(id)));
@@ -177,11 +212,12 @@ export class CommonService {
   }
 
   static async createCertificate(data: Partial<Certificate>): Promise<Certificate> {
-    return createDoc<Certificate>(COLLECTIONS.certificates, data);
+    return createDoc<Certificate>(COLLECTIONS.certificates, await withSlug(COLLECTIONS.certificates, data));
   }
 
   static async updateCertificate(id: string | number, data: Partial<Certificate>): Promise<Certificate> {
-    return updateDoc_<Certificate>(COLLECTIONS.certificates, id, data);
+    const withUrl = await withSlug(COLLECTIONS.certificates, data, String(id));
+    return updateDoc_<Certificate>(COLLECTIONS.certificates, id, withUrl);
   }
 
   static async deleteCertificate(id: string | number): Promise<void> {
@@ -326,11 +362,11 @@ export class CommonService {
   }
 
   static async createEvent(data: Partial<Event>): Promise<Event> {
-    return createDoc<Event>(COLLECTIONS.events, data);
+    return createDoc<Event>(COLLECTIONS.events, await withSlug(COLLECTIONS.events, data));
   }
 
   static async updateEvent(id: string, data: Partial<Event>): Promise<Event> {
-    return updateDoc_<Event>(COLLECTIONS.events, id, data);
+    return updateDoc_<Event>(COLLECTIONS.events, id, await withSlug(COLLECTIONS.events, data, id));
   }
 
   static async deleteEvent(id: string): Promise<void> {
