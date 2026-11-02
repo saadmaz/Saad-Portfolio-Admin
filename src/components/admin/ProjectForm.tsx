@@ -578,6 +578,7 @@ const ProjectForm = () => {
             <MultiImageUpload
               value={screenshots}
               onChange={urls => { setValue('screenshots', urls); setValue('images', urls); }}
+              nameHint={titleValue}
               maxImages={10}
               folder="projects/screenshots"
             />

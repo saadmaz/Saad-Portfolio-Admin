@@ -365,6 +365,8 @@ export interface Event {
   highlights?: string[];
   image?: string;
   images?: string[];
+  /** Optional alt text per photo, aligned with `images`. Blank = generated on the site. */
+  imageCaptions?: string[];
   link?: string;
   tags?: string[];
   type: string;          // Event category: Conference, Workshop, Summit, etc.

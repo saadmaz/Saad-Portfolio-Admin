@@ -40,6 +40,7 @@ const eventSchema = z.object({
   highlights: z.array(z.string()).optional(),
   link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   images: z.array(z.string()).min(1, 'At least one image is required'),
+  imageCaptions: z.array(z.string()).optional(),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -81,8 +82,9 @@ const toFormValues = (ev: Event | null): Partial<EventFormData> =>
         highlights: ev.highlights ?? [],
         link: ev.link ?? '',
         images: photosOf(ev),
+        imageCaptions: ev.imageCaptions ?? [],
       }
-    : { images: [], highlights: [] };
+    : { images: [], imageCaptions: [], highlights: [] };
 
 function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawerProps) {
   const isDesktop = useIsDesktop();
@@ -94,7 +96,7 @@ function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawer
 
   useEffect(() => {
     if (isOpen) {
-      form.reset({ images: [], highlights: [], ...toFormValues(event) });
+      form.reset({ images: [], imageCaptions: [], highlights: [], ...toFormValues(event) });
       setNewHighlight('');
     }
   }, [isOpen, event, form]);
@@ -222,6 +224,10 @@ function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawer
                     maxImages={20}
                     folder="events"
                     firstIsCover
+                    nameHint={form.watch('title')}
+                    captions={form.watch('imageCaptions')}
+                    onCaptionsChange={(caps) => form.setValue('imageCaptions', caps)}
+                    captionHint="Leave blank to auto-generate from your name, role, the event title, organizer and location."
                   />
                   <FormMessage />
                 </FormItem>
@@ -398,7 +404,9 @@ const AdminEvents = () => {
 
   const handleSubmit = async (data: EventFormData) => {
     try {
-      const payload = { ...data, image: data.images[0] ?? '' };
+      // One caption per photo, in photo order; blanks get generated alt text on the site.
+      const imageCaptions = data.images.map((_, i) => data.imageCaptions?.[i]?.trim() ?? '');
+      const payload = { ...data, imageCaptions, image: data.images[0] ?? '' };
       if (currentEvent) {
         await CommonService.updateEvent(currentEvent.id, payload);
         toast.success('Event updated');

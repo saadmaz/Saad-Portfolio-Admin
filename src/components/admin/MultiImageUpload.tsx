@@ -3,6 +3,7 @@ import { Upload, X, Loader2, Image as ImageIcon, Plus, ChevronLeft, ChevronRight
 import { uploadImage } from '@/services/storage';
 import { toast } from 'sonner';
 import { cn } from '@/shared/lib/utils';
+import { Input } from '@/components/ui/input';
 
 interface MultiImageUploadProps {
   value: string[];
@@ -11,6 +12,13 @@ interface MultiImageUploadProps {
   folder?: string;
   /** Label the first image "Cover" (when it's used as the cover). */
   firstIsCover?: boolean;
+  /** Used for uploaded file names (e.g. the event title), which search engines read. */
+  nameHint?: string;
+  /** Per-image alt text, aligned with `value`. Pass both to show the caption fields. */
+  captions?: string[];
+  onCaptionsChange?: (captions: string[]) => void;
+  /** Shown under the caption fields, e.g. what a blank caption falls back to. */
+  captionHint?: string;
 }
 
 const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
@@ -19,7 +27,14 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   maxImages = 10,
   folder = 'uploads',
   firstIsCover = false,
+  nameHint,
+  captions,
+  onCaptionsChange,
+  captionHint,
 }) => {
+  // Captions travel with their image through add/remove/reorder.
+  const caps = value.map((_, i) => captions?.[i] ?? '');
+  const showCaptions = !!onCaptionsChange && value.length > 0;
   const [uploading, setUploading] = useState(false);
   const [uploadCount, setUploadCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -56,7 +71,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     const newUrls: string[] = [];
     for (const file of valid) {
       try {
-        const url = await uploadImage(file, folder, () => {});
+        const url = await uploadImage(file, folder, () => {}, nameHint);
         newUrls.push(url);
         setUploadCount((c) => c + 1);
       } catch (err) {
@@ -66,6 +81,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
     if (newUrls.length > 0) {
       onChange([...value, ...newUrls]);
+      onCaptionsChange?.([...caps, ...newUrls.map(() => '')]);
       toast.success(
         newUrls.length === 1 ? 'Image uploaded' : `${newUrls.length} images uploaded`
       );
@@ -88,14 +104,19 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
   const remove = (index: number) => {
     onChange(value.filter((_, i) => i !== index));
+    onCaptionsChange?.(caps.filter((_, i) => i !== index));
   };
 
   const move = (from: number, to: number) => {
     if (from === to || to < 0 || to >= value.length) return;
-    const next = [...value];
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
-    onChange(next);
+    const shift = <T,>(list: T[]) => {
+      const next = [...list];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    };
+    onChange(shift(value));
+    onCaptionsChange?.(shift(caps));
   };
 
   const endDrag = () => {
@@ -233,6 +254,26 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Alt text per photo */}
+      {showCaptions && (
+        <div className="space-y-2 rounded-xl border border-border-subtle p-3">
+          <p className="label text-fg-2">Alt text · for Google &amp; screen readers</p>
+          {value.map((url, i) => (
+            <div key={`${url}-cap`} className="flex items-center gap-2.5">
+              <img src={url} alt="" className="h-8 w-12 shrink-0 rounded object-cover" />
+              <Input
+                value={caps[i]}
+                onChange={(e) => onCaptionsChange?.(caps.map((c, j) => (j === i ? e.target.value : c)))}
+                placeholder={`Photo ${i + 1}: who's in it, what's happening`}
+                aria-label={`Alt text for photo ${i + 1}`}
+                className="h-9 text-sm"
+              />
+            </div>
+          ))}
+          {captionHint && <p className="text-[12px] text-muted-foreground">{captionHint}</p>}
         </div>
       )}
 

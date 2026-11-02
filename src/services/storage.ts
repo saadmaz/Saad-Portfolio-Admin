@@ -17,13 +17,36 @@ const storage = getStorage(app);
  *   • the upload can be cancelled on timeout
  *   • errors are surfaced immediately rather than hanging forever
  */
+/** "48th Big Debate!" → "48th-big-debate" (URL- and image-search-friendly). */
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+
+/**
+ * Storage file name. Google reads image file names, so prefer a descriptive
+ * hint (e.g. the event title) over camera names like "IMG_4521". The short
+ * timestamp keeps names unique.
+ */
+const storageName = (file: File, nameHint?: string) => {
+  const dot = file.name.lastIndexOf(".");
+  const ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : "jpg";
+  const base = slugify(nameHint ?? "") || slugify(dot > 0 ? file.name.slice(0, dot) : file.name) || "image";
+  return `${base}-${Date.now().toString(36)}.${ext}`;
+};
+
 export const uploadImage = (
   file: File,
   folder: string = "uploads",
-  onProgress?: (pct: number) => void
+  onProgress?: (pct: number) => void,
+  nameHint?: string
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const filename  = `${Date.now()}-${file.name}`;
+    const filename  = storageName(file, nameHint);
     const storageRef = ref(storage, `${folder}/${filename}`);
 
     const task: UploadTask = uploadBytesResumable(storageRef, file, {
