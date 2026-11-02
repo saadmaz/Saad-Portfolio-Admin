@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -6,15 +6,17 @@ import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { CommonService } from '@/shared/services/common-service';
 import { Event } from '@/types';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Plus, Search, Calendar, MapPin, Edit2, Trash2, Globe, Loader2, Images, X } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Plus, Search, Calendar, Trash2, Images, X } from 'lucide-react';
 import { toast } from "sonner";
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { useIsDesktop } from '@/components/admin/useIsDesktop';
+import { cn, plural } from '@/shared/lib/utils';
+import { byEventDateDesc, eventDateLabel, parseEventDate } from '@/shared/lib/eventDates';
 import EmptyState from '@/components/admin/EmptyState';
 import MultiImageUpload from '@/components/admin/MultiImageUpload';
 import {
@@ -45,210 +47,312 @@ type EventFormData = z.infer<typeof eventSchema>;
 const ROLE_OPTIONS = ['Speaker', 'Host', 'Compere', 'Organizer', 'Panelist', 'Attendee'];
 const TYPE_OPTIONS = ['Conference', 'Summit', 'Workshop', 'Hackathon', 'Networking', 'Seminar', 'Webinar', 'Other'];
 
-// shared input class helper
-const inp = 'bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:border-accent/40 outline-none w-full';
-const lbl = 'text-[12px] font-medium uppercase tracking-widest text-muted-foreground';
+const photosOf = (ev: Event) => (ev.images?.length ? ev.images : ev.image ? [ev.image] : []);
 
-// ─── Event Form Dialog ────────────────────────────────────────────────────────
-interface EventFormDialogProps {
+/** Mono pill used for the role filters and the role picker (Figma: Tag, Default / Accent). */
+const chip = (active: boolean) =>
+  cn(
+    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 font-mono text-label uppercase transition-colors',
+    active
+      ? 'border-transparent bg-accent/[0.12] text-accent'
+      : 'border-border text-fg-2 hover:border-border-strong hover:text-foreground',
+  );
+
+// ─── Edit drawer ──────────────────────────────────────────────────────────────
+interface EventDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
-  defaultValues?: Partial<EventFormData>;
+  event: Event | null;
   onSubmit: (data: EventFormData) => Promise<void>;
+  onDelete: (event: Event) => void;
 }
 
-function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: EventFormDialogProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<EventFormData>({
+const toFormValues = (ev: Event | null): Partial<EventFormData> =>
+  ev
+    ? {
+        title: ev.title,
+        organizer: ev.organizer,
+        role: ev.role ?? '',
+        type: ev.type ?? '',
+        date: ev.date,
+        location: ev.location,
+        attendees: ev.attendees ?? '',
+        description: ev.description,
+        highlights: ev.highlights ?? [],
+        link: ev.link ?? '',
+        images: photosOf(ev),
+      }
+    : { images: [], highlights: [] };
+
+function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawerProps) {
+  const isDesktop = useIsDesktop();
+  const [newHighlight, setNewHighlight] = useState('');
+  const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
-    defaultValues: { images: [], highlights: [], ...defaultValues },
+    defaultValues: toFormValues(event),
   });
 
-  const images = watch('images') ?? [];
-  const highlights = watch('highlights') ?? [];
-  const [newHighlight, setNewHighlight] = useState('');
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      reset({ images: [], highlights: [], ...defaultValues });
+      form.reset({ images: [], highlights: [], ...toFormValues(event) });
       setNewHighlight('');
     }
-  }, [isOpen, defaultValues, reset]);
+  }, [isOpen, event, form]);
+
+  const highlights = form.watch('highlights') ?? [];
 
   const addHighlight = () => {
     const val = newHighlight.trim();
     if (!val) return;
-    setValue('highlights', [...highlights, val]);
+    form.setValue('highlights', [...highlights, val]);
     setNewHighlight('');
   };
 
-  const removeHighlight = (i: number) =>
-    setValue('highlights', highlights.filter((_, idx) => idx !== i));
-
-  const handleFormSubmit = async (data: EventFormData) => {
-    await onSubmit(data);
-    onClose();
+  const handleSubmit = async (data: EventFormData) => {
+    try {
+      await onSubmit(data);
+      onClose();
+    } catch {
+      // onSubmit already toasted; keep the drawer open with the user's edits.
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[680px] bg-card border-border text-foreground max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-medium text-foreground">{title}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side={isDesktop ? 'right' : 'bottom'}
+        className={cn(
+          'flex flex-col gap-0 p-0',
+          isDesktop ? 'w-full border-l sm:max-w-[480px]' : 'max-h-[92dvh] rounded-t-2xl border-t',
+        )}
+      >
+        {!isDesktop && <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-surface-3" aria-hidden="true" />}
+        <div className="shrink-0 border-b border-border-subtle px-6 pb-5 pt-6 pr-16">
+          <SheetTitle>{event ? 'Edit event' : 'New event'}</SheetTitle>
+          <SheetDescription className="meta mt-1 truncate">
+            {event?.slug ? `saadmaz.com/events/${event.slug}` : 'Fill in the details and save.'}
+          </SheetDescription>
+        </div>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 py-2">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+              <FormField control={form.control} name="title" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl><Input {...field} placeholder="e.g. 48th Big Debate" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-          {/* ── IMAGES ── */}
-          <div className="space-y-1.5">
-            <label className={`${lbl} flex items-center gap-1.5`}>
-              <Images className="w-3 h-3" /> Event Photos (16:9) <span className="text-danger">*</span>
-            </label>
-            <MultiImageUpload
-              value={images}
-              onChange={(urls) => setValue('images', urls, { shouldValidate: true })}
-              maxImages={20}
-              folder="events"
-            />
-            {errors.images && (
-              <p className="text-caption text-danger font-medium">{errors.images.message as string}</p>
-            )}
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField control={form.control} name="organizer" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organizer</FormLabel>
+                    <FormControl><Input {...field} placeholder="e.g. Isipathana College" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="type" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select type…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {TYPE_OPTIONS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
 
-          {/* ── TITLE ── */}
-          <div className="space-y-1">
-            <label className={lbl}>Event Title *</label>
-            <input {...register('title')} placeholder="e.g. Google I/O 2024" className={inp} />
-            {errors.title && <p className="text-caption text-danger">{errors.title.message}</p>}
-          </div>
+              <FormField control={form.control} name="role" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your role</FormLabel>
+                  <div role="radiogroup" aria-label="Your role" className="flex flex-wrap gap-1.5">
+                    {ROLE_OPTIONS.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        role="radio"
+                        aria-checked={field.value === r}
+                        onClick={() => field.onChange(r)}
+                        className={chip(field.value === r)}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-          {/* ── ROLE + TYPE ── */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className={lbl}>Your Role * <span className="text-muted-foreground normal-case font-normal">(how you participated)</span></label>
-              <Select value={watch('role')} onValueChange={(v) => setValue('role', v, { shouldValidate: true })}>
-                <SelectTrigger className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none w-full h-auto">
-                  <SelectValue placeholder="Select role…" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border text-foreground">
-                  {ROLE_OPTIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {errors.role && <p className="text-caption text-danger">{errors.role.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <label className={lbl}>Event Type * <span className="text-muted-foreground normal-case font-normal">(category)</span></label>
-              <Select value={watch('type')} onValueChange={(v) => setValue('type', v, { shouldValidate: true })}>
-                <SelectTrigger className="bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none w-full h-auto">
-                  <SelectValue placeholder="Select type…" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border text-foreground">
-                  {TYPE_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {errors.type && <p className="text-caption text-danger">{errors.type.message}</p>}
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <FormField control={form.control} name="date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl><Input {...field} placeholder="Apr 27, 2022" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="location" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl><Input {...field} placeholder="Colombo" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="attendees" render={({ field }) => (
+                  <FormItem className="col-span-2 sm:col-span-1">
+                    <FormLabel>Attendees</FormLabel>
+                    <FormControl><Input {...field} value={field.value ?? ''} placeholder="500+" /></FormControl>
+                  </FormItem>
+                )} />
+              </div>
 
-          {/* ── ORGANIZER + ATTENDEES ── */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className={lbl}>Organizer *</label>
-              <input {...register('organizer')} placeholder="e.g. Google" className={inp} />
-              {errors.organizer && <p className="text-caption text-danger">{errors.organizer.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <label className={lbl}>Attendees <span className="text-muted-foreground normal-case font-normal">(optional)</span></label>
-              <input {...register('attendees')} placeholder='e.g. 500+, 2,000+' className={inp} />
-            </div>
-          </div>
+              <FormField control={form.control} name="images" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Photos</FormLabel>
+                  <MultiImageUpload
+                    value={field.value ?? []}
+                    onChange={(urls) => form.setValue('images', urls, { shouldValidate: true })}
+                    maxImages={20}
+                    folder="events"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-          {/* ── DATE + LOCATION ── */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className={lbl}>Date *</label>
-              <input {...register('date')} placeholder="e.g. May 14, 2024" className={inp} />
-              {errors.date && <p className="text-caption text-danger">{errors.date.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <label className={lbl}>Location *</label>
-              <input {...register('location')} placeholder="e.g. Mountain View, CA or Online" className={inp} />
-              {errors.location && <p className="text-caption text-danger">{errors.location.message}</p>}
-            </div>
-          </div>
+              <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Shown on the event page…" className="min-h-[120px]" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-          {/* ── DESCRIPTION ── */}
-          <div className="space-y-1">
-            <label className={lbl}>Description / About This Event *</label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              placeholder="Full description shown on the event detail page…"
-              className={`${inp} resize-none`}
-            />
-            {errors.description && <p className="text-caption text-danger">{errors.description.message}</p>}
-          </div>
-
-          {/* ── HIGHLIGHTS ── */}
-          <div className="space-y-2">
-            <label className={lbl}>Highlights <span className="text-muted-foreground normal-case font-normal">(bullet points on detail page)</span></label>
-            {highlights.length > 0 && (
-              <ul className="space-y-1.5">
+              <div className="space-y-2">
+                <p className="label">Highlights</p>
                 {highlights.map((h, i) => (
-                  <li key={i} className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
+                  <div
+                    key={i}
+                    className="flex items-center gap-2.5 rounded-[10px] border border-border-subtle bg-secondary px-3 py-2.5 text-sm text-foreground"
+                  >
                     <span className="flex-1">{h}</span>
-                    <button type="button" onClick={() => removeHighlight(i)} className="text-muted-foreground hover:text-danger transition-colors">
-                      <X className="w-3.5 h-3.5" />
+                    <button
+                      type="button"
+                      aria-label={`Remove "${h}"`}
+                      onClick={() => form.setValue('highlights', highlights.filter((_, idx) => idx !== i))}
+                      className="text-muted-foreground transition-colors hover:text-danger-fg"
+                    >
+                      <X className="h-3.5 w-3.5" />
                     </button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
-            )}
-            <div className="flex gap-2">
-              <input
-                value={newHighlight}
-                onChange={(e) => setNewHighlight(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHighlight(); } }}
-                placeholder="e.g. 45-minute keynote presentation"
-                className={inp}
-              />
-              <button
-                type="button"
-                onClick={addHighlight}
-                className="shrink-0 h-[38px] px-3 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+                <div className="flex gap-2">
+                  <Input
+                    value={newHighlight}
+                    onChange={(e) => setNewHighlight(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHighlight(); } }}
+                    placeholder="Add a highlight and press Enter"
+                    aria-label="New highlight"
+                  />
+                  <Button type="button" variant="outline" size="icon" onClick={addHighlight} aria-label="Add highlight">
+                    <Plus />
+                  </Button>
+                </div>
+              </div>
+
+              <FormField control={form.control} name="link" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Event link</FormLabel>
+                  <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://…" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
-          </div>
 
-          {/* ── LINK ── */}
-          <div className="space-y-1">
-            <label className={lbl}>Event Link <span className="text-muted-foreground normal-case font-normal">(optional)</span></label>
-            <input {...register('link')} placeholder="https://..." className={inp} />
-            {errors.link && <p className="text-caption text-danger">{errors.link.message}</p>}
-          </div>
+            <div className="flex shrink-0 items-center gap-2 border-t border-border-subtle px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:pb-4">
+              {event && (
+                <Button type="button" variant="destructive-ghost" size="sm" onClick={() => onDelete(event)} className="-ml-2 px-2.5">
+                  <Trash2 aria-hidden="true" /> Delete event
+                </Button>
+              )}
+              <div className="ml-auto flex flex-1 gap-2 md:flex-none">
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1 md:flex-none">
+                  Cancel
+                </Button>
+                <Button type="submit" loading={form.formState.isSubmitting} className="flex-1 md:flex-none">
+                  Save changes
+                </Button>
+              </div>
+            </div>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-secondary text-muted-foreground">
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Save Event
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+// ─── Card ─────────────────────────────────────────────────────────────────────
+// No-photo cover from Figma (Events · Admin Desktop): warm graphite with an ember glow.
+const PLACEHOLDER_COVER = {
+  backgroundImage:
+    'radial-gradient(50% 31% at 60% 62%, rgba(255,158,102,0.35), rgba(255,158,102,0)), linear-gradient(180deg, #33302E 0%, #1C1C1F 100%)',
+};
+
+function EventCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
+  const photos = photosOf(event);
+  const { year } = parseEventDate(event.date);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex flex-col overflow-hidden rounded-[14px] border border-border-subtle bg-card text-left transition-colors hover:border-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="relative h-[130px] w-full overflow-hidden" style={photos.length ? undefined : PLACEHOLDER_COVER}>
+        {photos.length > 0 ? (
+          <img
+            src={photos[0]}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          year && (
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-3 right-3 text-[64px] font-medium leading-none tracking-[-0.05em] text-foreground/[0.07]"
+            >
+              {year}
+            </span>
+          )
+        )}
+        {event.role && (
+          <span className="absolute left-3 top-3 rounded-full bg-[rgba(26,26,28,0.7)] px-2.5 py-1 font-mono text-label uppercase text-foreground backdrop-blur-sm">
+            {event.role}
+          </span>
+        )}
+        {photos.length > 1 && (
+          <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-[rgba(26,26,28,0.7)] px-2 py-1 font-mono text-label text-foreground backdrop-blur-sm">
+            <Images className="h-3 w-3" aria-hidden="true" /> {photos.length}
+          </span>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-col gap-1.5 p-[14px]">
+        <p className="line-clamp-2 min-h-[42px] text-sm leading-normal text-foreground transition-colors group-hover:text-accent">
+          {event.title}
+        </p>
+        <p className="meta truncate" title={[event.organizer, event.location].filter(Boolean).join(' · ')}>
+          {[event.organizer, eventDateLabel(event.date)].filter(Boolean).join(' · ')}
+        </p>
+      </div>
+    </button>
   );
 }
 
@@ -256,10 +360,11 @@ function EventFormDialog({ isOpen, onClose, title, defaultValues, onSubmit }: Ev
 const AdminEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
 
   useEffect(() => { fetchEvents(); }, []);
 
@@ -267,7 +372,7 @@ const AdminEvents = () => {
     setIsLoading(true);
     try {
       const data = await CommonService.getEvents();
-      setEvents(data);
+      setEvents([...data].sort(byEventDateDesc));
     } catch {
       toast.error('Failed to load events');
     } finally {
@@ -275,16 +380,16 @@ const AdminEvents = () => {
     }
   };
 
-  const handleAdd = () => { setCurrentEvent(null); setIsDialogOpen(true); };
+  const handleAdd = () => { setCurrentEvent(null); setIsDrawerOpen(true); };
   useCreateIntent(handleAdd);
-  const handleEdit = (event: Event) => { setCurrentEvent(event); setIsDialogOpen(true); };
-  const handleDelete = (id: string, label: string) => setDeleteTarget({ id, label });
+  const handleEdit = (event: Event) => { setCurrentEvent(event); setIsDrawerOpen(true); };
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     try {
       await CommonService.deleteEvent(deleteTarget.id);
       toast.success('Event deleted');
+      setIsDrawerOpen(false);
       fetchEvents();
     } catch { toast.error('Delete failed'); }
     finally { setDeleteTarget(null); }
@@ -307,153 +412,129 @@ const AdminEvents = () => {
     }
   };
 
-  const getDefaultValues = (ev: Event | null): Partial<EventFormData> => {
-    if (!ev) return { images: [], highlights: [] };
-    const imgs = ev.images && ev.images.length > 0
-      ? ev.images
-      : ev.image ? [ev.image] : [];
-    return {
-      title: ev.title,
-      organizer: ev.organizer,
-      role: ev.role ?? '',
-      type: ev.type ?? '',
-      date: ev.date,
-      location: ev.location,
-      attendees: ev.attendees ?? '',
-      description: ev.description,
-      highlights: ev.highlights ?? [],
-      link: ev.link ?? '',
-      images: imgs,
-    };
-  };
+  // Roles actually in use, most common first, for the filter chips and header.
+  const roleCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of events) if (e.role) counts.set(e.role, (counts.get(e.role) ?? 0) + 1);
+    return [...counts].sort((a, b) => b[1] - a[1]);
+  }, [events]);
 
-  const filteredEvents = events.filter(e =>
-    e.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.organizer?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const groups = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const matches = events.filter(
+      (e) =>
+        (!roleFilter || e.role === roleFilter) &&
+        (!q || [e.title, e.organizer, e.location].some((v) => v?.toLowerCase().includes(q))),
+    );
+    // events are already newest-first, so years come out in order.
+    const byYear = new Map<string, Event[]>();
+    for (const e of matches) {
+      const key = String(parseEventDate(e.date).year ?? 'Undated');
+      byYear.set(key, [...(byYear.get(key) ?? []), e]);
+    }
+    return [...byYear];
+  }, [events, searchQuery, roleFilter]);
 
-  const thumb = (ev: Event) =>
-    (ev.images && ev.images.length > 0) ? ev.images[0] : (ev.image ?? null);
+  const isFiltered = !!searchQuery.trim() || !!roleFilter;
+  const subtitle = [
+    plural(events.length, 'event'),
+    ...roleCounts.slice(0, 2).map(([role, n]) => `${n} as ${role.toLowerCase()}`),
+  ].join(' · ');
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Events"
-        subtitle={plural(events.length, "event")}
+        subtitle={subtitle}
         actions={
           <Button onClick={handleAdd} variant="primary">
-            <Plus className="w-4 h-4" /> Add event
+            <Plus className="w-4 h-4" /> New event
           </Button>
         }
       />
 
-      {/* Search */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative lg:w-72">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
-            type="text"
-            placeholder="Search events..."
+            type="search"
+            placeholder={`Search ${plural(events.length, 'event')}…`}
+            aria-label="Search events"
             className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <button type="button" aria-pressed={!roleFilter} onClick={() => setRoleFilter(null)} className={chip(!roleFilter)}>
+            All <span className="tabular">{events.length}</span>
+          </button>
+          {roleCounts.map(([role, n]) => (
+            <button
+              key={role}
+              type="button"
+              aria-pressed={roleFilter === role}
+              onClick={() => setRoleFilter(roleFilter === role ? null : role)}
+              className={chip(roleFilter === role)}
+            >
+              {role} <span className="tabular">{n}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* List */}
-      <div className="grid gap-3">
-        {isLoading && !isDialogOpen ? (
-          [1, 2].map(i => (
-            <div key={i} className="h-28 w-full bg-secondary border border-border rounded-lg animate-pulse" />
-          ))
-        ) : filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => {
-            const imgCount = (event.images?.length ?? 0) || (event.image ? 1 : 0);
-            return (
-              <Card key={event.id} interactive className="bg-card border-border shadow-sm group rounded-lg overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex items-stretch">
-                    {/* Thumbnail */}
-                    {thumb(event) ? (
-                      <div className="w-24 flex-shrink-0 overflow-hidden">
-                        <img src={thumb(event)!} alt={event.title} className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-16 flex-shrink-0 flex items-center justify-center bg-accent/5">
-                        <Globe className="w-6 h-6 text-accent/40" />
-                      </div>
-                    )}
-
-                    <div className="flex-1 p-5 flex items-center gap-5 min-w-0">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-medium text-foreground text-base group-hover:text-accent transition-colors truncate">
-                            {event.title}
-                          </h3>
-                          {event.role && (
-                            <span className="shrink-0 text-[12px] font-medium text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full">
-                              {event.role}
-                            </span>
-                          )}
-                          {imgCount > 0 && (
-                            <span className="shrink-0 flex items-center gap-1 text-[12px] font-medium text-muted-foreground bg-secondary border border-border px-1.5 py-0.5 rounded">
-                              <Images className="w-3 h-3" />{imgCount}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground font-medium text-sm">{event.organizer} · {event.type}</p>
-                        <div className="flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground font-medium mt-1.5">
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-accent/60" /> {event.date}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-accent/60" /> {event.location}
-                          </span>
-                          {event.attendees && (
-                            <span className="text-muted-foreground">{event.attendees} attendees</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id, event.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        ) : (
-          <EmptyState
-            icon={Calendar}
-            title={searchQuery ? 'No events found' : 'No events yet'}
-            description={searchQuery ? 'Try a different search.' : 'Add your first event to get started.'}
-            action={!searchQuery ? { label: 'Add event', onClick: handleAdd } : undefined}
-          />
-        )}
-      </div>
+      {/* Grid, grouped by year */}
+      {isLoading && !isDrawerOpen ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-[214px] animate-pulse rounded-[14px] border border-border-subtle bg-secondary" />
+          ))}
+        </div>
+      ) : groups.length > 0 ? (
+        <div className="space-y-10">
+          {groups.map(([year, list]) => (
+            <section key={year} aria-label={`${year}, ${plural(list.length, 'event')}`}>
+              <div className="mb-4 flex items-center gap-3">
+                <h2 className="label text-fg-2">{year}</h2>
+                <span className="meta tabular">{list.length}</span>
+                <div className="h-px flex-1 bg-border-subtle" aria-hidden="true" />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {list.map((event) => (
+                  <EventCard key={event.id} event={event} onOpen={() => handleEdit(event)} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={Calendar}
+          title={isFiltered ? 'No events match' : 'No events yet'}
+          description={isFiltered ? 'Try a different search or role.' : 'Add your first event to get started.'}
+          action={!isFiltered ? { label: 'Add event', onClick: handleAdd } : undefined}
+          secondaryAction={
+            isFiltered ? { label: 'Clear filters', onClick: () => { setSearchQuery(''); setRoleFilter(null); } } : undefined
+          }
+        />
+      )}
 
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
         title="Delete event?"
-        description={`"${deleteTarget?.label}" will be permanently deleted.`}
+        description={`"${deleteTarget?.title}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}
       />
 
-      <EventFormDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        title={currentEvent ? 'Edit event' : 'Add new event'}
-        defaultValues={getDefaultValues(currentEvent)}
+      <EventDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        event={currentEvent}
         onSubmit={handleSubmit}
+        onDelete={setDeleteTarget}
       />
     </div>
   );

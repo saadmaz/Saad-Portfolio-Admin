@@ -25,6 +25,7 @@ import {
 import { cn } from '@/shared/lib/utils';
 import ImageUpload from './ImageUpload';
 import LogoUpload from './LogoUpload';
+import { useIsDesktop } from './useIsDesktop';
 
 interface FieldConfig {
   name: string;
@@ -51,21 +52,6 @@ interface AdminEntityDialogProps<T extends FieldValues = EntityFormValues> {
   isLoading?: boolean;
   onDelete?: () => void;
 }
-
-const DESKTOP_QUERY = '(min-width: 768px)';
-
-const useIsDesktop = () => {
-  const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window === 'undefined' ? true : window.matchMedia(DESKTOP_QUERY).matches,
-  );
-  useEffect(() => {
-    const mql = window.matchMedia(DESKTOP_QUERY);
-    const onChange = () => setIsDesktop(mql.matches);
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, []);
-  return isDesktop;
-};
 
 /**
  * Create/edit form for the simple collections: a right-hand drawer on
