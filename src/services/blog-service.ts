@@ -49,8 +49,8 @@ export class BlogService {
   }
 
   /**
-   * Fetch only published posts (published === true).
-   * Used on the public /blog page.
+   * Fetch only published, listed posts (published === true, not unlisted).
+   * Used on the public /blog page. Unlisted posts are live but link-only.
    */
   static async getPublished(): Promise<BlogPost[]> {
     const q = query(
@@ -59,7 +59,9 @@ export class BlogService {
       orderBy("date", "desc"),
     );
     const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as BlogPost));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...d.data() } as BlogPost))
+      .filter((p) => !p.unlisted);
   }
 
   /**

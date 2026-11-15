@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowUpDown, ArrowUpRight, BookOpen, Eye, EyeOff, Globe, MoreHorizontal, Pencil, Search, Trash2 } from 'lucide-react';
+import { ArrowUpDown, ArrowUpRight, BookOpen, Eye, EyeOff, Globe, Link2, MoreHorizontal, Pencil, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import PageHeader from '@/components/admin/PageHeader';
@@ -35,8 +35,20 @@ const safeDate = (value?: string) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+const postUrl = (post: BlogPost) => `${SITE_URL}/blog/${post.slug}`;
+
 const StatusBadge = ({ post }: { post: BlogPost }) => {
   const status = statusOf(post);
+  if (status === 'published' && post.unlisted) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Badge variant="success" dot>Published</Badge>
+        <Badge variant="outline" className="gap-1" title="Only people with the link can see this post">
+          <Link2 className="h-3 w-3" aria-hidden="true" /> Unlisted
+        </Badge>
+      </span>
+    );
+  }
   if (status === 'published') return <Badge variant="success" dot>Published</Badge>;
   if (status === 'scheduled') return <Badge variant="accent" dot>Scheduled</Badge>;
   return <Badge variant="neutral" dot>Draft</Badge>;
@@ -116,11 +128,22 @@ const AdminBlogs = () => {
     try {
       await BlogService.update(post.id, { published: newState });
       setBlogs((prev) => prev.map((b) => (b.id === post.id ? { ...b, published: newState } : b)));
-      toast.success(newState ? `“${post.title}” published` : `“${post.title}” moved to drafts`);
+      toast.success(newState
+        ? `“${post.title}” published${post.unlisted ? ' (unlisted)' : ''}`
+        : `“${post.title}” moved to drafts`);
     } catch {
       toast.error('Failed to update post status');
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleCopyLink = async (post: BlogPost) => {
+    try {
+      await navigator.clipboard.writeText(postUrl(post));
+      toast.success('Link copied');
+    } catch {
+      toast.error('Could not copy link');
     }
   };
 
@@ -147,6 +170,9 @@ const AdminBlogs = () => {
           {post.published
             ? <><EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> Move to drafts</>
             : <><Globe className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> Publish</>}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => handleCopyLink(post)} className="gap-2.5">
+          <Link2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> Copy link
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => setDeleteTarget(post)} className="gap-2.5 text-danger-fg focus:text-danger-fg">
@@ -259,7 +285,7 @@ const AdminBlogs = () => {
                       <td className="py-3.5 pr-4">
                         <div className="flex items-center justify-end gap-0.5">
                           <Button asChild variant="ghost" size="icon-sm" aria-label={`View ${post.title} on site`}>
-                            <a href={`${SITE_URL}/blog/${post.slug}`} target="_blank" rel="noopener noreferrer"><Eye /></a>
+                            <a href={postUrl(post)} target="_blank" rel="noopener noreferrer"><Eye /></a>
                           </Button>
                           <Button asChild variant="ghost" size="icon-sm" aria-label={`Edit ${post.title}`}>
                             <Link to={`/blogs/${post.id}`}><Pencil /></Link>

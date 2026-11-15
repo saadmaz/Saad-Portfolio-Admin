@@ -13,7 +13,7 @@ import {
   Bold, Italic, Heading2, Heading3,
   List, ListOrdered, Code, Minus, Link as LinkIcon,
   Undo, Redo, Quote, Image as ImageIcon, Tag as TagIcon,
-  Search, Globe,
+  Search, Globe, Link2, Copy, Check,
   X, Loader2, Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import ImageUpload from './ImageUpload';
 import { PromptBlock } from './PromptBlock';
 import { cn } from '@/shared/lib/utils';
+import { SITE_URL } from './navConfig';
 
 /* ── Schema ──────────────────────────────────────────────────────── */
 const blogSchema = z.object({
@@ -38,6 +39,7 @@ const blogSchema = z.object({
   author:              z.string().min(2,  'Author required'),
   image:               z.string().optional().or(z.literal('')),
   published:           z.boolean().default(false),
+  unlisted:            z.boolean().default(false),
   scheduledDate:       z.string().optional().or(z.literal('')),
 });
 
@@ -184,6 +186,7 @@ const BlogForm = () => {
     defaultValues: {
       author: 'Saad Mazhar',
       published: false,
+      unlisted: false,
       tags: [],
       category: 'Tech',
     },
@@ -195,6 +198,20 @@ const BlogForm = () => {
   const schedDate     = watch('scheduledDate');
   const excerptValue  = watch('excerpt') ?? '';
   const metaValue     = watch('metaDescription') ?? '';
+  const isUnlisted    = watch('unlisted') ?? false;
+  const postUrl       = `${SITE_URL}/blog/${slugValue || 'your-slug'}`;
+  const [linkCopied,  setLinkCopied] = useState(false);
+
+  const copyPostLink = async () => {
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      setLinkCopied(true);
+      toast.success('Link copied');
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy link');
+    }
+  };
 
   /* ── TipTap editor ─────────────────────────────────────────────── */
   const editor = useEditor({
@@ -266,6 +283,7 @@ const BlogForm = () => {
         author:             post.author,
         image:              post.image ?? '',
         published:          post.published,
+        unlisted:           post.unlisted ?? false,
         scheduledDate:      post.scheduledDate ?? '',
       });
       if (editor && post.content) editor.commands.setContent(post.content);
@@ -425,7 +443,7 @@ const BlogForm = () => {
                 className="h-9 px-4 text-xs shadow-[0_0_18px_hsl(var(--accent)/0.28)]"
               >
                 <Send className="w-3.5 h-3.5 mr-1.5" />
-                {isLoading ? 'Saving…' : isEditMode ? 'Update' : publishMode === 'publish' ? 'Publish' : 'Save'}
+                {isLoading ? 'Saving…' : isEditMode ? 'Update' : publishMode === 'publish' ? (isUnlisted ? 'Publish unlisted' : 'Publish') : 'Save'}
               </Button>
 
               {isEditMode && (
@@ -630,6 +648,83 @@ const BlogForm = () => {
               </Field>
             )}
 
+            {/* Visibility */}
+            <div>
+              <Label>Visibility</Label>
+              <div role="radiogroup" aria-label="Visibility" className="space-y-1.5">
+                {([
+                  { value: false, icon: Globe, title: 'Public',   desc: 'Listed on /blog, the homepage and in search.' },
+                  { value: true,  icon: Link2, title: 'Unlisted', desc: 'Only people with the link can read it.' },
+                ] as const).map(opt => {
+                  const active = isUnlisted === opt.value;
+                  return (
+                    <button
+                      key={opt.title}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setValue('unlisted', opt.value, { shouldDirty: true })}
+                      className="w-full flex items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors"
+                      style={{
+                        background: active ? 'hsl(var(--accent) / 0.08)' : 'hsl(var(--secondary) / 0.6)',
+                        border: `1px solid ${active ? 'hsl(var(--accent) / 0.45)' : 'hsl(var(--border-subtle))'}`,
+                      }}
+                    >
+                      <opt.icon
+                        className="w-4 h-4 mt-0.5 flex-shrink-0"
+                        style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.50)' }}
+                      />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-[13px] font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                          {opt.title}
+                        </span>
+                        <span className="block text-[12px] leading-snug" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
+                          {opt.desc}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="mt-1 w-3.5 h-3.5 rounded-full flex-shrink-0 flex items-center justify-center"
+                        style={{ border: `1.5px solid ${active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.30)'}` }}
+                      >
+                        {active && <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'hsl(var(--accent))' }} />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Share link for unlisted posts */}
+            {isUnlisted && (
+              <div>
+                <Label>Share link</Label>
+                <div
+                  className="flex items-center gap-1 rounded-lg pl-3 pr-1 py-1"
+                  style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
+                >
+                  <span className="flex-1 min-w-0 truncate font-mono text-[12px]" style={{ color: 'hsl(var(--foreground) / 0.75)' }} title={postUrl}>
+                    {postUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyPostLink}
+                    aria-label={linkCopied ? 'Link copied' : 'Copy link'}
+                    className="flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-background/60"
+                    style={{ color: linkCopied ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.70)' }}
+                  >
+                    {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {linkCopied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                <p className="text-[12px] mt-1.5" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
+                  {publishMode === 'publish'
+                    ? 'Hidden from your blog list, homepage, sitemap and search engines.'
+                    : 'The link works once the post is live.'}
+                </p>
+              </div>
+            )}
+
             {/* Status indicator */}
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg"
@@ -644,7 +739,7 @@ const BlogForm = () => {
                 }}
               />
               <span className="text-[12px] font-medium" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
-                {publishMode === 'publish' ? 'Will go live immediately'
+                {publishMode === 'publish' ? (isUnlisted ? 'Live, but only for people with the link' : 'Will go live immediately')
                   : publishMode === 'schedule' ? (schedDate ? `Scheduled for ${new Date(schedDate).toLocaleDateString()}` : 'Pick a date above')
                   : 'Saved as draft'}
               </span>

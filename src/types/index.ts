@@ -173,6 +173,8 @@ export interface BlogPost {
   image?: string;
   tags?: string[];
   published: boolean;
+  /** Live, but only reachable by direct link: hidden from lists, feeds and search. */
+  unlisted?: boolean;
   is_latest?: boolean;
 
   /* SEO */
