@@ -107,7 +107,29 @@ export const PromptBlock = Node.create({
 
   addCommands() {
     return {
-      togglePrompt: () => ({ commands }) => commands.toggleNode(this.name, 'paragraph'),
+      togglePrompt: () => ({ state, tr, dispatch, commands }) => {
+        const { $from, $to } = state.selection;
+        const range = $from.blockRange($to);
+        const multiBlock = !!range
+          && range.endIndex - range.startIndex > 1
+          && range.parent.canReplaceWith(range.startIndex, range.endIndex, this.type);
+        if ($from.parent.type.name === this.name || !range || !multiBlock) {
+          return commands.toggleNode(this.name, 'paragraph');
+        }
+        // Several paragraphs selected (e.g. a pasted prompt): merge them into
+        // ONE prompt block, keeping a blank line between paragraphs. Inline
+        // marks like `code` are dropped, since a prompt is plain text.
+        const parts: string[] = [];
+        for (let i = range.startIndex; i < range.endIndex; i++) {
+          parts.push(range.parent.child(i).textContent);
+        }
+        const text = parts.join('\n\n');
+        if (dispatch) {
+          const node = this.type.create(null, text ? state.schema.text(text) : null);
+          tr.replaceWith(range.start, range.end, node);
+        }
+        return true;
+      },
     };
   },
 
