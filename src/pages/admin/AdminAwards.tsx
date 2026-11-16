@@ -4,12 +4,15 @@ import { CommonService } from '@/shared/services/common-service';
 import { Award } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, Award as AwardIcon, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Award as AwardIcon } from 'lucide-react';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
+import SearchInput from '@/components/admin/SearchInput';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -27,7 +30,7 @@ const awardFields = [
   { name: 'title', label: 'Award Title', type: 'text', placeholder: 'e.g. Dean\'s List' },
   { name: 'issuer', label: 'Issuer / Organization', type: 'text', placeholder: 'e.g. University of Toronto' },
   { name: 'date', label: 'Date Received', type: 'text', placeholder: 'e.g. June 2023 or 2023-06' },
-  { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Briefly describe the award...' },
+  { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Briefly describe the award…' },
   { name: 'link', label: 'Link (Optional)', type: 'text', placeholder: 'https://...' },
 ] as const;
 
@@ -110,49 +113,30 @@ const AdminAwards = () => {
         }
       />
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search awards..."
-            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+      <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search awards…" />
 
       <div className="grid gap-3">
         {isLoading && !isDialogOpen ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="h-24 w-full bg-secondary border border-border rounded-lg animate-pulse" />
-          ))
+          [1, 2, 3].map(i => <div key={i} className={cn(SKELETON, 'h-[78px]')} />)
         ) : filteredAwards.length > 0 ? (
           filteredAwards.map((award) => (
-            <Card key={award.id} interactive className="group">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2">
-                      <AwardIcon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-foreground text-sm">
-                        {award.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground font-medium">{award.issuer} · {award.date}</p>
-                    </div>
+            <Card key={award.id} className={ROW_CARD}>
+              <CardContent className="flex items-center justify-between gap-4 p-4">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className={ICON_TILE}>
+                    <AwardIcon />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(award)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(award.id, award.title)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  <div className="min-w-0">
+                    <h3 className={cn(ROW_TITLE, 'truncate')}>{award.title}</h3>
+                    <p className={ROW_META}>{[award.issuer, award.date].filter(Boolean).join(' · ')}</p>
                   </div>
                 </div>
+                <RowActions
+                  label="award"
+                  href={award.link || undefined}
+                  onEdit={() => handleEdit(award)}
+                  onDelete={() => handleDelete(award.id, award.title)}
+                />
               </CardContent>
             </Card>
           ))
@@ -177,7 +161,7 @@ const AdminAwards = () => {
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentAward ? 'Edit award' : 'Add new award'}
+        title={currentAward ? 'Edit award' : 'Add award'}
         fields={awardFields}
         schema={awardSchema}
         defaultValues={currentAward || {}}

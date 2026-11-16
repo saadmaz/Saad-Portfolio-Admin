@@ -4,12 +4,14 @@ import { CommonService } from '@/shared/services/common-service';
 import { Language } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Globe, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Globe } from 'lucide-react';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -106,7 +108,7 @@ const AdminLanguages = () => {
         subtitle={plural(languages.length, "language")}
         actions={
           <Button onClick={handleAdd} variant="primary">
-            <Plus className="w-4 h-4" /> Add new language
+            <Plus className="w-4 h-4" /> Add language
           </Button>
         }
       />
@@ -114,37 +116,30 @@ const AdminLanguages = () => {
       <div className="grid gap-4 md:grid-cols-2">
         {isLoading && !isDialogOpen ? (
           [1, 2, 3, 4].map(i => (
-            <div key={i} className="h-32 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-32')} />
           ))
         ) : languages.length > 0 ? (
           languages.map((lang) => (
-            <Card key={lang.id} interactive className="bg-card border-border shadow-sm overflow-hidden group">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-info-subtle border border-info/20 flex items-center justify-center text-info-fg">
-                      <Globe className="w-5 h-5" />
+            <Card key={lang.id} className={ROW_CARD}>
+              <CardContent className="p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className={ICON_TILE}>
+                      <Globe />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-foreground text-lg">{lang.name}</h3>
-                      <p className="text-sm text-accent">{lang.level}</p>
+                    <div className="min-w-0">
+                      <h3 className={cn(ROW_TITLE, 'truncate')}>{lang.name}</h3>
+                      <p className="text-[13px] font-medium text-accent">{lang.level}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(lang)} className="h-8 w-8 hover:bg-secondary">
-                      <Edit2 className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(lang.id, lang.name)} className="h-8 w-8 hover:bg-danger-subtle text-danger-fg hover:text-danger">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <RowActions label="language" reveal onEdit={() => handleEdit(lang)} onDelete={() => handleDelete(lang.id, lang.name)} />
                 </div>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="flex justify-between text-caption text-muted-foreground">
                     <span>Proficiency</span>
-                    <span>{lang.percentage}%</span>
+                    <span className="tabular">{lang.percentage}%</span>
                   </div>
-                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden border border-border">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                     <div
                       className="h-full bg-accent transition-all duration-1000 ease-out"
                       style={{ width: `${lang.percentage}%` }}
@@ -157,9 +152,9 @@ const AdminLanguages = () => {
         ) : (
           <EmptyState
             icon={Globe}
-            title="No languages added"
+            title="No languages yet"
             description="Add languages to showcase your communication skills."
-            action={{ label: 'Add new language', onClick: handleAdd }}
+            action={{ label: 'Add language', onClick: handleAdd }}
             className="md:col-span-2"
           />
         )}
@@ -169,7 +164,7 @@ const AdminLanguages = () => {
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentLanguage ? 'Edit language' : 'Add new language'}
+        title={currentLanguage ? 'Edit language' : 'Add language'}
         fields={languageFields}
         schema={languageSchema}
         defaultValues={currentLanguage || { percentage: 80 }}

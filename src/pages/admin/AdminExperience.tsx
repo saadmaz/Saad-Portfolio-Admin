@@ -3,20 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   Plus, MoreVertical, Edit2, Trash2,
-  Calendar, MapPin, Star, Copy, Search, Building2,
+  Calendar, MapPin, Star, Copy, Building2,
 } from 'lucide-react';
 import { CommonService } from '@/shared/services/common-service';
 import { Experience } from '@/types';
 import { toast } from 'sonner';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
+import SearchInput from '@/components/admin/SearchInput';
 import EmptyState from '@/components/admin/EmptyState';
 
 type FilterTab = 'all' | 'current' | 'past' | 'featured';
@@ -136,41 +137,31 @@ const AdminExperience = () => {
             onClick={() => navigate('/experience/new')}
             className="hover:scale-105"
           >
-            <Plus className="w-5 h-5" /> Add experience
+            <Plus className="w-4 h-4" /> Add experience
           </Button>
         }
       />
 
       {/* Search + Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by company or role…"
-            className="pl-9 bg-card border-border"
-          />
-        </div>
-        <div className="flex gap-1.5">
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                filter === tab.key
-                  ? 'bg-accent text-accent-foreground border-accent'
-                  : 'bg-card border-border text-muted-foreground hover:border-accent/40 hover:text-foreground'
-              }`}
-            >
-              {tab.label}
-              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[12px] ${
-                filter === tab.key ? 'bg-black/20 text-accent-foreground' : 'bg-secondary text-muted-foreground'
-              }`}>
-                {counts[tab.key]}
-              </span>
-            </button>
-          ))}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search by company or role…" />
+        <div className="no-scrollbar -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="flex w-max gap-1 rounded-xl border border-border bg-card p-1">
+            {TABS.map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setFilter(tab.key)}
+                aria-pressed={filter === tab.key}
+                className={cn(
+                  'whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors',
+                  filter === tab.key ? 'bg-secondary text-foreground' : 'text-fg-2 hover:text-foreground',
+                )}
+              >
+                {tab.label} <span className="tabular">{counts[tab.key]}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -245,28 +236,20 @@ const AdminExperience = () => {
                   {/* Actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 hover:bg-secondary">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      <Button variant="ghost" size="icon-sm" aria-label={`More actions for ${getCompanyName(exp)}`}>
+                        <MoreVertical />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-card border-border text-foreground rounded-xl shadow-xl p-1 min-w-[160px]">
-                      <DropdownMenuItem
-                        className="hover:bg-accent/10 hover:text-accent cursor-pointer rounded-lg m-1 py-2 font-medium"
-                        onClick={() => navigate(`/experience/${exp.id}`)}
-                      >
-                        <Edit2 className="w-4 h-4" /> Edit details
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onSelect={() => navigate(`/experience/${exp.id}`)} className="gap-2.5">
+                        <Edit2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="hover:bg-secondary cursor-pointer rounded-lg m-1 py-2 font-medium text-muted-foreground"
-                        onClick={() => handleDuplicate(exp)}
-                      >
-                        <Copy className="w-4 h-4" /> Duplicate
+                      <DropdownMenuItem onSelect={() => handleDuplicate(exp)} className="gap-2.5">
+                        <Copy className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> Duplicate
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="hover:bg-danger-subtle hover:text-danger-fg cursor-pointer text-danger-fg rounded-lg m-1 py-2 font-medium"
-                        onClick={() => handleDelete(exp.id, getCompanyName(exp))}
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => handleDelete(exp.id, getCompanyName(exp))} className="gap-2.5 text-danger-fg focus:text-danger-fg">
+                        <Trash2 className="h-4 w-4" aria-hidden="true" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -277,7 +260,7 @@ const AdminExperience = () => {
         ) : (
           <EmptyState
             icon={Building2}
-            title={search || filter !== 'all' ? 'No results match your search.' : 'No experience entries yet.'}
+            title={search || filter !== 'all' ? 'No matching experience' : 'No experience yet'}
             action={
               !search && filter === 'all'
                 ? { label: 'Add your first experience', onClick: () => navigate('/experience/new') }

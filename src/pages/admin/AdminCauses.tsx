@@ -4,12 +4,14 @@ import { CommonService } from '@/shared/services/common-service';
 import { Cause } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Leaf, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Leaf } from 'lucide-react';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -22,7 +24,7 @@ type CauseFormData = z.infer<typeof causeSchema>;
 
 const causeFields = [
   { name: 'name', label: 'Cause / Issue', type: 'text' as const, placeholder: 'e.g. Climate Change, Education Equity, Open Source' },
-  { name: 'description', label: 'Description (Optional)', type: 'textarea' as const, placeholder: 'Why this cause matters to you...' },
+  { name: 'description', label: 'Description (Optional)', type: 'textarea' as const, placeholder: 'Why this cause matters to you…' },
 ] as const;
 
 const AdminCauses = () => {
@@ -92,32 +94,25 @@ const AdminCauses = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {isLoading && !isDialogOpen ? (
           [1, 2, 3].map(i => (
-            <div key={i} className="h-20 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-20')} />
           ))
         ) : causes.length > 0 ? (
           causes.map((cause) => (
-            <Card key={cause.id} className="bg-card border-border hover:border-accent/30 hover:bg-secondary transition-all group rounded-lg shadow-sm">
+            <Card key={cause.id} className={ROW_CARD}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground flex-shrink-0 mt-0.5">
-                      <Leaf className="w-4 h-4" />
+                    <div className={ICON_TILE}>
+                      <Leaf />
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-medium text-foreground text-sm">{cause.name}</h3>
+                    <div className="min-w-0 pt-0.5">
+                      <h3 className={ROW_TITLE}>{cause.name}</h3>
                       {cause.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{cause.description}</p>
+                        <p className={cn(ROW_META, 'mt-0.5 line-clamp-2 leading-relaxed')}>{cause.description}</p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(cause)} className="h-7 w-7 hover:bg-secondary text-muted-foreground hover:text-foreground">
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(cause.id, cause.name)} className="h-7 w-7 hover:bg-danger-subtle text-danger hover:text-danger-fg">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
+                  <RowActions label="cause" reveal onEdit={() => handleEdit(cause)} onDelete={() => handleDelete(cause.id, cause.name)} />
                 </div>
               </CardContent>
             </Card>
@@ -126,8 +121,9 @@ const AdminCauses = () => {
           <div className="col-span-full">
             <EmptyState
               icon={Leaf}
-              title="No causes added"
+              title="No causes yet"
               description="Share the issues and causes you care about."
+              action={{ label: 'Add cause', onClick: handleAdd }}
             />
           </div>
         )}

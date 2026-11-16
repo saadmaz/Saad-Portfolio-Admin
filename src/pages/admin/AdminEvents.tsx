@@ -55,7 +55,7 @@ const chip = (active: boolean) =>
   cn(
     'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 font-mono text-label uppercase transition-colors',
     active
-      ? 'border-transparent bg-accent/[0.12] text-accent'
+      ? 'border-transparent bg-accent-subtle text-accent'
       : 'border-border text-fg-2 hover:border-border-strong hover:text-foreground',
   );
 

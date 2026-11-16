@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, KeyboardEvent } from 'react';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -119,19 +120,10 @@ const SectionCard = ({
   icon: Icon,
   children,
 }: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) => (
-  <div
-    className="rounded-xl overflow-hidden"
-    style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border-subtle))' }}
-  >
-    <div
-      className="flex items-center gap-2 px-4 py-3"
-      style={{ borderBottom: '1px solid hsl(var(--border-subtle))' }}
-    >
-      <Icon className="w-3.5 h-3.5 text-accent" />
-      <span className="text-[12px] font-medium uppercase tracking-widest"
-            style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-        {title}
-      </span>
+  <div className="overflow-hidden rounded-xl border border-border-subtle bg-card">
+    <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-3">
+      <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+      <h2 className="text-sm font-medium text-foreground">{title}</h2>
     </div>
     <div className="p-4 space-y-4">{children}</div>
   </div>
@@ -414,47 +406,48 @@ const BlogForm = () => {
       >
         <FormHeader
           backTo="/blogs"
-          title={isEditMode ? 'Edit post' : 'New Blog Post'}
-          subtitle={isEditMode ? 'Update content and metadata.' : 'Write something worth reading.'}
+          title={isEditMode ? 'Edit post' : 'New post'}
+          subtitle={isEditMode ? 'Blog · Editing' : 'Blog · New'}
           actions={
             <>
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={handlePreview}
-                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground h-9 px-3 text-xs"
               >
-                <Eye className="w-3.5 h-3.5" /> Preview
+                <Eye aria-hidden="true" /> Preview
               </Button>
 
               <Button
                 type="submit"
                 variant="outline"
+                size="sm"
                 disabled={isLoading}
-                className="border-border hover:bg-secondary text-muted-foreground hover:text-foreground h-9 px-3 text-xs"
               >
-                <Save className="w-3.5 h-3.5" /> Save draft
+                <Save aria-hidden="true" /> Save draft
               </Button>
 
               <Button
                 type="button"
                 onClick={handleSubmit(d => onSubmit(d, publishMode === 'publish'))}
-                disabled={isLoading}
-                className="h-9 px-4 text-xs shadow-[0_0_18px_hsl(var(--accent)/0.28)]"
+                size="sm"
+                loading={isLoading}
               >
-                <Send className="w-3.5 h-3.5 mr-1.5" />
-                {isLoading ? 'Saving…' : isEditMode ? 'Update' : publishMode === 'publish' ? (isUnlisted ? 'Publish unlisted' : 'Publish') : 'Save'}
+                <Send aria-hidden="true" />
+                {isEditMode ? 'Update' : publishMode === 'publish' ? (isUnlisted ? 'Publish unlisted' : 'Publish') : 'Save'}
               </Button>
 
               {isEditMode && (
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
+                  variant="destructive-ghost"
+                  size="icon-sm"
                   onClick={() => setShowDeleteModal(true)}
-                  className="text-destructive/60 hover:bg-destructive/10 hover:text-destructive w-9 h-9"
+                  aria-label="Delete post"
+                  className="h-9 w-9"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 aria-hidden="true" />
                 </Button>
               )}
             </>
@@ -747,7 +740,7 @@ const BlogForm = () => {
           </SectionCard>
 
           {/* ── Featured image ── */}
-          <SectionCard title="Featured Image" icon={ImageIcon}>
+          <SectionCard title="Featured image" icon={ImageIcon}>
             <ImageUpload
               value={watch('image')}
               onChange={url => setValue('image', url)}
@@ -756,7 +749,7 @@ const BlogForm = () => {
           </SectionCard>
 
           {/* ── SEO ── */}
-          <SectionCard title="SEO & Search" icon={Search}>
+          <SectionCard title="SEO & search" icon={Search}>
             <Field error={errors.metaDescription?.message}>
               <div className="flex items-center justify-between mb-1.5">
                 <Label>Meta Description</Label>
@@ -784,7 +777,7 @@ const BlogForm = () => {
           </SectionCard>
 
           {/* ── Organisation ── */}
-          <SectionCard title="Organisation" icon={TagIcon}>
+          <SectionCard title="Organization" icon={TagIcon}>
             <Field error={errors.category?.message}>
               <Label>Category</Label>
               <StyledInput {...register('category')} placeholder="Tech" />
@@ -833,47 +826,15 @@ const BlogForm = () => {
         </div>
       </div>
 
-      {/* ── Delete modal ───────────────────────────────────────── */}
-      {showDeleteModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'hsl(var(--background) / 0.80)', backdropFilter: 'blur(4px)' }}
-          onClick={() => !isLoading && setShowDeleteModal(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-xl p-6 space-y-4"
-            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', boxShadow: '0 24px 64px -12px rgb(0 0 0 / 0.6)' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div>
-              <h3 className="text-base font-medium mb-1" style={{ color: 'hsl(var(--foreground) / 0.90)' }}>Delete post?</h3>
-              <p className="text-[13px]" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-                This post will be permanently deleted and cannot be recovered.
-              </p>
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all"
-                style={{ background: 'hsl(var(--border-subtle))', color: 'hsl(var(--foreground) / 0.65)', border: '1px solid hsl(var(--border))' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={onDelete}
-                className="flex-1 py-2.5 rounded-xl text-[13px] font-medium transition-all disabled:opacity-50"
-                style={{ background: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))', boxShadow: '0 4px 12px hsl(var(--destructive) / 0.25)' }}
-              >
-                {isLoading ? 'Deleting…' : 'Delete post'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={showDeleteModal}
+        onOpenChange={o => !isLoading && setShowDeleteModal(o)}
+        title="Delete post?"
+        description="This post will be permanently deleted and can’t be recovered."
+        confirmLabel="Delete post"
+        isLoading={isLoading}
+        onConfirm={onDelete}
+      />
     </form>
   );
 };

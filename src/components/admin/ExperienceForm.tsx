@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { cn } from '@/shared/lib/utils';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -98,7 +99,7 @@ function AdminSelect({
   return (
     <Select value={value ?? ''} onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger
-        className={`text-foreground focus:ring-accent focus:border-accent/40 ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
+        className={cn(disabled && 'cursor-not-allowed opacity-40', className)}
       >
         <SelectValue placeholder={placeholder ?? 'Select…'} />
       </SelectTrigger>
@@ -252,7 +253,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
         <div className="p-4 space-y-4 border-t border-border">
           {/* Role Title */}
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Role Title *</label>
+            <label className="label">Role Title *</label>
             <Input
               value={role.role_title}
               onChange={(e) => onUpdate({ ...role, role_title: e.target.value })}
@@ -264,7 +265,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
           {/* Role dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[12px] uppercase font-medium text-muted-foreground">Start</label>
+              <label className="label">Start</label>
               <MonthYearPicker
                 month={role.role_start_month}
                 year={role.role_start_year}
@@ -273,7 +274,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[12px] uppercase font-medium text-muted-foreground">End</label>
+              <label className="label">End</label>
               <MonthYearPicker
                 month={role.role_end_month}
                 year={role.role_end_year}
@@ -300,13 +301,13 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
           {/* Description */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[12px] uppercase font-medium text-muted-foreground">Description</label>
+              <label className="label">Description</label>
               <span className="text-[12px] text-muted-foreground">{(role.description ?? '').length}/2000</span>
             </div>
             <Textarea
               value={role.description ?? ''}
               onChange={(e) => onUpdate({ ...role, description: e.target.value })}
-              placeholder="Describe your responsibilities, what you worked on, and your impact..."
+              placeholder="Describe your responsibilities, what you worked on, and your impact…"
               maxLength={2000}
               rows={4}
               className="text-sm resize-none"
@@ -316,7 +317,7 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
           {/* Skills */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-[12px] uppercase font-medium text-muted-foreground">Skills</label>
+              <label className="label">Skills</label>
               <span className={`text-[12px] ${(role.skills ?? []).length > 5 ? 'text-warning-fg' : 'text-muted-foreground'}`}>
                 {(role.skills ?? []).length}/20
                 {(role.skills ?? []).length > 5 && ' · LinkedIn recommends top 5'}
@@ -340,15 +341,15 @@ function RoleSubForm({ role, index, total, collapsed, onToggle, onUpdate, onRemo
                 placeholder="Type a skill and press Enter…"
                 className="text-xs h-8"
               />
-              <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={addSkill}>
-                <Plus className="w-3 h-3" />
+              <Button type="button" variant="outline" size="icon-sm" onClick={addSkill} aria-label="Add skill">
+                <Plus aria-hidden="true" />
               </Button>
             </div>
           </div>
 
           {/* Media */}
           <div className="space-y-2">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Media</label>
+            <label className="label">Media</label>
             {(role.media ?? []).length > 0 && (
               <div className="space-y-2">
                 {(role.media ?? []).map((m, mi) => (
@@ -601,14 +602,12 @@ const ExperienceForm = () => {
 
       <FormHeader
         backTo="/experience"
-        title={isEditMode ? 'Edit experience' : 'New Experience'}
-        subtitle="Fill in the company details and roles below."
+        title={isEditMode ? 'Edit experience' : 'New experience'}
+        subtitle={isEditMode ? 'Experience · Editing' : 'Experience · New'}
         actions={
-          <Button type="submit"
-           
-            disabled={isLoading}>
-            <Save className="w-4 h-4" />
-            {isLoading ? 'Saving…' : 'Save'}
+          <Button type="submit" size="sm" loading={isLoading}>
+            <Save aria-hidden="true" />
+            Save experience
           </Button>
         }
       />
@@ -622,20 +621,20 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-accent" /> Company Info
+                <Building2 className="w-4 h-4 text-accent" /> Company info
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               {/* Company name */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Company / Organization *</label>
+                <label className="label">Company / Organization *</label>
                 <Input {...register('company_name')} placeholder="e.g. Google" />
                 {errors.company_name && <p className="text-xs text-danger">{errors.company_name.message}</p>}
               </div>
 
               {/* Employment Type */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Employment Type</label>
+                <label className="label">Employment Type</label>
                 <AdminSelect
                   value={employmentType}
                   onValueChange={(v) => setValue('employment_type', v)}
@@ -648,7 +647,7 @@ const ExperienceForm = () => {
 
               {/* Location */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Location *</label>
+                <label className="label">Location *</label>
                 <Input
                   {...register('location')}
                   placeholder="e.g. Colombo, Western Province, Sri Lanka"
@@ -659,7 +658,7 @@ const ExperienceForm = () => {
 
               {/* Location Type — pill toggle */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Location Type</label>
+                <label className="label">Location Type</label>
                 <div className="flex gap-2">
                   {LOCATION_TYPES.map(lt => (
                     <button key={lt} type="button"
@@ -682,13 +681,13 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-accent" /> Company Duration
+                <Calendar className="w-4 h-4 text-accent" /> Company duration
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">Start Date</label>
+                  <label className="label">Start Date</label>
                   <MonthYearPicker
                     month={startMonth}
                     year={startYear}
@@ -697,7 +696,7 @@ const ExperienceForm = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">End Date</label>
+                  <label className="label">End Date</label>
                   <MonthYearPicker
                     month={endMonth}
                     year={endYear}
@@ -733,7 +732,7 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-accent" /> Roles at this Company
+                <Briefcase className="w-4 h-4 text-accent" /> Roles at this company
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-3">
@@ -758,7 +757,7 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-accent" /> Overview Description
+                <Sparkles className="w-4 h-4 text-accent" /> Overview description
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
@@ -767,7 +766,7 @@ const ExperienceForm = () => {
                 <span className="text-[12px] text-muted-foreground">{(watch('description') ?? '').length}/2000</span>
               </div>
               <Textarea {...register('description')}
-                placeholder="Describe your overall responsibilities, what you worked on, and your impact..."
+                placeholder="Describe your overall responsibilities, what you worked on, and your impact…"
                 maxLength={2000} rows={5} className="resize-none" />
             </CardContent>
           </Card>
@@ -776,7 +775,7 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-accent" /> Key Achievements
+                <Trophy className="w-4 h-4 text-accent" /> Key achievements
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
@@ -785,7 +784,7 @@ const ExperienceForm = () => {
                 <span className="text-[12px] text-muted-foreground">{(watch('achievements') ?? '').length}/2000</span>
               </div>
               <Textarea {...register('achievements')}
-                placeholder="e.g. Grew user base by 40%, Led a team of 8, Shipped 3 major features..."
+                placeholder="e.g. Grew user base by 40%, Led a team of 8, Shipped 3 major features…"
                 maxLength={2000} rows={4} className="resize-none" />
             </CardContent>
           </Card>
@@ -794,7 +793,7 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Star className="w-4 h-4 text-accent" /> Company-Level Skills
+                <Star className="w-4 h-4 text-accent" /> Company-level skills
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 space-y-3">
@@ -819,8 +818,8 @@ const ExperienceForm = () => {
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTopSkill(); } }}
                   placeholder="Type a skill and press Enter…"
                   className="text-sm h-9" />
-                <Button type="button" variant="outline" size="sm" className="h-9" onClick={addTopSkill}>
-                  <Plus className="w-3 h-3" />
+                <Button type="button" variant="outline" size="sm" className="h-9 w-9 px-0" onClick={addTopSkill} aria-label="Add skill">
+                  <Plus aria-hidden="true" />
                 </Button>
               </div>
             </CardContent>
@@ -870,7 +869,7 @@ const ExperienceForm = () => {
           <Card>
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Star className="w-4 h-4 text-accent" /> Linked Projects
+                <Star className="w-4 h-4 text-accent" /> Linked projects
                 {linkedProjectIds.length > 0 && (
                   <span className="ml-auto text-[12px] font-medium text-accent">{linkedProjectIds.length} linked</span>
                 )}
@@ -937,7 +936,7 @@ const ExperienceForm = () => {
             <CardHeader className="border-b border-border-subtle pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-accent" />
-                Company Logo <span className="text-danger text-[12px] font-normal">(required)</span>
+                Company logo <span className="text-danger text-[12px] font-normal">(required)</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -973,7 +972,7 @@ const ExperienceForm = () => {
 
               {/* Display Order */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Display Order</label>
+                <label className="label">Display Order</label>
                 <Input {...register('display_order')} type="number" placeholder="e.g. 1"
                   className="text-sm" />
                 <p className="text-[12px] text-muted-foreground">Lower = appears first</p>

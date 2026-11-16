@@ -107,16 +107,12 @@ const CertificateForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-20">
       <FormHeader
         backTo="/certificates"
-        title={isEditMode ? 'Edit certificate' : 'Add achievement'}
-        subtitle='"Your hard work is your unique signature."'
+        title={isEditMode ? 'Edit certificate' : 'New certificate'}
+        subtitle={isEditMode ? 'Certifications · Editing' : 'Certifications · New'}
         actions={
-          <Button
-            type="submit"
-           
-            disabled={isLoading}
-          >
-            <Save className="w-4 h-4" />
-            Save achievement
+          <Button type="submit" size="sm" loading={isLoading}>
+            <Save aria-hidden="true" />
+            Save certificate
           </Button>
         }
       />
@@ -125,9 +121,9 @@ const CertificateForm = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader className="border-b border-border-subtle">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Award className="w-4 h-4 text-accent" />
-                    Credential Essentials
+                    Credential essentials
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
@@ -166,9 +162,9 @@ const CertificateForm = () => {
 
           <Card>
             <CardHeader className="border-b border-border-subtle">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <LinkIcon className="w-4 h-4 text-accent" />
-                    Validation Links
+                    Validation links
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
@@ -222,7 +218,7 @@ const CertificateForm = () => {
                   )}
                </Field>
                <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs font-medium">Featured Achievement</span>
+                  <span className="text-xs font-medium">Featured certificate</span>
                   <input type="checkbox" {...register('is_featured')} className="w-4 h-4 accent-accent" />
                </div>
             </CardContent>

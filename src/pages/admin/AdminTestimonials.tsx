@@ -4,12 +4,14 @@ import { CommonService } from '@/shared/services/common-service';
 import { Testimonial } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Quote, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Quote } from 'lucide-react';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -107,37 +109,30 @@ const AdminTestimonials = () => {
       <div className="grid gap-6 md:grid-cols-2">
         {isLoading && !isDialogOpen ? (
           [1, 2].map(i => (
-            <div key={i} className="h-48 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-48')} />
           ))
         ) : testimonials.length > 0 ? (
           testimonials.map((test) => (
-            <Card key={test.id} interactive className="bg-card border-border shadow-sm overflow-hidden relative group">
-              <CardContent className="p-6">
-                <Quote className="absolute top-4 right-4 w-10 h-10 text-border group-hover:text-accent/10 transition-colors" />
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center text-fg-2 overflow-hidden">
+            <Card key={test.id} className={cn(ROW_CARD, 'relative flex flex-col overflow-hidden')}>
+              <CardContent className="flex flex-1 flex-col p-5">
+                <Quote className="absolute right-4 top-4 h-10 w-10 text-border transition-colors group-hover:text-accent/40" aria-hidden="true" />
+                <div className="mb-4 flex items-center gap-3 pr-12">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-secondary text-fg-2">
                     {test.avatar ? (
                       <img src={test.avatar} alt={test.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-lg font-medium">{test.name.charAt(0)}</span>
+                      <span className="text-base font-medium">{test.name.charAt(0)}</span>
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-medium text-foreground">{test.name}</h3>
-                    <p className="text-xs text-muted-foreground">{test.position} at {test.company}</p>
+                  <div className="min-w-0">
+                    <h3 className={cn(ROW_TITLE, 'truncate')}>{test.name}</h3>
+                    <p className={cn(ROW_META, 'truncate')}>{[test.position, test.company].filter(Boolean).join(' at ')}</p>
                   </div>
                 </div>
-                <p className="text-sm text-foreground/80 leading-relaxed line-clamp-4 mb-4">
-                  "{test.content}"
+                <p className="mb-4 line-clamp-4 flex-1 text-sm leading-relaxed text-fg-2">
+                  “{test.content}”
                 </p>
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(test)} className="h-8 w-8 hover:bg-secondary">
-                    <Edit2 className="w-4 h-4 text-muted-foreground" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(test.id, test.name)} className="h-8 w-8 hover:bg-danger-subtle text-danger-fg hover:text-danger">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                <RowActions label="testimonial" reveal className="justify-end" onEdit={() => handleEdit(test)} onDelete={() => handleDelete(test.id, test.name)} />
               </CardContent>
             </Card>
           ))

@@ -4,12 +4,15 @@ import { CommonService } from '@/shared/services/common-service';
 import { Course } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, BookMarked, Edit2, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, BookMarked } from 'lucide-react';
+import SearchInput from '@/components/admin/SearchInput';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -29,7 +32,7 @@ const courseFields = [
   { name: 'school', label: 'School / Platform', type: 'text' as const, placeholder: 'e.g. Coursera, MIT OpenCourseWare' },
   { name: 'associatedWith', label: 'Associated Institution (Optional)', type: 'text' as const, placeholder: 'e.g. Stanford University' },
   { name: 'completedDate', label: 'Completion Date (Optional)', type: 'text' as const, placeholder: 'e.g. June 2023' },
-  { name: 'description', label: 'Description (Optional)', type: 'textarea' as const, placeholder: 'What you learned...' },
+  { name: 'description', label: 'Description (Optional)', type: 'textarea' as const, placeholder: 'What you learned…' },
   { name: 'link', label: 'Course Link (Optional)', type: 'text' as const, placeholder: 'https://...' },
 ] as const;
 
@@ -103,55 +106,32 @@ const AdminCourses = () => {
         }
       />
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search courses..."
-            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+      <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search courses…" />
 
       <div className="grid gap-3">
         {isLoading && !isDialogOpen ? (
           [1, 2, 3].map(i => (
-            <div key={i} className="h-24 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-24')} />
           ))
         ) : filtered.length > 0 ? (
           filtered.map((course) => (
-            <Card key={course.id} className="bg-card border-border hover:border-accent/30 hover:bg-secondary transition-all group rounded-lg shadow-sm">
+            <Card key={course.id} className={ROW_CARD}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2 flex-shrink-0">
+                    <div className={ICON_TILE}>
                       <BookMarked className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-medium text-foreground text-sm truncate">
+                      <h3 className={cn(ROW_TITLE, 'truncate')}>
                         {course.name}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-medium">
+                      <p className={ROW_META}>
                         {course.school}{course.associatedWith ? ` · ${course.associatedWith}` : ''}{course.completedDate ? ` · ${course.completedDate}` : ''}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {course.link && (
-                      <a href={course.link} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(course)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id, course.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <RowActions label="course" href={course.link} onEdit={() => handleEdit(course)} onDelete={() => handleDelete(course.id, course.name)} />
                 </div>
               </CardContent>
             </Card>
@@ -159,8 +139,9 @@ const AdminCourses = () => {
         ) : (
           <EmptyState
             icon={BookMarked}
-            title="No courses found"
+            title={searchQuery ? 'No courses found' : 'No courses yet'}
             description={searchQuery ? 'Try a different search.' : 'Add the courses you have completed.'}
+            action={!searchQuery ? { label: 'Add course', onClick: handleAdd } : undefined}
           />
         )}
       </div>

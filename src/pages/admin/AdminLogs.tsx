@@ -80,7 +80,7 @@ const AdminLogs = () => {
               onClick={() => setFilter(f.key)}
               aria-pressed={filter === f.key}
               className={cn(
-                'shrink-0 rounded-full border px-3 py-1 font-mono text-[12px] uppercase tracking-[0.06em] transition-colors',
+                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 font-mono text-label uppercase transition-colors',
                 filter === f.key
                   ? 'border-transparent bg-accent-subtle text-accent'
                   : 'border-border text-fg-2 hover:border-border-strong hover:text-foreground',

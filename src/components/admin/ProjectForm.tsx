@@ -3,20 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import {
   Save, Plus, Trash2, Image as ImageIcon, Images,
   Globe, Github, Layout, Layers, Sparkles, X, Video,
@@ -29,7 +21,6 @@ import type { Education, Experience } from '@/types';
 import FormHeader from './FormHeader';
 import ImageUpload from './ImageUpload';
 import MultiImageUpload from './MultiImageUpload';
-import { cn } from "@/shared/lib/utils";
 import {
   Select,
   SelectContent,
@@ -92,8 +83,7 @@ const toSlug = (s: string) =>
     .replace(/[\s_]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const FIELD_CLS = "bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent focus:border-accent/40 rounded-lg h-10";
-const LABEL_CLS = "text-[12px] font-medium uppercase tracking-widest text-muted-foreground mb-1.5 block";
+const LABEL_CLS = "label mb-2 block";
 
 // ── Reusable tag-list editor ──────────────────────────────────────
 const TagListEditor = ({
@@ -126,10 +116,9 @@ const TagListEditor = ({
       <div className="flex gap-2">
         <Input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
-          placeholder={placeholder} className={cn(FIELD_CLS, "flex-1 h-9 text-sm")} />
-        <Button type="button" onClick={add} variant="outline"
-          className="border-border bg-card hover:bg-secondary text-muted-foreground hover:text-foreground h-9 px-3 text-xs">
-          <Plus className="w-3 h-3 mr-1" /> Add
+          placeholder={placeholder} className="h-9 flex-1" />
+        <Button type="button" onClick={add} variant="outline" size="sm">
+          <Plus /> Add
         </Button>
       </div>
     </div>
@@ -144,13 +133,11 @@ const Section = ({ icon: Icon, title, children, badge }: {
     <CardHeader className="border-b border-border-subtle py-3 px-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="w-3.5 h-3.5 text-accent" />
-          <span className="text-[12px] font-medium uppercase tracking-widest text-muted-foreground">{title}</span>
+          <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+          <h2 className="text-sm font-medium text-foreground">{title}</h2>
         </div>
         {badge && (
-          <span className="text-[12px] font-medium uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-full border border-accent/20">
-            {badge}
-          </span>
+          <Badge variant="accent">{badge}</Badge>
         )}
       </div>
     </CardHeader>
@@ -304,19 +291,19 @@ const ProjectForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-24">
       <FormHeader
         backTo="/projects"
-        title={isEditMode ? 'Edit project' : 'New Project'}
+        title={isEditMode ? 'Edit project' : 'New project'}
+        subtitle={isEditMode ? 'Projects · Editing' : 'Projects · New'}
         actions={
           <>
-            <Button type="submit" disabled={isLoading}
-              className="h-10 shadow-[0_0_20px_hsl(var(--accent)/0.28)]">
-              <Save className="w-3.5 h-3.5" />
-              {isLoading ? 'Saving…' : 'Save project'}
+            <Button type="submit" size="sm" loading={isLoading}>
+              <Save aria-hidden="true" />
+              Save project
             </Button>
             {isEditMode && (
-              <Button type="button" variant="ghost" size="icon"
-                className="text-danger/60 hover:bg-danger/10 hover:text-danger w-9 h-9"
+              <Button type="button" variant="destructive-ghost" size="icon-sm" aria-label="Delete project"
+                className="h-9 w-9"
                 onClick={() => setDeleteDialogOpen(true)} disabled={isLoading}>
-                <Trash2 className="w-4 h-4" />
+                <Trash2 aria-hidden="true" />
               </Button>
             )}
           </>
@@ -328,33 +315,33 @@ const ProjectForm = () => {
         <div className="lg:col-span-2 space-y-5">
 
           {/* Essentials */}
-          <Section icon={Layout} title="Project Essentials">
+          <Section icon={Layout} title="Project essentials">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLS}>Title</label>
-                <Input {...register('title')} placeholder="e.g. Portfolio v3" className={FIELD_CLS} />
+                <Input {...register('title')} placeholder="e.g. Portfolio v3" />
                 {errors.title && <p className="text-xs text-danger mt-1">{errors.title.message}</p>}
               </div>
               <div>
                 <label className={LABEL_CLS}>Slug (URL)</label>
-                <Input {...register('slug')} placeholder="portfolio-v3" className={cn(FIELD_CLS, "font-mono text-sm")} />
+                <Input {...register('slug')} placeholder="portfolio-v3" className="font-mono text-sm" />
                 {errors.slug && <p className="text-xs text-danger mt-1">{errors.slug.message}</p>}
               </div>
             </div>
 
             <div>
               <label className={LABEL_CLS}>Tagline</label>
-              <Input {...register('tagline')} placeholder="Short punchy description…" className={FIELD_CLS} />
+              <Input {...register('tagline')} placeholder="Short punchy description…" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLS}>Date</label>
-                <Input {...register('date')} placeholder="e.g. 2025-06-01" className={FIELD_CLS} />
+                <Input {...register('date')} placeholder="e.g. 2025-06-01" />
               </div>
               <div>
                 <label className={LABEL_CLS}>Role</label>
-                <Input {...register('role')} placeholder="e.g. Solo Developer" className={FIELD_CLS} />
+                <Input {...register('role')} placeholder="e.g. Solo Developer" />
               </div>
             </div>
 
@@ -362,7 +349,7 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Type</label>
                 <Select value={(watch('type') as string) ?? ''} onValueChange={(v) => setValue('type', v)}>
-                  <SelectTrigger className="w-full bg-transparent border border-border rounded-lg px-3 h-10 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
@@ -374,12 +361,12 @@ const ProjectForm = () => {
               </div>
               <div>
                 <label className={LABEL_CLS}>Category</label>
-                <Input {...register('category')} placeholder="e.g. Portfolio" className={FIELD_CLS} />
+                <Input {...register('category')} placeholder="e.g. Portfolio" />
               </div>
               <div>
                 <label className={LABEL_CLS}>Stage</label>
                 <Select value={(watch('stage') as string) ?? ''} onValueChange={(v) => setValue('stage', v)}>
-                  <SelectTrigger className="w-full bg-transparent border border-border rounded-lg px-3 h-10 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
@@ -396,23 +383,23 @@ const ProjectForm = () => {
           <Section icon={BookOpen} title="Descriptions">
             <div>
               <label className={LABEL_CLS}>Short Description</label>
-              <Input {...register('description')} placeholder="One-liner shown on cards…" className={FIELD_CLS} />
+              <Input {...register('description')} placeholder="One-liner shown on cards…" />
             </div>
             <div>
               <label className={LABEL_CLS}>Overview (Detailed)</label>
               <Textarea {...register('overview')} placeholder="Full project overview - goals, outcomes, architecture…"
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent rounded-lg min-h-[120px] resize-none" />
+                className="min-h-[120px] resize-none" />
               {errors.overview && <p className="text-xs text-danger mt-1">{errors.overview.message}</p>}
             </div>
             <div>
               <label className={LABEL_CLS}>Long Description</label>
               <Textarea {...register('long_description')} placeholder="Extended write-up for the project detail page…"
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-accent rounded-lg min-h-[100px] resize-none" />
+                className="min-h-[100px] resize-none" />
             </div>
           </Section>
 
           {/* Tech */}
-          <Section icon={Layers} title="Technical Stack">
+          <Section icon={Layers} title="Technical stack">
             <TagListEditor label="Tech Stack Tags (chips on cards)"
               values={techStack} placeholder="e.g. React, TypeScript…"
               onChange={v => setValue('techStack', v)} />
@@ -426,7 +413,7 @@ const ProjectForm = () => {
           </Section>
 
           {/* Challenges & Learnings */}
-          <Section icon={Lightbulb} title="Challenges & Learnings"
+          <Section icon={Lightbulb} title="Challenges & learnings"
             badge={`${challenges.length + learnings.length}`}>
             <TagListEditor label="Challenges faced"
               values={challenges} placeholder="e.g. Achieving 100/100 Lighthouse scores"
@@ -446,7 +433,7 @@ const ProjectForm = () => {
           </Section>
 
           {/* Associate With */}
-          <Section icon={Link2} title="Associate With"
+          <Section icon={Link2} title="Associate with"
             badge={linkedEducationIds.length + linkedExperienceIds.length > 0
               ? `${linkedEducationIds.length + linkedExperienceIds.length}`
               : undefined}>
@@ -560,20 +547,19 @@ const ProjectForm = () => {
         <div className="space-y-5">
 
           {/* Hero Image */}
-          <Section icon={ImageIcon} title="Hero Image">
+          <Section icon={ImageIcon} title="Hero image">
             <ImageUpload
               value={watch('heroImage') || watch('image')}
               onChange={url => { setValue('heroImage', url); setValue('image', url); }}
             />
             <div className="mt-3">
               <label className={LABEL_CLS}>Image Alt Text</label>
-              <Input {...register('altText')} placeholder={watch('title') || 'Falls back to the project title if left blank'}
-                className={FIELD_CLS} />
+              <Input {...register('altText')} placeholder={watch('title') || 'Falls back to the project title if left blank'} />
             </div>
           </Section>
 
           {/* Gallery */}
-          <Section icon={Images} title="Screenshots / Gallery"
+          <Section icon={Images} title="Screenshots / gallery"
             badge={screenshots.length ? `${screenshots.length}` : undefined}>
             <MultiImageUpload
               value={screenshots}
@@ -585,25 +571,25 @@ const ProjectForm = () => {
           </Section>
 
           {/* Video */}
-          <Section icon={Video} title="Video Demo">
+          <Section icon={Video} title="Video demo">
             <div>
               <label className={LABEL_CLS}>YouTube / Video URL</label>
               <div className="relative">
                 <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('video')} placeholder="https://youtube.com/watch?v=…"
-                  className={cn(FIELD_CLS, "pl-9")} />
+                  className="pl-9" />
               </div>
             </div>
           </Section>
 
           {/* Links */}
-          <Section icon={Link2} title="External Links">
+          <Section icon={Link2} title="External links">
             <div>
               <label className={LABEL_CLS}>Live Demo URL</label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('liveUrl')} placeholder="https://example.com"
-                  className={cn(FIELD_CLS, "pl-9")} />
+                  className="pl-9" />
               </div>
               {errors.liveUrl && <p className="text-xs text-danger mt-1">{errors.liveUrl.message}</p>}
             </div>
@@ -612,7 +598,7 @@ const ProjectForm = () => {
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('live_preview')} placeholder="https://…"
-                  className={cn(FIELD_CLS, "pl-9")} />
+                  className="pl-9" />
               </div>
             </div>
             <div>
@@ -620,7 +606,7 @@ const ProjectForm = () => {
               <div className="relative">
                 <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('githubUrl')} placeholder="https://github.com/…"
-                  className={cn(FIELD_CLS, "pl-9")} />
+                  className="pl-9" />
               </div>
             </div>
             <div>
@@ -628,7 +614,7 @@ const ProjectForm = () => {
               <div className="relative">
                 <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input {...register('github')} placeholder="https://github.com/…"
-                  className={cn(FIELD_CLS, "pl-9")} />
+                  className="pl-9" />
               </div>
             </div>
           </Section>
@@ -639,7 +625,7 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Status</label>
                 <Select value={(watch('status') as string) ?? ''} onValueChange={(v) => setValue('status', v)}>
-                  <SelectTrigger className="w-full bg-transparent border border-border rounded-lg px-3 h-10 text-sm text-foreground focus:ring-2 focus:ring-accent outline-none">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
@@ -652,51 +638,39 @@ const ProjectForm = () => {
               <div>
                 <label className={LABEL_CLS}>Order Index</label>
                 <Input type="number" {...register('order_index', { valueAsNumber: true })}
-                  placeholder="1" className={FIELD_CLS} />
+                  placeholder="1" />
               </div>
             </div>
             <div>
               <label className={LABEL_CLS}>Card Gradient (Tailwind classes)</label>
               <Input {...register('colour')} placeholder="from-indigo-900/40 to-blue-900/40"
-                className={cn(FIELD_CLS, "font-mono text-xs")} />
+                className="font-mono text-xs" />
             </div>
             <label className="flex items-center justify-between cursor-pointer group pt-1">
-              <span className="text-sm font-medium text-fg-2 group-hover:text-foreground transition-colors">Featured Project</span>
+              <span className="text-sm font-medium text-fg-2 group-hover:text-foreground transition-colors">Featured project</span>
               <input type="checkbox" {...register('featured')}
-                className="w-4 h-4 rounded accent-accent " />
+                className="h-4 w-4 rounded accent-accent" />
             </label>
             <label className="flex items-center justify-between cursor-pointer group pt-1">
               <span className="text-sm font-medium text-fg-2 group-hover:text-foreground transition-colors">
                 Published <span className="font-normal text-muted-foreground">(unpublish to hide from the public site and sitemap)</span>
               </span>
               <input type="checkbox" {...register('published')}
-                className="w-4 h-4 rounded accent-accent " />
+                className="h-4 w-4 rounded accent-accent" />
             </label>
           </Section>
         </div>
       </div>
 
-      {/* Delete dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={o => !isLoading && setDeleteDialogOpen(o)}>
-        <AlertDialogContent className="bg-card border-[hsl(var(--border-subtle))] text-foreground rounded-xl shadow-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-medium">Delete project?</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground text-sm">
-              This project will be permanently removed. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel disabled={isLoading}
-              className="text-foreground hover:bg-surface-3 rounded-xl font-medium">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction disabled={isLoading} onClick={onDelete}
-              className="bg-danger hover:bg-danger/90 text-danger-foreground rounded-xl font-medium border-0 shadow-lg shadow-danger/20">
-              {isLoading ? 'Deleting…' : 'Delete project'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={o => !isLoading && setDeleteDialogOpen(o)}
+        title="Delete project?"
+        description="This project will be permanently removed. This can’t be undone."
+        confirmLabel="Delete project"
+        isLoading={isLoading}
+        onConfirm={onDelete}
+      />
     </form>
   );
 };

@@ -4,12 +4,14 @@ import { CommonService } from '@/shared/services/common-service';
 import { VolunteerExperience } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Heart, Edit2, Trash2, Calendar } from 'lucide-react';
+import { Plus, Heart, Calendar } from 'lucide-react';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import { LightboxModal } from '@/components/ui/LightboxModal';
 import * as z from 'zod';
@@ -97,7 +99,7 @@ const AdminVolunteer = () => {
         subtitle={plural(volunteer.length, "role")}
         actions={
           <Button onClick={handleAdd} variant="primary">
-            <Plus className="w-4 h-4" /> Add experience
+            <Plus className="w-4 h-4" /> Add volunteer role
           </Button>
         }
       />
@@ -105,18 +107,18 @@ const AdminVolunteer = () => {
       <div className="grid gap-4">
         {isLoading && !isDialogOpen ? (
           [1, 2].map(i => (
-            <div key={i} className="h-28 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-28')} />
           ))
         ) : volunteer.length > 0 ? (
           volunteer.map((exp) => (
-            <Card key={exp.id} interactive className="bg-card border-border overflow-hidden group shadow-sm">
+            <Card key={exp.id} className={cn(ROW_CARD, 'overflow-hidden')}>
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row">
                   {exp.image && (
                     <button
                       type="button"
                       onClick={() => setLightbox(exp.image!)}
-                      className="md:w-36 h-28 md:h-auto flex-shrink-0 overflow-hidden focus:outline-none"
+                      aria-label="View image" className="md:w-36 h-28 md:h-auto shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                     >
                       <img
                         src={exp.image}
@@ -125,31 +127,24 @@ const AdminVolunteer = () => {
                       />
                     </button>
                   )}
-                  <div className="flex-1 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
+                  <div className="flex flex-1 flex-col justify-between gap-4 p-5 md:flex-row md:items-center">
+                    <div className="flex min-w-0 items-start gap-4">
                       {!exp.image && (
-                        <div className="w-12 h-12 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground flex-shrink-0">
-                          <Heart className="w-6 h-6" />
+                        <div className={ICON_TILE}>
+                          <Heart />
                         </div>
                       )}
                       <div>
-                        <h3 className="font-medium text-foreground text-lg">{exp.role}</h3>
-                        <p className="text-accent font-medium">{exp.organization}</p>
-                        <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                        <h3 className={ROW_TITLE}>{exp.role}</h3>
+                        <p className="text-[13px] font-medium text-accent">{exp.organization}</p>
+                        <div className={cn(ROW_META, 'mt-1.5 flex flex-wrap gap-x-4 gap-y-1')}>
                           <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-accent" /> {exp.startDate} – {exp.isCurrent ? 'Present' : exp.endDate}
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" /> {exp.startDate} – {exp.isCurrent ? 'Present' : exp.endDate}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 self-end md:self-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(exp)} className="hover:bg-secondary text-muted-foreground hover:text-foreground">
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(exp.id, exp.role)} className="hover:bg-danger-subtle text-danger-fg hover:text-danger">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <RowActions label="volunteer role" reveal className="self-end md:self-center" onEdit={() => handleEdit(exp)} onDelete={() => handleDelete(exp.id, exp.role)} />
                   </div>
                 </div>
               </CardContent>
@@ -158,9 +153,9 @@ const AdminVolunteer = () => {
         ) : (
           <EmptyState
             icon={Heart}
-            title="No volunteer work added"
+            title="No volunteer roles yet"
             description="Highlight your contributions to the community."
-            action={{ label: 'Add experience', onClick: handleAdd }}
+            action={{ label: 'Add volunteer role', onClick: handleAdd }}
           />
         )}
       </div>
@@ -175,7 +170,7 @@ const AdminVolunteer = () => {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="Delete experience?"
+        title="Delete volunteer role?"
         description={`"${deleteTarget?.label}" will be permanently deleted.`}
         confirmLabel="Delete"
         onConfirm={handleConfirmDelete}
@@ -184,7 +179,7 @@ const AdminVolunteer = () => {
       <AdminEntityDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={currentExp ? 'Edit experience' : 'Add experience'}
+        title={currentExp ? 'Edit volunteer role' : 'Add volunteer role'}
         fields={volunteerFields}
         schema={volunteerSchema}
         defaultValues={currentExp || {}}

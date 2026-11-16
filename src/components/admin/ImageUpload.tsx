@@ -55,7 +55,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, class
 
       <div className="relative group">
         {value ? (
-          <div className="relative aspect-video rounded-xl overflow-hidden border ">
+          <div className="relative aspect-video rounded-xl overflow-hidden border">
             <img src={value} alt="Uploaded" className="w-full h-full object-cover" />
             {/* Change / Remove overlay */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center gap-2">

@@ -4,12 +4,15 @@ import { CommonService } from '@/shared/services/common-service';
 import { Organization } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, Building2, Edit2, Trash2, ExternalLink, Calendar } from 'lucide-react';
+import { Plus, Building2, Calendar } from 'lucide-react';
+import SearchInput from '@/components/admin/SearchInput';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -32,7 +35,7 @@ const organizationFields = [
   { name: 'position', label: 'Position / Role (Optional)', type: 'text' as const, placeholder: 'e.g. Secretary, Member, Chapter Lead' },
   { name: 'startDate', label: 'Start Date (Optional)', type: 'text' as const, placeholder: 'e.g. Jan 2022' },
   { name: 'endDate', label: 'End Date (Optional)', type: 'text' as const, placeholder: 'e.g. Dec 2023' },
-  { name: 'description', label: 'Description (Optional)', type: 'textarea' as const, placeholder: 'What you did in this organization...' },
+  { name: 'description', label: 'Description (Optional)', type: 'textarea' as const, placeholder: 'What you did in this organization…' },
   { name: 'link', label: 'Organization Link (Optional)', type: 'text' as const, placeholder: 'https://...' },
 ] as const;
 
@@ -106,27 +109,16 @@ const AdminOrganizations = () => {
         }
       />
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search organizations..."
-            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+      <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search organizations…" />
 
       <div className="grid gap-3">
         {isLoading && !isDialogOpen ? (
           [1, 2, 3].map(i => (
-            <div key={i} className="h-24 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-24')} />
           ))
         ) : filtered.length > 0 ? (
           filtered.map((org) => (
-            <Card key={org.id} className="bg-card border-border hover:border-accent/30 hover:bg-secondary transition-all group rounded-lg overflow-hidden shadow-sm">
+            <Card key={org.id} className={cn(ROW_CARD, 'overflow-hidden')}>
               <CardContent className="p-0">
                 <div className="flex">
                   {org.image && (
@@ -137,34 +129,22 @@ const AdminOrganizations = () => {
                   <div className="flex-1 p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
                       {!org.image && (
-                        <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2 flex-shrink-0">
+                        <div className={ICON_TILE}>
                           <Building2 className="w-5 h-5" />
                         </div>
                       )}
                       <div className="min-w-0">
-                        <h3 className="font-medium text-foreground text-sm">{org.name}</h3>
-                        {org.position && <p className="text-xs text-accent font-medium">{org.position}</p>}
+                        <h3 className={ROW_TITLE}>{org.name}</h3>
+                        {org.position && <p className="text-[13px] font-medium text-accent">{org.position}</p>}
                         {(org.startDate || org.endDate) && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Calendar className="w-3 h-3" />
+                          <p className={cn(ROW_META, 'mt-0.5 flex items-center gap-1.5')}>
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                             {org.startDate}{org.isCurrent ? ' – Present' : org.endDate ? ` – ${org.endDate}` : ''}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {org.link && (
-                        <a href={org.link} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-all">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(org)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(org.id, org.name)} className="h-9 w-9 hover:bg-danger-subtle text-danger-fg hover:text-danger-fg">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <RowActions label="organization" href={org.link} onEdit={() => handleEdit(org)} onDelete={() => handleDelete(org.id, org.name)} />
                   </div>
                 </div>
               </CardContent>
@@ -173,8 +153,9 @@ const AdminOrganizations = () => {
         ) : (
           <EmptyState
             icon={Building2}
-            title="No organizations found"
+            title={searchQuery ? 'No organizations found' : 'No organizations yet'}
             description={searchQuery ? 'Try a different search.' : 'Add professional associations and memberships.'}
+            action={!searchQuery ? { label: 'Add organization', onClick: handleAdd } : undefined}
           />
         )}
       </div>

@@ -297,10 +297,9 @@ const AdminCertificates = () => {
               <Button
                 variant="outline"
                 onClick={handleSeed}
-                disabled={isSeedLoading}
-                className="border-accent/30 hover:bg-accent/10 px-5 text-accent hover:text-accent"
+                loading={isSeedLoading}
               >
-                <DatabaseZap className="w-4 h-4 mr-2" /> {isSeedLoading ? 'Seeding...' : 'Seed Default Data'}
+                <DatabaseZap aria-hidden="true" /> Seed default data
               </Button>
             )}
             <Button
@@ -383,7 +382,7 @@ const AdminCertificates = () => {
           <div className="col-span-full">
             <EmptyState
               icon={Award}
-              title="No certificates added"
+              title="No certificates yet"
               description="Showcase your verified achievements and professional learning."
               action={{ label: 'Add certificate', onClick: () => openSheet(null) }}
             />
@@ -408,7 +407,7 @@ const AdminCertificates = () => {
               <form id="cert-sheet-form" onSubmit={form.handleSubmit(handleSheetSave)} className="px-6 py-4 space-y-4">
                 <FormField control={form.control} name="issuer_logo" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground font-medium text-sm">Issuer Logo</FormLabel>
+                    <FormLabel>Issuer logo</FormLabel>
                     <FormControl>
                       <LogoUpload value={field.value as string} onChange={field.onChange} />
                     </FormControl>
@@ -417,9 +416,9 @@ const AdminCertificates = () => {
 
                 <FormField control={form.control} name="title" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground font-medium text-sm">Certificate Title *</FormLabel>
+                    <FormLabel>Certificate title *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Python Essential Training" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
+                      <Input {...field} placeholder="e.g. Python Essential Training" />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
@@ -428,18 +427,18 @@ const AdminCertificates = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <FormField control={form.control} name="issuer" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground font-medium text-sm">Issuer *</FormLabel>
+                      <FormLabel>Issuer *</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="LinkedIn Learning" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
+                        <Input {...field} placeholder="LinkedIn Learning" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="platform" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground font-medium text-sm">Platform *</FormLabel>
+                      <FormLabel>Platform *</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="LinkedIn Learning" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
+                        <Input {...field} placeholder="LinkedIn Learning" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -448,9 +447,9 @@ const AdminCertificates = () => {
 
                 <FormField control={form.control} name="issue_date" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground font-medium text-sm">Issue Date *</FormLabel>
+                    <FormLabel>Issue date *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="YYYY-MM-DD" className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
+                      <Input {...field} placeholder="YYYY-MM-DD" />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
@@ -459,10 +458,10 @@ const AdminCertificates = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <FormField control={form.control} name="category" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground font-medium text-sm">Category</FormLabel>
+                      <FormLabel>Category</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value as string}>
                         <FormControl>
-                          <SelectTrigger className="bg-secondary border-border text-foreground focus:border-accent/50">
+                          <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -474,10 +473,10 @@ const AdminCertificates = () => {
                   )} />
                   <FormField control={form.control} name="type" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-muted-foreground font-medium text-sm">Type</FormLabel>
+                      <FormLabel>Type</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value as string}>
                         <FormControl>
-                          <SelectTrigger className="bg-secondary border-border text-foreground focus:border-accent/50">
+                          <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -491,9 +490,9 @@ const AdminCertificates = () => {
 
                 <FormField control={form.control} name="credential_url" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground font-medium text-sm">Credential URL</FormLabel>
+                    <FormLabel>Credential URL</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://..." className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
+                      <Input {...field} placeholder="https://..." />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
@@ -501,21 +500,21 @@ const AdminCertificates = () => {
 
                 <FormField control={form.control} name="pdf_document_link" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground font-medium text-sm">PDF Link (Optional)</FormLabel>
+                    <FormLabel>PDF link (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="/Certificates/..." className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50" />
+                      <Input {...field} placeholder="/Certificates/..." />
                     </FormControl>
                   </FormItem>
                 )} />
 
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-muted-foreground font-medium text-sm">Description</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
                         placeholder="What did you learn?"
-                        className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-accent/50 min-h-[90px]"
+                        className="min-h-[90px]"
                       />
                     </FormControl>
                   </FormItem>
@@ -530,7 +529,7 @@ const AdminCertificates = () => {
                         className="border-border data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                       />
                     </FormControl>
-                    <FormLabel className="text-sm font-medium text-muted-foreground cursor-pointer !mt-0">
+                    <FormLabel className="!mt-0 cursor-pointer font-sans text-sm normal-case tracking-normal text-fg-2">
                       Feature this certificate
                     </FormLabel>
                   </FormItem>

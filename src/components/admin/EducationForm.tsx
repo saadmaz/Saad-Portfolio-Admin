@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { cn } from '@/shared/lib/utils';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -83,7 +84,7 @@ function AdminSelect({
   return (
     <Select value={value ?? ''} onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger
-        className={`text-foreground focus:ring-accent focus:border-accent/40 ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
+        className={cn(disabled && 'cursor-not-allowed opacity-40', className)}
       >
         <SelectValue placeholder={placeholder ?? 'Select…'} />
       </SelectTrigger>
@@ -267,7 +268,7 @@ function MediaSubForm({
         <div className="p-4 space-y-3 border-t border-border">
           {/* Media type toggle */}
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Media Type</label>
+            <label className="label">Media Type</label>
             <div className="flex gap-1.5 flex-wrap">
               {MEDIA_TYPES.map(t => (
                 <button
@@ -288,7 +289,7 @@ function MediaSubForm({
 
           {/* URL or upload */}
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">
+            <label className="label">
               {showUpload ? 'Upload or URL' : 'URL'}
             </label>
             {showUpload && (
@@ -318,7 +319,7 @@ function MediaSubForm({
           {/* Caption (required) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[12px] uppercase font-medium text-muted-foreground">
+              <label className="label">
                 Caption <span className="text-danger">*</span>
               </label>
               <span className={`text-[12px] ${charColor(captionLen, 120)}`}>{captionLen}/120</span>
@@ -333,7 +334,7 @@ function MediaSubForm({
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Description</label>
+            <label className="label">Description</label>
             <Textarea
               value={item.media_description ?? ''}
               onChange={(e) => onUpdate({ ...item, media_description: e.target.value })}
@@ -345,7 +346,7 @@ function MediaSubForm({
 
           {/* Date */}
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Date (when was this from?)</label>
+            <label className="label">Date (when was this from?)</label>
             <MonthYearPicker
               month={item.media_date_month}
               year={item.media_date_year}
@@ -399,7 +400,7 @@ function AwardSubForm({
       {!collapsed && (
         <div className="p-4 space-y-3 border-t border-border">
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Award Title *</label>
+            <label className="label">Award Title *</label>
             <Input
               value={award.award_title}
               onChange={(e) => onUpdate({ ...award, award_title: e.target.value })}
@@ -408,7 +409,7 @@ function AwardSubForm({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Issuer</label>
+            <label className="label">Issuer</label>
             <Input
               value={award.award_issuer ?? ''}
               onChange={(e) => onUpdate({ ...award, award_issuer: e.target.value })}
@@ -417,7 +418,7 @@ function AwardSubForm({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Date Received</label>
+            <label className="label">Date Received</label>
             <MonthYearPicker
               month={award.award_date_month}
               year={award.award_date_year}
@@ -428,11 +429,11 @@ function AwardSubForm({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase font-medium text-muted-foreground">Description</label>
+            <label className="label">Description</label>
             <Textarea
               value={award.award_description ?? ''}
               onChange={(e) => onUpdate({ ...award, award_description: e.target.value })}
-              placeholder="Brief description of the award..."
+              placeholder="Brief description of the award…"
               rows={2}
               className="text-sm resize-none"
             />
@@ -660,7 +661,7 @@ const EducationForm = () => {
   if (isLoading && isEditMode) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-7 h-7 rounded-full border-4 border-accent border-t-transparent animate-spin" />
+        <div className="h-5 w-5 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-label="Loading" />
       </div>
     );
   }
@@ -670,7 +671,7 @@ const EducationForm = () => {
       <FormHeader
         backTo="/education"
         title={isEditMode ? 'Edit education' : 'New education'}
-        subtitle={isEditMode ? 'Education · Editing' : 'Education · Draft'}
+        subtitle={isEditMode ? 'Education · Editing' : 'Education · New'}
       />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -687,7 +688,7 @@ const EducationForm = () => {
             <div className="p-5 space-y-4 border-t border-border">
               {/* School Logo */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">
+                <label className="label">
                   School Logo <span className="text-danger">*</span>
                 </label>
                 <LogoUpload
@@ -704,7 +705,7 @@ const EducationForm = () => {
 
               {/* School Name */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">
+                <label className="label">
                   School / Institution Name <span className="text-danger">*</span>
                 </label>
                 <Input
@@ -719,7 +720,7 @@ const EducationForm = () => {
 
               {/* School Website URL */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">
+                <label className="label">
                   School Website URL
                 </label>
                 <div className="relative">
@@ -741,7 +742,7 @@ const EducationForm = () => {
         {/* ── Section 2: Degree & Field ──────────────────────────────── */}
         <div className="border border-border rounded-xl overflow-hidden">
           <SectionHeader
-            title="Degree & Field"
+            title="Degree & field"
             icon={<Star className="w-4 h-4" />}
             collapsed={collapsed.degree}
             onToggle={() => toggle('degree')}
@@ -749,7 +750,7 @@ const EducationForm = () => {
           {!collapsed.degree && (
             <div className="p-5 space-y-4 border-t border-border">
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Degree</label>
+                <label className="label">Degree</label>
                 <Input
                   {...register('degree')}
                   placeholder="e.g. Bachelor of Science"
@@ -764,7 +765,7 @@ const EducationForm = () => {
                 </p>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Field of Study</label>
+                <label className="label">Field of Study</label>
                 <Input
                   {...register('field_of_study')}
                   placeholder="e.g. Computer Science"
@@ -787,7 +788,7 @@ const EducationForm = () => {
             <div className="p-5 space-y-4 border-t border-border">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">Start Date</label>
+                  <label className="label">Start Date</label>
                   <MonthYearPicker
                     month={startMonth}
                     year={startYear}
@@ -798,7 +799,7 @@ const EducationForm = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">
+                  <label className="label">
                     End Date {isCurrent && <span className="text-muted-foreground font-normal">(or expected)</span>}
                   </label>
                   <MonthYearPicker
@@ -842,7 +843,7 @@ const EducationForm = () => {
         {/* ── Section 4: Academic Details ────────────────────────────── */}
         <div className="border border-border rounded-xl overflow-hidden">
           <SectionHeader
-            title="Academic Details"
+            title="Academic details"
             icon={<Sparkles className="w-4 h-4" />}
             collapsed={collapsed.academic}
             onToggle={() => toggle('academic')}
@@ -852,7 +853,7 @@ const EducationForm = () => {
               {/* Grade */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">Grade</label>
+                  <label className="label">Grade</label>
                   <span className={`text-[12px] ${charColor(grade.length, 80)}`}>{grade.length}/80</span>
                 </div>
                 <Input
@@ -883,7 +884,7 @@ const EducationForm = () => {
               {/* Activities */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">Activities & Societies</label>
+                  <label className="label">Activities & Societies</label>
                   <span className={`text-[12px] ${charColor(activities.length, 500)}`}>{activities.length}/500</span>
                 </div>
                 <Textarea
@@ -902,7 +903,7 @@ const EducationForm = () => {
               {/* Description */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[12px] uppercase font-medium text-muted-foreground">Description</label>
+                  <label className="label">Description</label>
                   <span className={`text-[12px] ${charColor(description.length, 1000)}`}>{description.length}/1,000</span>
                 </div>
                 <Textarea
@@ -962,8 +963,8 @@ const EducationForm = () => {
                   placeholder="Type a skill and press Enter…"
                   className="text-sm h-9"
                 />
-                <Button type="button" variant="outline" size="sm" className="h-9" onClick={addSkill}>
-                  <Plus className="w-3.5 h-3.5" />
+                <Button type="button" variant="outline" size="sm" className="h-9 w-9 px-0" onClick={addSkill} aria-label="Add skill">
+                  <Plus aria-hidden="true" />
                 </Button>
               </div>
 
@@ -980,7 +981,7 @@ const EducationForm = () => {
         {/* ── Section 6: Linked Projects ─────────────────────────────── */}
         <div className="border border-border rounded-xl overflow-hidden">
           <SectionHeader
-            title="Linked Projects"
+            title="Linked projects"
             icon={<Globe className="w-4 h-4" />}
             collapsed={collapsed.projects}
             onToggle={() => toggle('projects')}
@@ -1046,7 +1047,7 @@ const EducationForm = () => {
         {/* ── Section 7: Honors & Awards ─────────────────────────────── */}
         <div className="border border-border rounded-xl overflow-hidden">
           <SectionHeader
-            title="Honors & Awards"
+            title="Honors & awards"
             icon={<Trophy className="w-4 h-4" />}
             collapsed={collapsed.awards}
             onToggle={() => toggle('awards')}
@@ -1165,7 +1166,7 @@ const EducationForm = () => {
 
               {/* Display order */}
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase font-medium text-muted-foreground">Display Order</label>
+                <label className="label">Display Order</label>
                 <Input
                   {...register('display_order')}
                   type="number"
@@ -1180,16 +1181,8 @@ const EducationForm = () => {
 
         {/* ── Footer actions ─────────────────────────────────────────── */}
         <div className="flex items-center gap-3 pt-2">
-          <Button
-            type="submit"
-            disabled={isLoading}
-           
-          >
-            {isLoading ? (
-              <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin mr-2" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
+          <Button type="submit" loading={isLoading}>
+            <Save />
             {isEditMode ? 'Save changes' : 'Add education'}
           </Button>
           <Button

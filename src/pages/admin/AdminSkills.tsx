@@ -14,7 +14,6 @@ import {
   Calendar,
   Plus,
   Trash2,
-  GripVertical,
   ChevronDown,
   ChevronUp,
   Save,
@@ -106,16 +105,14 @@ const AdminSkills = () => {
             <Button
               variant="outline"
               onClick={addCategory}
-              className="border-border hover:bg-secondary px-4 py-2 text-muted-foreground hover:text-foreground"
             >
               <Plus className="w-4 h-4" /> Add category
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving}
-              className="hover:scale-105"
+              loading={isSaving}
             >
-              <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save all changes'}
+              <Save className="w-4 h-4" /> Save all changes
             </Button>
           </>
         }
@@ -123,12 +120,11 @@ const AdminSkills = () => {
 
       <div className="space-y-8">
         {isLoading ? (
-          <div className="h-40 bg-secondary border border-border rounded-xl animate-pulse" />
+          <div className="h-40 w-full animate-pulse rounded-xl border border-border-subtle bg-card" />
         ) : skillSets.map((set, catIndex) => (
-          <Card key={catIndex} interactive className="overflow-hidden rounded-xl group/card">
+          <Card key={catIndex} className="overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-border bg-secondary">
               <div className="flex items-center gap-4 flex-1">
-                <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-accent transition-colors" />
                 <div className="relative group/input flex-1 max-w-sm">
                   <Input
                     value={set.category}
@@ -138,19 +134,19 @@ const AdminSkills = () => {
                       setSkillSets(next);
                     }}
                     className="bg-transparent border-none text-xl font-medium p-0 h-auto focus-visible:ring-0 text-foreground placeholder:text-muted-foreground"
-                    placeholder="Enter category name..."
+                    placeholder="Enter category name…"
                   />
                   <div className="absolute bottom-0 left-0 w-0 h-[1px] bg-accent transition-all duration-300 group-focus-within/input:w-full" />
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'up')} disabled={catIndex === 0}>
+                <Button variant="ghost" size="icon-sm" aria-label="Move category up" className="hover:bg-card" onClick={() => moveCategory(catIndex, 'up')} disabled={catIndex === 0}>
                   <ChevronUp className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-card text-muted-foreground hover:text-foreground" onClick={() => moveCategory(catIndex, 'down')} disabled={catIndex === skillSets.length - 1}>
+                <Button variant="ghost" size="icon-sm" aria-label="Move category down" className="hover:bg-card" onClick={() => moveCategory(catIndex, 'down')} disabled={catIndex === skillSets.length - 1}>
                   <ChevronDown className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-danger-fg hover:text-danger-fg hover:bg-danger-subtle ml-1" onClick={() => removeCategory(catIndex)}>
+                <Button variant="destructive-ghost" size="icon-sm" aria-label="Delete category" className="ml-1" onClick={() => removeCategory(catIndex)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -167,10 +163,12 @@ const AdminSkills = () => {
                         placeholder="Skill name"
                       />
                       <button
+                        type="button"
                         onClick={() => removeSkill(catIndex, skillIndex)}
-                        className="opacity-0 group-hover:opacity-100 text-danger-fg hover:text-danger-fg/80 transition-all active:scale-90"
+                        aria-label={`Remove ${skill.name || 'skill'}`}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-danger-fg transition-[opacity,background-color] hover:bg-danger-subtle focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:opacity-0 md:group-hover:opacity-100"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </div>
                     <div className="grid grid-cols-2 gap-3 pt-2">

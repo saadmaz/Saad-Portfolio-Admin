@@ -4,12 +4,15 @@ import { CommonService } from '@/shared/services/common-service';
 import { TestScore } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, ClipboardList, Edit2, Trash2 } from 'lucide-react';
+import { Plus, ClipboardList } from 'lucide-react';
+import SearchInput from '@/components/admin/SearchInput';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
 
@@ -26,7 +29,7 @@ const testScoreFields = [
   { name: 'testName', label: 'Test Name', type: 'text' as const, placeholder: 'e.g. SAT, IELTS, GRE, TOEFL' },
   { name: 'score', label: 'Score', type: 'text' as const, placeholder: 'e.g. 1550 / 1600, 8.5 / 9.0' },
   { name: 'date', label: 'Date Taken (Optional)', type: 'text' as const, placeholder: 'e.g. March 2022' },
-  { name: 'description', label: 'Description / Notes (Optional)', type: 'textarea' as const, placeholder: 'Additional context about the score...' },
+  { name: 'description', label: 'Description / Notes (Optional)', type: 'textarea' as const, placeholder: 'Additional context about the score…' },
 ] as const;
 
 const AdminTestScores = () => {
@@ -98,51 +101,33 @@ const AdminTestScores = () => {
         }
       />
 
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search test scores..."
-            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors hover:border-border-strong focus:border-accent focus:outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+      <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search test scores…" />
 
       <div className="grid gap-3">
         {isLoading && !isDialogOpen ? (
           [1, 2, 3].map(i => (
-            <div key={i} className="h-20 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-20')} />
           ))
         ) : filtered.length > 0 ? (
           filtered.map((score) => (
-            <Card key={score.id} className="bg-card border-border hover:border-accent/30 hover:bg-secondary transition-all group rounded-lg shadow-sm">
+            <Card key={score.id} className={ROW_CARD}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary border border-border-subtle flex items-center justify-center text-fg-2 flex-shrink-0">
+                    <div className={ICON_TILE}>
                       <ClipboardList className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-foreground text-sm">
+                      <h3 className={ROW_TITLE}>
                         {score.testName}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-medium">
+                      <p className={ROW_META}>
                         Score: <span className="text-accent font-medium tabular">{score.score}</span>
                         {score.date ? ` · ${score.date}` : ''}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(score)} className="h-9 w-9 hover:bg-secondary text-muted-foreground hover:text-foreground">
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(score.id, score.testName)} className="h-9 w-9 hover:bg-danger-subtle text-danger hover:text-danger-fg">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <RowActions label="score" onEdit={() => handleEdit(score)} onDelete={() => handleDelete(score.id, score.testName)} />
                 </div>
               </CardContent>
             </Card>
@@ -150,8 +135,9 @@ const AdminTestScores = () => {
         ) : (
           <EmptyState
             icon={ClipboardList}
-            title="No test scores found"
+            title={searchQuery ? 'No test scores found' : 'No test scores yet'}
             description={searchQuery ? 'Try a different search.' : 'Add your standardized test results.'}
+            action={!searchQuery ? { label: 'Add score', onClick: handleAdd } : undefined}
           />
         )}
       </div>

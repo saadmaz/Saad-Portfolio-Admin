@@ -4,12 +4,15 @@ import { CommonService } from '@/shared/services/common-service';
 import { Hackathon } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trophy, Edit2, Trash2, Calendar, Layout } from 'lucide-react';
+import { Plus, Trophy, Calendar, Layout } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import RowActions from '@/components/admin/RowActions';
+import { ROW_CARD, ICON_TILE, ROW_TITLE, ROW_META, SKELETON } from '@/components/admin/listStyles';
 import { toast } from "sonner";
 import AdminEntityDialog from '@/components/admin/AdminEntityDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
-import { plural } from '@/shared/lib/utils';
+import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import { LightboxModal } from '@/components/ui/LightboxModal';
 import * as z from 'zod';
@@ -108,18 +111,18 @@ const AdminHackathons = () => {
       <div className="grid gap-4">
         {isLoading && !isDialogOpen ? (
           [1, 2].map(i => (
-            <div key={i} className="h-32 w-full bg-secondary border border-border rounded-lg animate-pulse" />
+            <div key={i} className={cn(SKELETON, 'h-32')} />
           ))
         ) : hackathons.length > 0 ? (
           hackathons.map((hack) => (
-            <Card key={hack.id} interactive className="bg-card border-border overflow-hidden group shadow-sm">
+            <Card key={hack.id} className={cn(ROW_CARD, 'overflow-hidden')}>
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row">
                   {hack.image && (
                     <button
                       type="button"
                       onClick={() => setLightbox(hack.image!)}
-                      className="md:w-40 h-32 md:h-auto flex-shrink-0 overflow-hidden focus:outline-none"
+                      aria-label="View image" className="md:w-40 h-32 md:h-auto shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                     >
                       <img
                         src={hack.image}
@@ -128,42 +131,35 @@ const AdminHackathons = () => {
                       />
                     </button>
                   )}
-                  <div className="flex-1 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
+                  <div className="flex flex-1 flex-col justify-between gap-4 p-5 md:flex-row md:items-center">
+                    <div className="flex min-w-0 items-start gap-4">
                       {!hack.image && (
-                        <div className="w-12 h-12 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground flex-shrink-0">
-                          <Trophy className="w-6 h-6" />
+                        <div className={ICON_TILE}>
+                          <Trophy />
                         </div>
                       )}
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-foreground text-lg">{hack.name}</h3>
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <h3 className={ROW_TITLE}>{hack.name}</h3>
                           {hack.achievement && (
-                            <span className="px-2 py-0.5 rounded bg-accent/15 text-accent text-[12px] font-medium uppercase tracking-wider border border-accent/20">
+                            <Badge variant="accent">
                               {hack.achievement}
-                            </span>
+                            </Badge>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><Layout className="w-3.5 h-3.5 text-accent" /> {hack.role}</span>
-                          <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-accent" /> {hack.date}</span>
+                        <div className={cn(ROW_META, 'flex flex-wrap gap-x-4 gap-y-1')}>
+                          <span className="flex items-center gap-1.5"><Layout className="h-3.5 w-3.5" aria-hidden="true" /> {hack.role}</span>
+                          <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" aria-hidden="true" /> {hack.date}</span>
                           <span className="text-accent font-medium">{hack.organizer}</span>
                         </div>
                         {hack.projectTitle && (
-                          <p className="mt-2 text-sm text-muted-foreground font-medium">
+                          <p className={cn(ROW_META, 'mt-1.5')}>
                             Project: <span className="text-foreground font-medium">{hack.projectTitle}</span>
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 self-end md:self-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(hack)} className="hover:bg-secondary text-muted-foreground hover:text-foreground">
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(hack.id, hack.name)} className="hover:bg-danger-subtle text-danger-fg hover:text-danger">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <RowActions label="hackathon" reveal className="self-end md:self-center" onEdit={() => handleEdit(hack)} onDelete={() => handleDelete(hack.id, hack.name)} />
                   </div>
                 </div>
               </CardContent>
@@ -172,7 +168,7 @@ const AdminHackathons = () => {
         ) : (
           <EmptyState
             icon={Trophy}
-            title="No hackathons listed"
+            title="No hackathons yet"
             description="Add your hackathon experiences to highlight your rapid prototyping skills."
             action={{ label: 'Add hackathon', onClick: handleAdd }}
           />
