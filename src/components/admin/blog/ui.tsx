@@ -48,7 +48,7 @@ export function CharCount({ value, max, min }: { value: string; max: number; min
 }
 
 const control =
-  'w-full rounded-lg border border-border bg-secondary px-3 py-2 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-accent aria-[invalid=true]:border-danger';
+  'w-full rounded-lg border border-border-subtle bg-background/60 px-3 py-2 text-[13px] text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.2)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground/70 hover:border-border focus:border-accent/60 focus:ring-4 focus:ring-accent/10 aria-[invalid=true]:border-danger';
 
 interface FieldBase {
   label: string;
@@ -124,9 +124,12 @@ export function SelectField({
 
 export function PanelSection({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-3.5">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="label text-[11px] text-fg-2">{title}</h3>
+        <h3 className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-fg-2">
+          <span className="h-3 w-0.5 rounded-full bg-accent/70" aria-hidden="true" />
+          {title}
+        </h3>
         {action}
       </div>
       {children}

@@ -32,15 +32,15 @@ const Btn = ({ onClick, active, label, disabled, children }: { onClick: () => vo
     onMouseDown={(e) => e.preventDefault()} // keep the editor selection
     onClick={onClick}
     className={cn(
-      'flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-40 [&_svg]:h-[15px] [&_svg]:w-[15px]',
-      active ? 'bg-accent/15 text-accent' : 'text-fg-2 hover:bg-secondary hover:text-foreground',
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-30 [&_svg]:h-[15px] [&_svg]:w-[15px]',
+      active ? 'bg-accent/15 text-accent shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.25)]' : 'text-fg-2 hover:bg-surface-3 hover:text-foreground',
     )}
   >
     {children}
   </button>
 );
 
-const Sep = () => <span className="mx-0.5 h-5 w-px shrink-0 bg-border" aria-hidden="true" />;
+const Sep = () => <span className="mx-1 h-5 w-px shrink-0 bg-border-subtle" aria-hidden="true" />;
 
 /** Every block the Insert menu can add, as editor content. */
 const INSERTS: { group: string; items: { label: string; icon: React.ComponentType<{ className?: string }>; content: Record<string, unknown> }[] }[] = [
@@ -168,7 +168,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   };
 
   return (
-    <div className="sticky top-[76px] z-20 flex flex-wrap items-center gap-0.5 border-b border-border-subtle bg-card/95 p-1.5 backdrop-blur" role="toolbar" aria-label="Formatting">
+    <div className="sticky top-[calc(var(--editor-top,72px)+10px)] z-20 mx-3 flex flex-wrap items-center gap-0.5 rounded-xl border border-border bg-popover/85 p-1 shadow-lg backdrop-blur-xl sm:mx-6" role="toolbar" aria-label="Formatting">
       <Btn label="Undo" onClick={() => chain().undo().run()} disabled={!s.canUndo}><Undo /></Btn>
       <Btn label="Redo" onClick={() => chain().redo().run()} disabled={!s.canRedo}><Redo /></Btn>
       <Sep />
@@ -180,7 +180,7 @@ function Toolbar({ editor }: { editor: Editor }) {
           if (v === 'p') chain().setParagraph().run();
           else chain().toggleHeading({ level: Number(v[1]) as 1 | 2 | 3 | 4 }).run();
         }}
-        className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground"
+        className="h-8 cursor-pointer rounded-lg border border-transparent bg-transparent px-2 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3 focus:border-accent/50 focus:outline-none"
       >
         <option value="p">Paragraph</option>
         <option value="h1">Heading 1</option>
@@ -213,7 +213,7 @@ function Toolbar({ editor }: { editor: Editor }) {
           aria-label="Code language"
           value={s.language}
           onChange={(e) => chain().updateAttributes('codeBlock', { language: e.target.value }).run()}
-          className="h-8 rounded-md border border-border bg-background px-2 font-mono text-[12px] text-foreground"
+          className="h-8 rounded-lg border border-border-subtle bg-background/60 px-2 font-mono text-[12px] text-foreground focus:border-accent/50 focus:outline-none"
         >
           {CODE_LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
@@ -221,7 +221,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       {s.table && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className="flex h-8 items-center gap-1 rounded-md bg-accent/15 px-2 text-[12px] text-accent"><TableIcon className="h-3.5 w-3.5" /> Table</button>
+            <button type="button" className="flex h-8 items-center gap-1 rounded-lg bg-accent/15 px-2 text-[12px] text-accent"><TableIcon className="h-3.5 w-3.5" /> Table</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onSelect={() => chain().addRowBefore().run()}>Add row above</DropdownMenuItem>
@@ -241,7 +241,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       <div className="ml-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" size="xs" variant="secondary"><Plus aria-hidden="true" /> Insert</Button>
+            <Button type="button" size="xs" variant="secondary" className="h-8 rounded-lg bg-surface-3 hover:bg-accent hover:text-accent-foreground"><Plus aria-hidden="true" /> Insert</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-[70vh] w-56 overflow-y-auto">
             {INSERTS.map((g, gi) => (
@@ -289,7 +289,7 @@ export function BlogEditor({
     content,
     editorProps: {
       attributes: {
-        class: 'article-editor prose-editor min-h-[480px] px-6 py-5 focus:outline-none',
+        class: 'article-editor prose-editor mx-auto min-h-[520px] max-w-[780px] px-5 pb-16 pt-8 focus:outline-none sm:px-10',
         'aria-label': 'Article content',
         role: 'textbox',
         'aria-multiline': 'true',
@@ -313,9 +313,9 @@ export function BlogEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
-  if (!editor) return <div className="min-h-[520px] animate-pulse rounded-xl border border-border-subtle bg-card" />;
+  if (!editor) return <div className="mx-6 my-6 min-h-[520px] animate-pulse rounded-xl bg-secondary/40" />;
   return (
-    <div className={cn('rounded-xl border bg-card', invalid ? 'border-danger/60' : 'border-border-subtle')}>
+    <div className={cn('relative pt-4', invalid && 'rounded-xl ring-1 ring-danger/60')}>
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>

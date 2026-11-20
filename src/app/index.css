@@ -148,6 +148,16 @@
 
 /* Article editor: the blocks below mirror the site's article styles. */
 .article-editor > * + * { @apply mt-3; }
+.ProseMirror.article-editor { font-size: 16.5px; }
+.ProseMirror.article-editor p,
+.ProseMirror.article-editor ul,
+.ProseMirror.article-editor ol { line-height: 1.8; color: hsl(var(--foreground) / 0.82); }
+.ProseMirror.article-editor h1 { font-size: 1.85em; letter-spacing: -0.03em; @apply mt-10 font-semibold; }
+.ProseMirror.article-editor h2 { font-size: 1.5em; letter-spacing: -0.025em; @apply mb-3 mt-9 font-semibold; }
+.ProseMirror.article-editor h3 { font-size: 1.22em; letter-spacing: -0.015em; @apply mt-7 font-semibold; }
+.ProseMirror.article-editor blockquote { @apply my-5 border-l-[3px] py-0.5 pl-5 text-[1.05em] italic; }
+.ProseMirror.article-editor hr { @apply my-9; }
+.article-editor.ProseMirror > p.is-editor-empty:first-child::before { @apply text-muted-foreground/60; }
 .ProseMirror h1 { @apply mb-2 mt-7 text-2xl font-medium tracking-tight text-foreground; }
 .ProseMirror h4 { @apply mb-1 mt-4 text-base font-medium text-foreground; }
 .ProseMirror li > p { @apply mb-1; }
