@@ -146,6 +146,38 @@
   @apply pointer-events-none float-left h-0 text-muted-foreground;
 }
 
+/* Article editor: the blocks below mirror the site's article styles. */
+.article-editor > * + * { @apply mt-3; }
+.ProseMirror h1 { @apply mb-2 mt-7 text-2xl font-medium tracking-tight text-foreground; }
+.ProseMirror h4 { @apply mb-1 mt-4 text-base font-medium text-foreground; }
+.ProseMirror li > p { @apply mb-1; }
+.ProseMirror ul ul, .ProseMirror ol ol, .ProseMirror ul ol, .ProseMirror ol ul { @apply mb-1 mt-1; }
+.ProseMirror code { @apply rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[0.85em] text-accent; }
+.ProseMirror pre { @apply my-3 overflow-x-auto rounded-xl border border-border bg-black/40 p-4 font-mono text-[13px] leading-relaxed text-foreground; }
+.ProseMirror pre code { @apply bg-transparent p-0 text-inherit; }
+.ProseMirror .hljs-keyword, .ProseMirror .hljs-built_in, .ProseMirror .hljs-selector-tag { color: #ff8259; }
+.ProseMirror .hljs-string, .ProseMirror .hljs-attr { color: #86efac; }
+.ProseMirror .hljs-number, .ProseMirror .hljs-literal, .ProseMirror .hljs-type { color: #93c5fd; }
+.ProseMirror .hljs-comment { @apply italic text-muted-foreground; }
+.ProseMirror .hljs-title, .ProseMirror .hljs-function { color: #fde047; }
+.ProseMirror table { @apply my-4 w-full border-collapse overflow-hidden text-[13px]; table-layout: fixed; }
+.ProseMirror th, .ProseMirror td { @apply relative border border-border px-2.5 py-1.5 align-top; }
+.ProseMirror th { @apply bg-secondary font-medium text-foreground; }
+.ProseMirror td p, .ProseMirror th p { @apply mb-0; }
+.ProseMirror .selectedCell::after { content: ''; @apply pointer-events-none absolute inset-0 bg-accent/15; }
+.ProseMirror hr[data-variant="dots"] { @apply border-dashed; }
+.ProseMirror hr.ProseMirror-selectednode { @apply border-accent; }
+.ProseMirror .columns-edit [data-node-view-content-react] > div,
+.ProseMirror .columns-edit > div { @apply contents; }
+.ProseMirror .columns-edit [data-column] { @apply min-h-[3rem] rounded-lg border border-dashed border-border-subtle p-2; }
+.ProseMirror .callout-edit { border-left-color: hsl(var(--info)); }
+.ProseMirror .callout-tip { border-left-color: hsl(var(--success)); }
+.ProseMirror .callout-note { border-left-color: hsl(var(--muted-foreground)); }
+.ProseMirror .callout-warning { border-left-color: hsl(var(--warning)); }
+.ProseMirror .callout-danger { border-left-color: hsl(var(--danger)); }
+.ProseMirror [data-node-view-wrapper] p { @apply text-fg-2; }
+.ProseMirror .prose-preview table { @apply my-0; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

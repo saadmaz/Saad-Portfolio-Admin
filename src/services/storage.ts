@@ -44,7 +44,15 @@ export const uploadImage = (
   folder: string = "uploads",
   onProgress?: (pct: number) => void,
   nameHint?: string
-): Promise<string> => {
+): Promise<string> => uploadImageWithPath(file, folder, onProgress, nameHint).then((r) => r.url);
+
+/** Same as uploadImage, also returning the storage path (needed to delete the object later). */
+export const uploadImageWithPath = (
+  file: File,
+  folder: string = "uploads",
+  onProgress?: (pct: number) => void,
+  nameHint?: string
+): Promise<{ url: string; path: string }> => {
   return new Promise((resolve, reject) => {
     const filename  = storageName(file, nameHint);
     const storageRef = ref(storage, `${folder}/${filename}`);
@@ -88,7 +96,7 @@ export const uploadImage = (
         clearTimeout(timer);
         try {
           const url = await getDownloadURL(task.snapshot.ref);
-          resolve(url);
+          resolve({ url, path: task.snapshot.ref.fullPath });
         } catch (err) {
           reject(err);
         }

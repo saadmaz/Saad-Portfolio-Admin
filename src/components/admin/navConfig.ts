@@ -2,6 +2,7 @@ import {
   LayoutGrid, Inbox, History, Code2, BookOpen, Briefcase, Zap, BadgeCheck,
   CalendarDays, GraduationCap, Award, Globe, Quote, Trophy, Newspaper,
   BookMarked, FileText, Lightbulb, Building2, Heart, Leaf, ClipboardList,
+  UserRound, Layers, CornerDownRight, FileQuestion, BarChart3, Settings2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -53,6 +54,17 @@ export const navGroups: NavGroup[] = [
       { icon: Zap,          label: 'Skills & tools', path: '/skills',       countKey: 'skills' },
       { icon: BadgeCheck,   label: 'Certifications', path: '/certificates', countKey: 'certificates' },
       { icon: CalendarDays, label: 'Events',         path: '/events',       countKey: 'events' },
+    ],
+  },
+  {
+    label: 'Publishing',
+    items: [
+      { icon: UserRound,       label: 'Authors',       path: '/authors' },
+      { icon: Layers,          label: 'Series',        path: '/series' },
+      { icon: BarChart3,       label: 'Analytics',     path: '/analytics' },
+      { icon: CornerDownRight, label: 'Redirects',     path: '/redirects' },
+      { icon: FileQuestion,    label: '404 monitor',   path: '/not-found' },
+      { icon: Settings2,       label: 'Blog settings', path: '/blog-settings' },
     ],
   },
   {
