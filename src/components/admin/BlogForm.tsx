@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  AlertTriangle, Archive, CalendarClock, CheckCircle2, ChevronDown, CloudOff, Eye, ExternalLink, FileClock, Loader2,
-  RotateCcw, Save, Send, Trash2, Undo2, Wand2,
+  AlertTriangle, Archive, BookOpenText, CalendarClock, ChevronDown, Clock, CloudOff, Eye, ExternalLink, FileClock,
+  History, Image as ImageIcon, Link2, Loader2, Quote, RotateCcw, Rocket, Save, Search, Send, Settings2,
+  Share2, Trash2, Undo2, Wand2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -55,15 +56,39 @@ const NEW_DRAFT: Draft = {
 };
 
 const TABS = [
-  { id: 'publish', label: 'Publish' },
-  { id: 'details', label: 'Details' },
-  { id: 'media', label: 'Images' },
-  { id: 'seo', label: 'SEO' },
-  { id: 'social', label: 'Social' },
-  { id: 'related', label: 'Related' },
-  { id: 'sources', label: 'Sources' },
-  { id: 'history', label: 'History' },
+  { id: 'publish', label: 'Publish', icon: Rocket },
+  { id: 'details', label: 'Details', icon: Settings2 },
+  { id: 'media', label: 'Images', icon: ImageIcon },
+  { id: 'seo', label: 'SEO', icon: Search },
+  { id: 'social', label: 'Social', icon: Share2 },
+  { id: 'related', label: 'Related', icon: Link2 },
+  { id: 'sources', label: 'Sources', icon: Quote },
+  { id: 'history', label: 'History', icon: History },
 ] as const;
+
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+/** Borderless textarea that grows with its content, for the title and lede. */
+function GrowingTextarea({
+  className, onEnter, ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { onEnter?: () => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [props.value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      onKeyDown={onEnter ? (e) => { if (e.key === 'Enter') { e.preventDefault(); onEnter(); } } : undefined}
+      className={cn('block w-full resize-none overflow-hidden border-none bg-transparent p-0 focus:outline-none', className)}
+      {...props}
+    />
+  );
+}
 type TabId = (typeof TABS)[number]['id'];
 
 const STATUS_BADGE: Record<ArticleStatus, 'neutral' | 'info' | 'accent' | 'success' | 'warning'> = {
@@ -72,18 +97,28 @@ const STATUS_BADGE: Record<ArticleStatus, 'neutral' | 'info' | 'accent' | 'succe
 
 function SaveIndicator({ state, at, live }: { state: SaveState; at: Date | null; live: boolean }) {
   const time = at?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const dot = (tone: string, pulse = false) => (
+    <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+      {pulse && <span className={cn('absolute inline-flex h-full w-full animate-ping rounded-full opacity-60', tone)} />}
+      <span className={cn('relative inline-flex h-1.5 w-1.5 rounded-full', tone)} />
+    </span>
+  );
   const map: Record<SaveState, { icon: React.ReactNode; text: string; tone: string }> = {
-    idle: { icon: null, text: live ? 'No pending changes' : 'All changes saved', tone: 'text-muted-foreground' },
-    dirty: { icon: null, text: 'Unsaved changes', tone: 'text-muted-foreground' },
-    saving: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, text: 'Saving…', tone: 'text-muted-foreground' },
-    saved: { icon: <CheckCircle2 className="h-3.5 w-3.5" />, text: live ? `Changes saved privately${time ? ` · ${time}` : ''}` : `Saved${time ? ` · ${time}` : ''}`, tone: 'text-success-fg' },
-    error: { icon: <AlertTriangle className="h-3.5 w-3.5" />, text: 'Couldn’t save, retrying', tone: 'text-danger-fg' },
-    offline: { icon: <CloudOff className="h-3.5 w-3.5" />, text: 'Offline: saved on this device', tone: 'text-warning-fg' },
-    conflict: { icon: <AlertTriangle className="h-3.5 w-3.5" />, text: 'Edited elsewhere', tone: 'text-danger-fg' },
+    idle: { icon: dot('bg-muted-foreground/60'), text: live ? 'No pending changes' : 'All changes saved', tone: 'text-muted-foreground' },
+    dirty: { icon: dot('bg-warning'), text: 'Unsaved changes', tone: 'text-fg-2' },
+    saving: { icon: <Loader2 className="h-3 w-3 animate-spin" />, text: 'Saving…', tone: 'text-fg-2' },
+    saved: { icon: dot('bg-success'), text: live ? `Saved privately${time ? ` · ${time}` : ''}` : `Saved${time ? ` · ${time}` : ''}`, tone: 'text-fg-2' },
+    error: { icon: <AlertTriangle className="h-3 w-3" />, text: 'Couldn’t save, retrying', tone: 'text-danger-fg' },
+    offline: { icon: <CloudOff className="h-3 w-3" />, text: 'Offline: saved on this device', tone: 'text-warning-fg' },
+    conflict: { icon: dot('bg-danger', true), text: 'Edited elsewhere', tone: 'text-danger-fg' },
   };
   const m = map[state];
   return (
-    <span role="status" aria-live="polite" className={cn('flex items-center gap-1.5 whitespace-nowrap text-[12px]', m.tone)}>
+    <span
+      role="status"
+      aria-live="polite"
+      className={cn('flex h-8 items-center gap-2 whitespace-nowrap rounded-full border border-border-subtle bg-card/60 px-3 text-[12px] tabular', m.tone)}
+    >
       {m.icon}
       {m.text}
     </span>
@@ -368,18 +403,44 @@ const BlogForm = () => {
     await flush();
   }, [flush]);
 
+  // The toolbar and sidebar stick just below the top bar, whose height changes when its actions wrap.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    const root = rootRef.current;
+    if (!header || !root) return;
+    const sync = () => root.style.setProperty('--editor-top', `${header.offsetHeight}px`);
+    sync();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(sync);
+    ro.observe(header);
+    return () => ro.disconnect();
+  }, [loaded]);
+
   if (!loaded)
     return (
-      <div className="space-y-4">
-        <div className="h-12 w-1/2 animate-pulse rounded-xl bg-card" />
-        <div className="h-[600px] animate-pulse rounded-xl border border-border-subtle bg-card" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-4">
+          <div className="h-10 w-1/3 animate-pulse rounded-full bg-card" />
+          <div className="h-[640px] animate-pulse rounded-2xl border border-border-subtle bg-card" />
+        </div>
+        <div className="hidden h-[520px] animate-pulse rounded-2xl border border-border-subtle bg-card xl:block" />
       </div>
     );
 
+  const hasSeoProblems = seo.checks.some((c) => c.status === 'fail');
+
   return (
-    <div className="animate-in fade-in pb-20 duration-300">
+    <div ref={rootRef} className="relative isolate animate-in fade-in pb-24 duration-300 [--editor-top:72px]">
+      {/* Ambient ember glow behind the canvas. */}
+      <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-[8%] -z-10 h-[420px] w-[70%] rounded-full bg-accent/[0.06] blur-[120px]" />
+
       {/* ── Top bar ─────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 -mx-1 mb-5 bg-background px-1 py-3">
+      <div
+        ref={headerRef}
+        className="sticky top-0 z-30 -mx-4 mb-6 border-b border-border-subtle/70 bg-background/70 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:-mx-8 md:px-8"
+      >
         <FormHeader
           backTo="/blogs"
           title={draft.title?.trim() || (postId ? 'Untitled post' : 'New post')}
@@ -393,66 +454,79 @@ const BlogForm = () => {
           actions={
             <>
               <SaveIndicator state={autosave.state} at={autosave.lastSavedAt} live={live} />
-              <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground lg:flex" title="SEO completeness">
-                <SeoScore score={seo.score} size={30} />
-              </span>
-              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)} disabled={!postId && !draft.title?.trim()}>
+              <span className="mx-1 hidden h-6 w-px bg-border-subtle sm:block" aria-hidden="true" />
+              <Button type="button" variant="ghost" size="xs" onClick={() => setPreviewOpen(true)} disabled={!postId && !draft.title?.trim()}>
                 <Eye aria-hidden="true" /> Preview
               </Button>
-              <Button type="button" variant="outline" size="sm" onClick={manualSave} loading={busy === 'save'} disabled={!!busy}>
+              <Button type="button" variant="outline" size="xs" onClick={manualSave} loading={busy === 'save'} disabled={!!busy}>
                 <Save aria-hidden="true" /> Save
               </Button>
-              <Button type="button" size="sm" onClick={() => runTransition(primary.action)} loading={busy === primary.action} disabled={!!busy}>
-                <primary.icon aria-hidden="true" /> {primary.label}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon-sm" aria-label="More actions" disabled={!!busy}>
-                    <ChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {status !== 'in_review' && status !== 'published' && status !== 'scheduled' && (
-                    <DropdownMenuItem onSelect={() => runTransition('review')} className="gap-2.5"><FileClock className="h-4 w-4" /> Mark ready for review</DropdownMenuItem>
-                  )}
-                  {status === 'scheduled' && (
-                    <DropdownMenuItem onSelect={() => runTransition('unschedule')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Cancel schedule</DropdownMenuItem>
-                  )}
-                  {status === 'scheduled' && (
-                    <DropdownMenuItem onSelect={() => runTransition('publish')} className="gap-2.5"><Send className="h-4 w-4" /> Publish now instead</DropdownMenuItem>
-                  )}
-                  {status === 'published' && (
-                    <DropdownMenuItem onSelect={() => runTransition('unpublish')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Unpublish (back to draft)</DropdownMenuItem>
-                  )}
-                  {pendingLive && status === 'published' && (
-                    <DropdownMenuItem onSelect={discardPending} className="gap-2.5"><RotateCcw className="h-4 w-4" /> Discard unpublished changes</DropdownMenuItem>
-                  )}
-                  {(status === 'in_review' || status === 'archived') && (
-                    <DropdownMenuItem onSelect={() => runTransition('draft')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Move to drafts</DropdownMenuItem>
-                  )}
-                  {status !== 'archived' && postId && (
-                    <DropdownMenuItem onSelect={() => runTransition('archive')} className="gap-2.5"><Archive className="h-4 w-4" /> Archive</DropdownMenuItem>
-                  )}
-                  {server?.published && (
-                    <DropdownMenuItem asChild className="gap-2.5">
-                      <a href={`${SITE_URL}/blog/${server.slug}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4" /> View on site</a>
-                    </DropdownMenuItem>
-                  )}
-                  {postId && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="gap-2.5 text-danger-fg focus:text-danger-fg"><Trash2 className="h-4 w-4" /> Delete post</DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center rounded-full shadow-ember">
+                <Button
+                  type="button"
+                  size="xs"
+                  className="rounded-r-none pr-3.5"
+                  onClick={() => runTransition(primary.action)}
+                  loading={busy === primary.action}
+                  disabled={!!busy}
+                >
+                  <primary.icon aria-hidden="true" /> {primary.label}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      size="xs"
+                      aria-label="More actions"
+                      disabled={!!busy}
+                      className="rounded-l-none border-l border-accent-foreground/15 px-2"
+                    >
+                      <ChevronDown />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {status !== 'in_review' && status !== 'published' && status !== 'scheduled' && (
+                      <DropdownMenuItem onSelect={() => runTransition('review')} className="gap-2.5"><FileClock className="h-4 w-4" /> Mark ready for review</DropdownMenuItem>
+                    )}
+                    {status === 'scheduled' && (
+                      <DropdownMenuItem onSelect={() => runTransition('unschedule')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Cancel schedule</DropdownMenuItem>
+                    )}
+                    {status === 'scheduled' && (
+                      <DropdownMenuItem onSelect={() => runTransition('publish')} className="gap-2.5"><Send className="h-4 w-4" /> Publish now instead</DropdownMenuItem>
+                    )}
+                    {status === 'published' && (
+                      <DropdownMenuItem onSelect={() => runTransition('unpublish')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Unpublish (back to draft)</DropdownMenuItem>
+                    )}
+                    {pendingLive && status === 'published' && (
+                      <DropdownMenuItem onSelect={discardPending} className="gap-2.5"><RotateCcw className="h-4 w-4" /> Discard unpublished changes</DropdownMenuItem>
+                    )}
+                    {(status === 'in_review' || status === 'archived') && (
+                      <DropdownMenuItem onSelect={() => runTransition('draft')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Move to drafts</DropdownMenuItem>
+                    )}
+                    {status !== 'archived' && postId && (
+                      <DropdownMenuItem onSelect={() => runTransition('archive')} className="gap-2.5"><Archive className="h-4 w-4" /> Archive</DropdownMenuItem>
+                    )}
+                    {server?.published && (
+                      <DropdownMenuItem asChild className="gap-2.5">
+                        <a href={`${SITE_URL}/blog/${server.slug}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4" /> View on site</a>
+                      </DropdownMenuItem>
+                    )}
+                    {postId && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="gap-2.5 text-danger-fg focus:text-danger-fg"><Trash2 className="h-4 w-4" /> Delete post</DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </>
           }
         />
       </div>
 
       {recovery && (
-        <div role="status" className={cn('mb-5 flex flex-wrap items-center gap-3 rounded-xl border p-3 text-[13px]', recovery.kind === 'local' ? 'border-warning/40 bg-warning-subtle text-warning-fg' : 'border-info/40 bg-info-subtle text-info-fg')}>
+        <div role="status" className={cn('mb-5 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 text-[13px]', recovery.kind === 'local' ? 'border-warning/30 bg-warning-subtle/70 text-warning-fg' : 'border-info/30 bg-info-subtle/70 text-info-fg')}>
           <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="flex-1">
             {recovery.kind === 'local'
@@ -471,32 +545,23 @@ const BlogForm = () => {
       )}
 
       {issues.length > 0 && (
-        <div role="alert" className="mb-5 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-[13px] text-danger-fg">
+        <div role="alert" className="mb-5 rounded-2xl border border-danger/30 bg-danger-subtle/70 px-4 py-3 text-[13px] text-danger-fg">
           <p className="font-medium">Fix these before going live:</p>
           <ul className="mt-1 list-disc pl-5">{issues.map((i) => <li key={i}>{i}</li>)}</ul>
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-        {/* ── Main content ─────────────────────────────────────── */}
-        <div className="min-w-0 space-y-5">
-          <div className="space-y-4 rounded-xl border border-border-subtle bg-card p-5">
-            <input
-              value={draft.title ?? ''}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Post title"
-              aria-label="Title"
-              className="w-full border-none bg-transparent text-[26px] font-medium leading-snug tracking-[-0.02em] text-foreground placeholder:text-foreground/25 focus:outline-none"
-            />
-            <input
-              value={draft.subtitle ?? ''}
-              onChange={(e) => update({ subtitle: e.target.value })}
-              placeholder="Subtitle (optional)"
-              aria-label="Subtitle"
-              className="w-full border-none bg-transparent text-[16px] text-fg-2 placeholder:text-foreground/25 focus:outline-none"
-            />
-            <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle pt-3">
-              <label htmlFor="slug" className="font-mono text-[12px] text-muted-foreground">/blog/</label>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        {/* ── Writing canvas ───────────────────────────────────── */}
+        <article className="relative min-w-0 rounded-2xl border border-border-subtle bg-card shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.04),0_30px_60px_-30px_rgb(0_0_0/0.7)]">
+          <div aria-hidden="true" className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+
+          <header className="mx-auto max-w-[780px] px-5 pb-2 pt-9 sm:px-10 sm:pt-14">
+            {/* URL */}
+            <div className="group flex w-fit max-w-full items-center rounded-full border border-border-subtle bg-background/50 py-1 pl-3 pr-1 font-mono text-[12px] transition-colors focus-within:border-accent/50 hover:border-border">
+              <label htmlFor="slug" className="shrink-0 text-muted-foreground">
+                <span className="hidden sm:inline">{SITE_HOST}</span>/blog/
+              </label>
               <input
                 id="slug"
                 value={draft.slug ?? ''}
@@ -505,44 +570,93 @@ const BlogForm = () => {
                   update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') });
                 }}
                 placeholder="url-slug"
-                className="min-w-[160px] flex-1 border-none bg-transparent font-mono text-[12px] text-fg-2 focus:outline-none"
+                size={Math.max(10, (draft.slug ?? '').length + 1)}
+                className="min-w-0 max-w-[420px] border-none bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
               />
-              <Button type="button" size="xs" variant="ghost" onClick={() => { setSlugTouched(true); update({ slug: slugify(draft.title) }); }}>
-                <Wand2 aria-hidden="true" /> From title
-              </Button>
+              <button
+                type="button"
+                title="Generate the URL from the title"
+                onClick={() => { setSlugTouched(true); update({ slug: slugify(draft.title) }); }}
+                className="ml-1 flex h-6 shrink-0 items-center gap-1 rounded-full px-2 font-sans text-[11.5px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <Wand2 className="h-3 w-3" aria-hidden="true" /> From title
+              </button>
             </div>
             {slugChangedWhileLive && (
-              <p className="flex gap-1.5 text-[12px] text-warning-fg">
+              <p className="mt-2.5 flex gap-1.5 text-[12px] text-warning-fg">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 This article is live at /blog/{server?.publishedSlug ?? server?.slug}. Changing the URL adds a permanent (301) redirect from the old one when you update.
               </p>
             )}
-            <div className="space-y-1.5 border-t border-border-subtle pt-3">
-              <div className="flex items-center justify-between">
-                <label htmlFor="excerpt" className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Excerpt<span className="text-accent"> *</span></label>
+
+            <GrowingTextarea
+              value={draft.title ?? ''}
+              onChange={(e) => setTitle(e.target.value.replace(/\n/g, ' '))}
+              onEnter={() => document.getElementById('post-subtitle')?.focus()}
+              placeholder="Post title"
+              aria-label="Title"
+              className="mt-7 text-[32px] font-semibold leading-[1.12] tracking-[-0.035em] text-foreground placeholder:text-foreground/20 sm:text-[42px]"
+            />
+            <GrowingTextarea
+              id="post-subtitle"
+              value={draft.subtitle ?? ''}
+              onChange={(e) => update({ subtitle: e.target.value.replace(/\n/g, ' ') })}
+              onEnter={() => document.getElementById('excerpt')?.focus()}
+              placeholder="Add a subtitle…"
+              aria-label="Subtitle"
+              className="mt-3 text-[18px] leading-relaxed tracking-[-0.01em] text-fg-2 placeholder:text-foreground/20 sm:text-[20px]"
+            />
+
+            {/* Excerpt */}
+            <div className="mt-7 rounded-xl border border-border-subtle bg-background/40 transition-colors focus-within:border-accent/40">
+              <div className="flex items-center justify-between gap-2 px-4 pt-3">
+                <label htmlFor="excerpt" className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  <BookOpenText className="h-3.5 w-3.5" aria-hidden="true" />
+                  Excerpt<span className="text-accent">*</span>
+                </label>
                 <CharCount value={draft.excerpt ?? ''} max={300} min={10} />
               </div>
-              <textarea
+              <GrowingTextarea
                 id="excerpt"
-                rows={2}
                 value={draft.excerpt ?? ''}
                 onChange={(e) => update({ excerpt: e.target.value })}
                 placeholder="A one or two sentence summary for listings, feeds and search."
-                className="w-full resize-y rounded-lg border border-border bg-secondary px-3 py-2 text-[13px] text-foreground outline-none focus:border-accent"
+                className="min-h-[52px] px-4 pb-3 pt-1.5 text-[14px] leading-relaxed text-foreground/90 placeholder:text-muted-foreground/70"
               />
             </div>
-          </div>
+          </header>
 
           <BlogEditor key={editorKey} content={editorContent} onChange={onEditorChange} />
-          <p className="text-[12px] text-muted-foreground">
-            {wordCount.toLocaleString()} words · {draft.readingTimeMinutes ?? 1} min read · Autosaves {live ? 'privately ' : ''}a few seconds after you stop typing.
-          </p>
-        </div>
+
+          <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 rounded-b-2xl border-t border-border-subtle bg-background/30 px-5 py-3 text-[12px] text-muted-foreground sm:px-6">
+            <span className="flex items-center gap-3 tabular">
+              <span><span className="text-foreground">{wordCount.toLocaleString()}</span> words</span>
+              <span className="h-3 w-px bg-border" aria-hidden="true" />
+              <span className="flex items-center gap-1"><Clock className="h-3 w-3" aria-hidden="true" /> {draft.readingTimeMinutes ?? 1} min read</span>
+            </span>
+            <span>Autosaves {live ? 'privately ' : ''}a few seconds after you stop typing</span>
+          </footer>
+        </article>
 
         {/* ── Settings panels ─────────────────────────────────── */}
-        <aside className="min-w-0 xl:sticky xl:top-[84px] xl:self-start">
-          <div className="overflow-hidden rounded-xl border border-border-subtle bg-card">
-            <div role="tablist" aria-label="Post settings" className="no-scrollbar flex overflow-x-auto border-b border-border-subtle px-1">
+        <aside className="min-w-0 xl:sticky xl:top-[calc(var(--editor-top)+16px)] xl:self-start">
+          <div className="rounded-2xl border border-border-subtle bg-card shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.04)]">
+            <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4">
+              <div>
+                <p className="label text-[11px]">Post settings</p>
+                <p className="mt-1 text-[13px] text-fg-2">{TABS.find((t) => t.id === tab)?.label}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTab('seo')}
+                title="SEO completeness"
+                className="flex items-center gap-2 rounded-full border border-border-subtle py-1 pl-3 pr-1 text-[12px] text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+              >
+                SEO
+                <SeoScore score={seo.score} size={28} />
+              </button>
+            </div>
+            <div role="tablist" aria-label="Post settings" className="mx-3 grid grid-cols-4 gap-1 rounded-xl border border-border-subtle bg-background/50 p-1">
               {TABS.map((t) => (
                 <button
                   key={t.id}
@@ -552,15 +666,26 @@ const BlogForm = () => {
                   aria-selected={tab === t.id}
                   aria-controls={`panel-${t.id}`}
                   onClick={() => setTab(t.id)}
-                  className={cn('relative whitespace-nowrap px-3 py-2.5 text-[13px] transition-colors', tab === t.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                  className={cn(
+                    'relative flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-[11.5px] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    tab === t.id
+                      ? 'bg-secondary text-foreground shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.06),0_1px_2px_rgb(0_0_0/0.3)]'
+                      : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground',
+                  )}
                 >
+                  <t.icon className={cn('h-4 w-4', tab === t.id && 'text-accent')} aria-hidden="true" />
                   {t.label}
-                  {t.id === 'seo' && seo.checks.some((c) => c.status === 'fail') && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-danger align-middle" aria-label="has problems" />}
-                  {tab === t.id && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                  {t.id === 'seo' && hasSeoProblems && <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-danger" aria-label="has problems" />}
                 </button>
               ))}
             </div>
-            <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="max-h-none overflow-y-auto p-4 xl:max-h-[calc(100vh-170px)]">
+            <div
+              key={tab}
+              id={`panel-${tab}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${tab}`}
+              className="animate-in fade-in slide-in-from-bottom-1 max-h-none overflow-y-auto px-4 pb-5 pt-5 duration-200 xl:max-h-[calc(100vh-var(--editor-top)-200px)]"
+            >
               {tab === 'publish' && <PublishPanel post={{ ...server, ...draft }} status={status} update={update} schedule={schedule} setSchedule={setSchedule} wordCount={wordCount} wpm={wpm} />}
               {tab === 'details' && <DetailsPanel post={draft} update={update} authors={authors} series={series} settings={settings} knownTags={knownTags} knownCategories={knownCategories} />}
               {tab === 'media' && (
