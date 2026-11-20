@@ -12,6 +12,14 @@ access. Moving this to its own repo/subdomain does not change that access
 control; it only stops the admin UI, forms, and rich-text editor from being
 shipped in the public bundle.
 
+## Blog CMS
+
+The blog editor (statuses, autosave, revisions, scheduling, secure previews,
+authors, series, redirects, 404 monitor, analytics, SEO and social previews) is
+described in **[docs/blog-cms.md](docs/blog-cms.md)**. Previews, rebuilds and
+the scheduler button call the public site's `/api/admin`, which needs the site's
+CMS environment variables (see `Saad-Portfolio/docs/editorial-cms.md`).
+
 ## Setup
 
 ```bash

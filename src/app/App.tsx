@@ -14,6 +14,12 @@ const AdminProjects = React.lazy(() => import("@/pages/admin/AdminProjects"));
 const ProjectForm = React.lazy(() => import("@/components/admin/ProjectForm"));
 const AdminBlogs = React.lazy(() => import("@/pages/admin/AdminBlogs"));
 const BlogForm = React.lazy(() => import("@/components/admin/BlogForm"));
+const AdminAuthors = React.lazy(() => import("@/pages/admin/AdminAuthors"));
+const AdminSeries = React.lazy(() => import("@/pages/admin/AdminSeries"));
+const AdminRedirects = React.lazy(() => import("@/pages/admin/AdminRedirects"));
+const AdminNotFound = React.lazy(() => import("@/pages/admin/AdminNotFound"));
+const AdminBlogAnalytics = React.lazy(() => import("@/pages/admin/AdminBlogAnalytics"));
+const AdminBlogSettings = React.lazy(() => import("@/pages/admin/AdminBlogSettings"));
 const AdminExperience = React.lazy(() => import("@/pages/admin/AdminExperience"));
 const ExperienceForm = React.lazy(() => import("@/components/admin/ExperienceForm"));
 const AdminSkills = React.lazy(() => import("@/pages/admin/AdminSkills"));
@@ -81,6 +87,12 @@ const App = () => (
                   <Route path="blogs" element={<AdminBlogs />} />
                   <Route path="blogs/new" element={<BlogForm />} />
                   <Route path="blogs/:id" element={<BlogForm />} />
+                  <Route path="authors" element={<AdminAuthors />} />
+                  <Route path="series" element={<AdminSeries />} />
+                  <Route path="redirects" element={<AdminRedirects />} />
+                  <Route path="not-found" element={<AdminNotFound />} />
+                  <Route path="analytics" element={<AdminBlogAnalytics />} />
+                  <Route path="blog-settings" element={<AdminBlogSettings />} />
                   <Route path="experience" element={<AdminExperience />} />
                   <Route path="experience/new" element={<ExperienceForm />} />
                   <Route path="experience/:id" element={<ExperienceForm />} />

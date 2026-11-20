@@ -1,841 +1,634 @@
-import React, { useEffect, useState, useCallback, useRef, KeyboardEvent } from 'react';
-import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Placeholder from '@tiptap/extension-placeholder';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Save, Trash2, Send, Eye,
-  Bold, Italic, Heading2, Heading3,
-  List, ListOrdered, Code, Minus, Link as LinkIcon,
-  Undo, Redo, Quote, Image as ImageIcon, Tag as TagIcon,
-  Search, Globe, Link2, Copy, Check,
-  X, Loader2, Sparkles,
+  AlertTriangle, Archive, CalendarClock, CheckCircle2, ChevronDown, CloudOff, Eye, ExternalLink, FileClock, Loader2,
+  RotateCcw, Save, Send, Trash2, Undo2, Wand2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import FormHeader from './FormHeader';
-import { BlogService } from '@/services/blog-service';
-import { uploadImage } from '@/services/storage';
 import { toast } from 'sonner';
-import ImageUpload from './ImageUpload';
-import { PromptBlock } from './PromptBlock';
-import { cn } from '@/shared/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import FormHeader from './FormHeader';
 import { SITE_URL } from './navConfig';
+import { cn } from '@/shared/lib/utils';
+import {
+  DEFAULT_WPM, SNAPSHOT_FIELDS, STATUS_LABELS, countWords, readingTimeMinutes, slugify, statusOf, zonedWallTimeToUtc,
+} from '@/shared/lib/article';
+import { analyzeSeo } from '@/shared/lib/seo-analysis';
+import { BlogService, ConflictError, PublishValidationError, type Transition } from '@/services/blog-service';
+import { AuthorService, SeriesService, SettingsService } from '@/services/blog-collections';
+import { SiteApi, rebuildMessage } from '@/services/site-api';
+import type { ArticleStatus, Author, BlogPost, BlogPostDoc, BlogSeries, BlogSettings } from '@/types/blog';
+import { BlogEditor, type EditorChange } from './blog/editor/BlogEditor';
+import { initialEditorContent } from './blog/editor/content';
+import { localBackup, useAutosave, type SaveState } from './blog/useAutosave';
+import { ImageAssetField } from './blog/ImageAssetField';
+import { PreviewDialog } from './blog/PreviewDialog';
+import { SocialPreviews } from './blog/previews';
+import { PublishPanel } from './blog/panels/PublishPanel';
+import { DetailsPanel } from './blog/panels/DetailsPanel';
+import { SeoPanel, SeoScore } from './blog/panels/SeoPanel';
+import { RelatedPanel, SourcesPanel } from './blog/panels/RelatedSourcesPanels';
+import { HistoryPanel } from './blog/panels/HistoryPanel';
+import { scheduleFromPost, type ScheduleValue } from './blog/schedule';
+import { CharCount, PanelSection } from './blog/ui';
 
-/* ── Schema ──────────────────────────────────────────────────────── */
-const blogSchema = z.object({
-  title:               z.string().min(5,  'Title must be at least 5 characters'),
-  slug:                z.string().min(3,  'Slug required')
-                         .regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers and hyphens only'),
-  excerpt:             z.string().min(10, 'Excerpt required').max(300, 'Max 300 characters'),
-  metaDescription:     z.string().max(160, 'Max 160 characters').optional().or(z.literal('')),
-  keywords:            z.string().optional().or(z.literal('')),
-  category:            z.string().min(1,  'Category required'),
-  tags:                z.array(z.string()).default([]),
-  author:              z.string().min(2,  'Author required'),
-  image:               z.string().optional().or(z.literal('')),
-  published:           z.boolean().default(false),
-  unlisted:            z.boolean().default(false),
-  scheduledDate:       z.string().optional().or(z.literal('')),
-});
+/** Fields the editor owns. featuredOrder is managed from the list page, so it's left out. */
+const EDITABLE = SNAPSHOT_FIELDS.filter((f) => f !== 'featuredOrder');
+type Draft = Partial<BlogPost>;
 
-type BlogFormValues = z.infer<typeof blogSchema>;
+const pickEditable = (post: Partial<BlogPost>): Draft => {
+  const out: Record<string, unknown> = {};
+  for (const f of EDITABLE) if (post[f] !== undefined && post[f] !== null) out[f] = post[f];
+  return out as Draft;
+};
 
-/* ── Helpers ──────────────────────────────────────────────────────── */
-const toSlug = (s: string) =>
-  s.toLowerCase().trim()
-   .replace(/[^\w\s-]/g, '')
-   .replace(/[\s_]+/g, '-')
-   .replace(/^-+|-+$/g, '');
+const NEW_DRAFT: Draft = {
+  title: '', subtitle: '', slug: '', excerpt: '', content: '', category: '', tags: [], author: 'Saad Mazhar',
+  tableOfContents: true, reactionsEnabled: true, socialShareEnabled: true, unlisted: false, featured: false,
+};
 
-/* ── Shared label style ──────────────────────────────────────────── */
-const Label = ({ children }: { children: React.ReactNode }) => (
-  <span className="block text-[12px] font-medium uppercase tracking-widest mb-1.5"
-        style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-    {children}
-  </span>
-);
+const TABS = [
+  { id: 'publish', label: 'Publish' },
+  { id: 'details', label: 'Details' },
+  { id: 'media', label: 'Images' },
+  { id: 'seo', label: 'SEO' },
+  { id: 'social', label: 'Social' },
+  { id: 'related', label: 'Related' },
+  { id: 'sources', label: 'Sources' },
+  { id: 'history', label: 'History' },
+] as const;
+type TabId = (typeof TABS)[number]['id'];
 
-/* ── Field wrapper ───────────────────────────────────────────────── */
-const Field = ({ children, error }: { children: React.ReactNode; error?: string }) => (
-  <div className="space-y-1">
-    {children}
-    {error && <p className="text-xs text-danger mt-1">{error}</p>}
-  </div>
-);
+const STATUS_BADGE: Record<ArticleStatus, 'neutral' | 'info' | 'accent' | 'success' | 'warning'> = {
+  draft: 'neutral', in_review: 'info', scheduled: 'accent', published: 'success', archived: 'warning',
+};
 
-/* ── Styled native input ─────────────────────────────────────────── */
-const StyledInput = React.forwardRef<
-  HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement>
->((props, ref) => (
-  <input
-    ref={ref}
-    {...props}
-    className={cn(
-      'w-full px-3 py-2.5 rounded-lg text-[13px] outline-none transition-all duration-150',
-      props.className,
-    )}
-    style={{
-      background: 'hsl(var(--secondary))',
-      border:     '1px solid hsl(var(--border))',
-      color:      'hsl(var(--foreground) / 0.85)',
-      ...props.style,
-    }}
-    onFocus={e => { e.currentTarget.style.borderColor = 'hsl(var(--accent) / 0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px hsl(var(--accent) / 0.08)'; }}
-    onBlur={e  => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.boxShadow = 'none'; }}
-  />
-));
-StyledInput.displayName = 'StyledInput';
+function SaveIndicator({ state, at, live }: { state: SaveState; at: Date | null; live: boolean }) {
+  const time = at?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const map: Record<SaveState, { icon: React.ReactNode; text: string; tone: string }> = {
+    idle: { icon: null, text: live ? 'No pending changes' : 'All changes saved', tone: 'text-muted-foreground' },
+    dirty: { icon: null, text: 'Unsaved changes', tone: 'text-muted-foreground' },
+    saving: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, text: 'Saving…', tone: 'text-muted-foreground' },
+    saved: { icon: <CheckCircle2 className="h-3.5 w-3.5" />, text: live ? `Changes saved privately${time ? ` · ${time}` : ''}` : `Saved${time ? ` · ${time}` : ''}`, tone: 'text-success-fg' },
+    error: { icon: <AlertTriangle className="h-3.5 w-3.5" />, text: 'Couldn’t save, retrying', tone: 'text-danger-fg' },
+    offline: { icon: <CloudOff className="h-3.5 w-3.5" />, text: 'Offline: saved on this device', tone: 'text-warning-fg' },
+    conflict: { icon: <AlertTriangle className="h-3.5 w-3.5" />, text: 'Edited elsewhere', tone: 'text-danger-fg' },
+  };
+  const m = map[state];
+  return (
+    <span role="status" aria-live="polite" className={cn('flex items-center gap-1.5 whitespace-nowrap text-[12px]', m.tone)}>
+      {m.icon}
+      {m.text}
+    </span>
+  );
+}
 
-/* ── Styled textarea ─────────────────────────────────────────────── */
-const StyledTextarea = React.forwardRef<
-  HTMLTextAreaElement,
-  React.TextareaHTMLAttributes<HTMLTextAreaElement>
->((props, ref) => (
-  <textarea
-    ref={ref}
-    {...props}
-    className={cn('w-full px-3 py-2.5 rounded-lg text-[13px] outline-none transition-all duration-150 resize-none', props.className)}
-    style={{
-      background: 'hsl(var(--secondary))',
-      border:     '1px solid hsl(var(--border))',
-      color:      'hsl(var(--foreground) / 0.85)',
-      ...props.style,
-    }}
-    onFocus={e => { e.currentTarget.style.borderColor = 'hsl(var(--accent) / 0.45)'; e.currentTarget.style.boxShadow = '0 0 0 3px hsl(var(--accent) / 0.08)'; }}
-    onBlur={e  => { e.currentTarget.style.borderColor = 'hsl(var(--border))'; e.currentTarget.style.boxShadow = 'none'; }}
-  />
-));
-StyledTextarea.displayName = 'StyledTextarea';
-
-/* ── Section card ────────────────────────────────────────────────── */
-const SectionCard = ({
-  title,
-  icon: Icon,
-  children,
-}: { title: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) => (
-  <div className="overflow-hidden rounded-xl border border-border-subtle bg-card">
-    <div className="flex items-center gap-2 border-b border-border-subtle px-4 py-3">
-      <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-      <h2 className="text-sm font-medium text-foreground">{title}</h2>
-    </div>
-    <div className="p-4 space-y-4">{children}</div>
-  </div>
-);
-
-/* ── Rich-text toolbar button ────────────────────────────────────── */
-const ToolbarBtn = ({
-  onClick, active, title, children,
-}: { onClick: () => void; active?: boolean; title: string; children: React.ReactNode }) => (
-  <button
-    type="button"
-    title={title}
-    onClick={onClick}
-    className={cn(
-      'p-1.5 rounded-md transition-all flex items-center justify-center',
-      active ? 'bg-accent/20 text-accent' : 'hover:bg-secondary',
-    )}
-    style={{ color: active ? 'hsl(var(--accent-hover))' : 'hsl(var(--foreground) / 0.60)' }}
-  >
-    {children}
-  </button>
-);
-
-/* ── Divider ─────────────────────────────────────────────────────── */
-const ToolbarDivider = () => (
-  <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'hsl(var(--border))' }} />
-);
-
-/* ═══════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-═══════════════════════════════════════════════════════════════════ */
 const BlogForm = () => {
-  const { id }       = useParams();
-  const navigate     = useNavigate();
-  const isEditMode   = !!id && id !== 'new';
+  const { id: routeId } = useParams();
+  const navigate = useNavigate();
+  const initialId = routeId && routeId !== 'new' ? routeId : null;
 
-  const [isLoading,          setIsLoading]          = useState(false);
-  const [contentError,       setContentError]        = useState('');
-  const [tagInput,           setTagInput]            = useState('');
-  const [publishMode,        setPublishMode]         = useState<'draft' | 'publish' | 'schedule'>('draft');
-  const [showDeleteModal,    setShowDeleteModal]      = useState(false);
-  const [excerptLen,         setExcerptLen]          = useState(0);
-  const [metaLen,            setMetaLen]             = useState(0);
-  const [isInlineUploading,  setIsInlineUploading]   = useState(false);
-  const inlineImageInputRef = useRef<HTMLInputElement>(null);
+  const [postId, setPostId] = useState<string | null>(initialId);
+  const [loaded, setLoaded] = useState(false);
+  const [server, setServer] = useState<BlogPostDoc | null>(null);
+  const [draft, setDraft] = useState<Draft>(NEW_DRAFT);
+  const [revision, setRevision] = useState(0);
+  const [editorContent, setEditorContent] = useState<string | Record<string, unknown>>('');
+  const [editorKey, setEditorKey] = useState(0);
+  const [text, setText] = useState('');
+  const [tab, setTab] = useState<TabId>('publish');
+  const [schedule, setSchedule] = useState<ScheduleValue>(() => scheduleFromPost({}));
+  const [busy, setBusy] = useState<Transition | 'save' | 'delete' | null>(null);
+  const [conflict, setConflict] = useState<BlogPostDoc | null>(null);
+  const [recovery, setRecovery] = useState<{ kind: 'local' | 'autosave'; data: Draft; at: string } | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [historyKey, setHistoryKey] = useState(0);
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [issues, setIssues] = useState<string[]>([]);
 
-  const {
-    register, handleSubmit, reset, setValue, watch,
-    formState: { errors },
-  } = useForm<BlogFormValues>({
-    resolver: zodResolver(blogSchema),
-    defaultValues: {
-      author: 'Saad Mazhar',
-      published: false,
-      unlisted: false,
-      tags: [],
-      category: 'Tech',
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [series, setSeries] = useState<BlogSeries[]>([]);
+  const [settings, setSettings] = useState<BlogSettings>({});
+  const [allPosts, setAllPosts] = useState<BlogPostDoc[]>([]);
+  const wpm = settings.readingWpm || DEFAULT_WPM;
+
+  const status: ArticleStatus = server ? statusOf(server) : 'draft';
+  const live = status === 'published' || status === 'scheduled';
+  const update = useCallback((patch: Draft) => setDraft((d) => ({ ...d, ...patch })), []);
+
+  // ── Supporting data ──────────────────────────────────────────────
+  useEffect(() => {
+    Promise.all([AuthorService.getAll(), SeriesService.getAll(), SettingsService.get(), BlogService.getAll()])
+      .then(([a, s, st, posts]) => {
+        setAuthors(a);
+        setSeries(s);
+        setSettings(st);
+        setAllPosts(posts);
+      })
+      .catch(() => toast.error('Some blog settings failed to load; defaults are used.'));
+  }, []);
+
+  // ── Load the post (or start a new one) ───────────────────────────
+  const autosave = useAutosave({
+    postId,
+    data: draft,
+    live,
+    baseRevision: revision,
+    enabled: loaded,
+    canCreate: !!draft.title?.trim(),
+    onCreated: (id, rev) => {
+      setPostId(id);
+      setRevision(rev);
+      setServer({ ...(draft as BlogPostDoc), id, status: 'draft', published: false, revision: rev });
+      // Keep the URL in sync without remounting the editor.
+      window.history.replaceState(window.history.state, '', `/blogs/${id}`);
     },
+    onSaved: setRevision,
+    onConflict: setConflict,
   });
+  const { markSaved, flush, getRevision } = autosave;
+  const postIdRef = useRef(postId);
+  useEffect(() => {
+    postIdRef.current = postId;
+  }, [postId]);
 
-  const titleValue    = watch('title');
-  const slugValue     = watch('slug');
-  const tags          = watch('tags') ?? [];
-  const schedDate     = watch('scheduledDate');
-  const excerptValue  = watch('excerpt') ?? '';
-  const metaValue     = watch('metaDescription') ?? '';
-  const isUnlisted    = watch('unlisted') ?? false;
-  const postUrl       = `${SITE_URL}/blog/${slugValue || 'your-slug'}`;
-  const [linkCopied,  setLinkCopied] = useState(false);
+  const loadPost = useCallback(
+    async (id: string) => {
+      const [post, pending] = await Promise.all([BlogService.getById(id), BlogService.getAutosave(id)]);
+      if (!post) {
+        toast.error('Post not found');
+        navigate('/blogs');
+        return;
+      }
+      const base = pickEditable(post);
+      let working = base;
+      setRecovery(null);
+      if (pending && pending.baseRevision === (post.revision ?? 0)) {
+        // Unpublished edits to a live post: load them, and say so.
+        working = { ...base, ...pickEditable(pending.data as Draft) };
+        for (const [k, v] of Object.entries(pending.data)) if (v === null) delete (working as Record<string, unknown>)[k];
+        setRecovery({ kind: 'autosave', data: working, at: pending.savedAt });
+      }
+      const backup = localBackup.read(id);
+      if (backup && backup.at > (pending?.savedAt ?? post.editedAt ?? '') && JSON.stringify(backup.data) !== JSON.stringify(working))
+        setRecovery({ kind: 'local', data: backup.data, at: backup.at });
 
-  const copyPostLink = async () => {
+      setServer(post);
+      setRevision(post.revision ?? 0);
+      setDraft(working);
+      setEditorContent(initialEditorContent(working.contentJson, working.content));
+      setEditorKey((k) => k + 1);
+      setSchedule(scheduleFromPost(post));
+      setSlugTouched(!!post.publishedAt);
+      markSaved(working);
+      setLoaded(true);
+    },
+    [navigate, markSaved],
+  );
+
+  useEffect(() => {
+    if (initialId) {
+      loadPost(initialId).catch(() => toast.error('Failed to load the post'));
+    } else {
+      const backup = localBackup.read(null);
+      if (backup?.data?.title || backup?.data?.content) setRecovery({ kind: 'local', data: backup.data, at: backup.at });
+      markSaved(NEW_DRAFT);
+      setLoaded(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialId]);
+
+  // ── Editor and derived fields ────────────────────────────────────
+  const onEditorChange = useCallback(
+    ({ html, json, text: plain }: EditorChange) => {
+      setText(plain);
+      update({ content: html, contentJson: json, readingTimeMinutes: readingTimeMinutes(html, wpm) });
+    },
+    [update, wpm],
+  );
+
+  const setTitle = (title: string) => update(slugTouched ? { title } : { title, slug: slugify(title) });
+
+  const wordCount = useMemo(() => countWords(text), [text]);
+  const seo = useMemo(() => analyzeSeo(draft), [draft]);
+  const knownTags = useMemo(() => [...new Set(allPosts.flatMap((p) => p.tags ?? []))].sort(), [allPosts]);
+  const knownCategories = useMemo(() => [...new Set(allPosts.map((p) => p.category).filter(Boolean))], [allPosts]);
+  const slugChangedWhileLive = !!server?.publishedAt && !!draft.slug && draft.slug !== (server.publishedSlug ?? server.slug);
+  const pendingLive = live && JSON.stringify(pickEditable(server ?? {})) !== JSON.stringify(pickEditable(draft));
+
+  // ── Actions ──────────────────────────────────────────────────────
+  const ensureSaved = useCallback(async (): Promise<string | null> => {
+    await flush();
+    return postIdRef.current;
+  }, [flush]);
+
+  const announceRebuild = (reason: string) =>
+    SiteApi.rebuild(reason)
+      .then((r) => toast.message(rebuildMessage(r)))
+      .catch(() => toast.message('Published. The site API could not be reached to refresh crawler pages; they update on the next deploy.'));
+
+  const runTransition = async (action: Transition) => {
+    if (!draft.title?.trim()) {
+      toast.error('Add a title first');
+      return;
+    }
+    setBusy(action);
+    setIssues([]);
     try {
-      await navigator.clipboard.writeText(postUrl);
-      setLinkCopied(true);
-      toast.success('Link copied');
-      setTimeout(() => setLinkCopied(false), 2000);
-    } catch {
-      toast.error('Could not copy link');
+      const id = await ensureSaved();
+      if (!id) throw new Error('The post could not be saved yet. Check your connection.');
+      const utc = schedule.local ? zonedWallTimeToUtc(schedule.local, schedule.zone) : null;
+      const data: Draft = {
+        ...draft,
+        image: draft.cover?.url ?? (draft.cover === undefined ? undefined : draft.image),
+        author: authors.find((a) => a.id === draft.authorId)?.name ?? draft.author ?? 'Saad Mazhar',
+      };
+      const saved = await BlogService.transition(id, action, data, getRevision(), {
+        scheduledAt: utc ?? undefined,
+        scheduledTimezone: schedule.zone,
+      });
+      setServer(saved);
+      setRevision(saved.revision ?? 0);
+      autosave.resolveConflict(saved.revision ?? 0, data);
+      markSaved(pickEditable(saved));
+      setDraft(pickEditable(saved));
+      setRecovery(null);
+      setHistoryKey((k) => k + 1);
+      localBackup.clear(id);
+      const messages: Record<Transition, string> = {
+        publish: 'Published', update: 'Live article updated', schedule: 'Scheduled', unschedule: 'Schedule cancelled',
+        unpublish: 'Unpublished: back to drafts', archive: 'Archived', review: 'Marked as ready for review', draft: 'Moved to drafts',
+      };
+      toast.success(messages[action]);
+      if (['publish', 'update', 'unpublish', 'archive'].includes(action)) announceRebuild(`${action}: ${saved.title}`);
+    } catch (err) {
+      if (err instanceof PublishValidationError) {
+        setIssues(err.issues);
+        setTab('publish');
+        toast.error('Not ready yet: see the checklist under Publish.');
+      } else if (err instanceof ConflictError) {
+        setConflict(err.current);
+      } else {
+        toast.error(err instanceof Error ? err.message : 'Something went wrong');
+      }
+    } finally {
+      setBusy(null);
+    }
+  };
+  const manualSave = async () => {
+    if (!draft.title?.trim()) {
+      toast.error('Add a title to save');
+      return;
+    }
+    setBusy('save');
+    try {
+      const id = await ensureSaved();
+      if (!id) throw new Error('Could not save. Check your connection.');
+      await BlogService.addRevision(id, draft, live ? 'Saved changes (not yet live)' : 'Manual save');
+      setHistoryKey((k) => k + 1);
+      toast.success(live ? 'Saved privately. Click Update to put the changes live.' : 'Saved, with a restore point in History.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setBusy(null);
     }
   };
 
-  /* ── TipTap editor ─────────────────────────────────────────────── */
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading:       { levels: [2, 3] },
-        bulletList:    { HTMLAttributes: { class: 'list-disc pl-5 space-y-1' } },
-        orderedList:   { HTMLAttributes: { class: 'list-decimal pl-5 space-y-1' } },
-        code:          { HTMLAttributes: { class: 'bg-surface-3 rounded px-1.5 py-0.5 font-mono text-sm text-accent' } },
-        codeBlock:     { HTMLAttributes: { class: 'bg-black/40 rounded-xl p-4 font-mono text-sm border border-border my-3' } },
-        blockquote:    { HTMLAttributes: { class: 'border-l-4 border-accent/50 pl-4 text-muted-foreground my-3 italic' } },
-        horizontalRule:{ HTMLAttributes: { class: 'border-border my-5' } },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: 'text-accent underline underline-offset-4 hover:text-accent-hover', target: '_blank' },
-      }),
-      Image.configure({
-        HTMLAttributes: { class: 'rounded-xl max-w-full my-4 border border-border' },
-      }),
-      PromptBlock,
-      Placeholder.configure({
-        placeholder: ({ node }) =>
-          node.type.name === 'prompt'
-            ? 'Write or paste the prompt readers can copy…'
-            : 'Start writing your post here. Use the toolbar above for formatting…',
-      }),
-    ],
-    editorProps: {
-      attributes: {
-        class: 'prose prose-invert prose-sm max-w-none min-h-[400px] focus:outline-none px-5 py-4 leading-relaxed',
-      },
-    },
-    onUpdate: ({ editor }) => {
-      if (editor.getText().length >= 50) setContentError('');
-    },
-  });
-
-  /* ── Auto-slug from title (new posts only) ─────────────────────── */
-  useEffect(() => {
-    if (!isEditMode && titleValue && !slugValue) {
-      setValue('slug', toSlug(titleValue));
-    }
-    // slugValue/setValue intentionally excluded: this is a one-way
-    // mirror (title -> slug) that must not re-run just because the
-    // slug itself changed, or a manually-edited slug would get
-    // clobbered on the next render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [titleValue, isEditMode]);
-
-  /* Update char counters */
-  useEffect(() => { setExcerptLen(excerptValue.length); }, [excerptValue]);
-  useEffect(() => { setMetaLen(metaValue.length); }, [metaValue]);
-
-  /* ── Load post for edit ────────────────────────────────────────── */
-  const loadPost = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const post = await BlogService.getById(id!);
-      if (!post) return;
-      reset({
-        title:              post.title,
-        slug:               post.slug,
-        excerpt:            post.excerpt,
-        metaDescription:    post.metaDescription ?? '',
-        keywords:           post.keywords ?? '',
-        category:           post.category,
-        tags:               post.tags ?? [],
-        author:             post.author,
-        image:              post.image ?? '',
-        published:          post.published,
-        unlisted:           post.unlisted ?? false,
-        scheduledDate:      post.scheduledDate ?? '',
-      });
-      if (editor && post.content) editor.commands.setContent(post.content);
-      if (post.published) setPublishMode('publish');
-      else if (post.scheduledDate) setPublishMode('schedule');
-      else setPublishMode('draft');
-    } catch {
-      toast.error('Failed to load blog post');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id, reset, editor]);
-
-  useEffect(() => {
-    if (isEditMode && editor) loadPost();
-  }, [isEditMode, editor, loadPost]);
-
-  /* ── Submit ────────────────────────────────────────────────────── */
-  const onSubmit = async (data: BlogFormValues, forcePublish?: boolean) => {
-    const text = editor?.getText() ?? '';
-    if (text.length < 50) { setContentError('Content must be at least 50 characters'); return; }
-    setContentError('');
-
-    const isPublished = forcePublish !== undefined
-      ? forcePublish
-      : publishMode === 'publish';
-
-    try {
-      setIsLoading(true);
-      const payload = {
-        ...data,
-        content:   editor!.getHTML(),
-        published: isPublished,
-        ...(isPublished && !isEditMode ? { publishedAt: new Date().toISOString() } : {}),
-      };
-      if (isEditMode) {
-        await BlogService.update(id!, payload);
-        toast.success('Post updated');
-      } else {
-        await BlogService.create({ ...payload, date: new Date().toISOString() });
-        toast.success('Post created');
-      }
-      navigate('/blogs');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Operation failed');
-    } finally {
-      setIsLoading(false);
-    }
+  const discardPending = async () => {
+    if (!postId) return;
+    await BlogService.discardAutosave(postId).catch(() => undefined);
+    localBackup.clear(postId);
+    await loadPost(postId);
+    toast.success('Unpublished changes discarded');
   };
 
   const onDelete = async () => {
+    if (!postId) return;
+    setBusy('delete');
     try {
-      setIsLoading(true);
-      await BlogService.delete(id!);
+      await BlogService.delete(postId);
+      localBackup.clear(postId);
       toast.success('Post deleted');
+      if (server?.published) announceRebuild(`delete: ${server.title}`);
       navigate('/blogs');
     } catch {
       toast.error('Delete failed');
     } finally {
-      setIsLoading(false);
-      setShowDeleteModal(false);
+      setBusy(null);
+      setDeleteOpen(false);
     }
   };
 
-  /* ── Link handler ──────────────────────────────────────────────── */
-  const handleSetLink = () => {
-    const url = window.prompt('Enter URL:');
-    if (!url) return;
-    if (url === '') {
-      editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+  const restoreSnapshot = async (snapshot: Draft) => {
+    const next = { ...draft, ...pickEditable(snapshot) };
+    setDraft(next);
+    setEditorContent(initialEditorContent(next.contentJson, next.content));
+    setEditorKey((k) => k + 1);
+  };
+
+  const resolveConflict = async (keep: 'mine' | 'theirs') => {
+    if (!conflict || !postId) return;
+    if (keep === 'theirs') {
+      setConflict(null);
+      await loadPost(postId);
+      autosave.resolveConflict(conflict.revision ?? 0, pickEditable(conflict));
+      toast.success('Loaded the latest version');
     } else {
-      editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+      // Keep a copy of the other version before overwriting it.
+      await BlogService.addRevision(postId, conflict, 'Overwritten after an edit conflict').catch(() => undefined);
+      setRevision(conflict.revision ?? 0);
+      setServer(conflict);
+      autosave.resolveConflict(conflict.revision ?? 0);
+      setConflict(null);
+      toast.message('Your version will be saved over it. The other version is kept in History.');
     }
   };
 
-  /* ── Image insert ──────────────────────────────────────────────── */
-  const handleInsertImage = () => {
-    inlineImageInputRef.current?.click();
-  };
+  // ── Primary action for the current status ────────────────────────
+  const scheduleUtc = schedule.local ? zonedWallTimeToUtc(schedule.local, schedule.zone) : null;
+  const wantsSchedule = !!scheduleUtc && Date.parse(scheduleUtc) > Date.now();
+  const primary: { action: Transition; label: string; icon: typeof Send } =
+    status === 'published'
+      ? { action: 'update', label: 'Update', icon: Send }
+      : status === 'scheduled'
+        ? { action: 'schedule', label: 'Update schedule', icon: CalendarClock }
+        : wantsSchedule
+          ? { action: 'schedule', label: 'Schedule', icon: CalendarClock }
+          : { action: 'publish', label: draft.unlisted ? 'Publish unlisted' : 'Publish', icon: Send };
 
-  const handleInlineImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10 MB'); return; }
+  const beforePreview = useCallback(async () => {
+    await flush();
+  }, [flush]);
 
-    setIsInlineUploading(true);
-    try {
-      const url = await uploadImage(file, 'uploads');
-      editor?.chain().focus().setImage({ src: url }).run();
-      toast.success('Image inserted');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      setIsInlineUploading(false);
-      if (inlineImageInputRef.current) inlineImageInputRef.current.value = '';
-    }
-  };
+  if (!loaded)
+    return (
+      <div className="space-y-4">
+        <div className="h-12 w-1/2 animate-pulse rounded-xl bg-card" />
+        <div className="h-[600px] animate-pulse rounded-xl border border-border-subtle bg-card" />
+      </div>
+    );
 
-  /* ── Tag management ────────────────────────────────────────────── */
-  const addTag = (raw: string) => {
-    const t = raw.trim().toLowerCase().replace(/\s+/g, '-');
-    if (t && !tags.includes(t)) setValue('tags', [...tags, t]);
-    setTagInput('');
-  };
-
-  const removeTag = (tag: string) => setValue('tags', tags.filter(t => t !== tag));
-
-  const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagInput); }
-    if (e.key === 'Backspace' && !tagInput && tags.length) removeTag(tags[tags.length - 1]);
-  };
-
-  /* ── Preview ───────────────────────────────────────────────────── */
-  const handlePreview = () => {
-    const slug = slugValue || 'preview';
-    window.open(`/blog/${slug}`, '_blank');
-  };
-
-  /* ═══════════════════ RENDER ═══════════════════════════════════ */
   return (
-    <form onSubmit={handleSubmit(d => onSubmit(d, false))} className="space-y-0 animate-in fade-in duration-300 pb-20">
-
-      {/* ── Top bar ────────────────────────────────────────────── */}
-      <div
-        className="sticky top-0 z-30 py-4 mb-6"
-        style={{ background: 'hsl(var(--background))' }}
-      >
+    <div className="animate-in fade-in pb-20 duration-300">
+      {/* ── Top bar ─────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-30 -mx-1 mb-5 bg-background px-1 py-3">
         <FormHeader
           backTo="/blogs"
-          title={isEditMode ? 'Edit post' : 'New post'}
-          subtitle={isEditMode ? 'Blog · Editing' : 'Blog · New'}
+          title={draft.title?.trim() || (postId ? 'Untitled post' : 'New post')}
+          subtitle={postId ? `Blog · ${STATUS_LABELS[status]}` : 'Blog · New'}
+          badge={
+            <span className="flex items-center gap-2">
+              <Badge variant={STATUS_BADGE[status]} dot>{STATUS_LABELS[status]}</Badge>
+              {pendingLive && <Badge variant="warning">Unpublished changes</Badge>}
+            </span>
+          }
           actions={
             <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handlePreview}
-              >
+              <SaveIndicator state={autosave.state} at={autosave.lastSavedAt} live={live} />
+              <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground lg:flex" title="SEO completeness">
+                <SeoScore score={seo.score} size={30} />
+              </span>
+              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)} disabled={!postId && !draft.title?.trim()}>
                 <Eye aria-hidden="true" /> Preview
               </Button>
-
-              <Button
-                type="submit"
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-              >
-                <Save aria-hidden="true" /> Save draft
+              <Button type="button" variant="outline" size="sm" onClick={manualSave} loading={busy === 'save'} disabled={!!busy}>
+                <Save aria-hidden="true" /> Save
               </Button>
-
-              <Button
-                type="button"
-                onClick={handleSubmit(d => onSubmit(d, publishMode === 'publish'))}
-                size="sm"
-                loading={isLoading}
-              >
-                <Send aria-hidden="true" />
-                {isEditMode ? 'Update' : publishMode === 'publish' ? (isUnlisted ? 'Publish unlisted' : 'Publish') : 'Save'}
+              <Button type="button" size="sm" onClick={() => runTransition(primary.action)} loading={busy === primary.action} disabled={!!busy}>
+                <primary.icon aria-hidden="true" /> {primary.label}
               </Button>
-
-              {isEditMode && (
-                <Button
-                  type="button"
-                  variant="destructive-ghost"
-                  size="icon-sm"
-                  onClick={() => setShowDeleteModal(true)}
-                  aria-label="Delete post"
-                  className="h-9 w-9"
-                >
-                  <Trash2 aria-hidden="true" />
-                </Button>
-              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon-sm" aria-label="More actions" disabled={!!busy}>
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {status !== 'in_review' && status !== 'published' && status !== 'scheduled' && (
+                    <DropdownMenuItem onSelect={() => runTransition('review')} className="gap-2.5"><FileClock className="h-4 w-4" /> Mark ready for review</DropdownMenuItem>
+                  )}
+                  {status === 'scheduled' && (
+                    <DropdownMenuItem onSelect={() => runTransition('unschedule')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Cancel schedule</DropdownMenuItem>
+                  )}
+                  {status === 'scheduled' && (
+                    <DropdownMenuItem onSelect={() => runTransition('publish')} className="gap-2.5"><Send className="h-4 w-4" /> Publish now instead</DropdownMenuItem>
+                  )}
+                  {status === 'published' && (
+                    <DropdownMenuItem onSelect={() => runTransition('unpublish')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Unpublish (back to draft)</DropdownMenuItem>
+                  )}
+                  {pendingLive && status === 'published' && (
+                    <DropdownMenuItem onSelect={discardPending} className="gap-2.5"><RotateCcw className="h-4 w-4" /> Discard unpublished changes</DropdownMenuItem>
+                  )}
+                  {(status === 'in_review' || status === 'archived') && (
+                    <DropdownMenuItem onSelect={() => runTransition('draft')} className="gap-2.5"><Undo2 className="h-4 w-4" /> Move to drafts</DropdownMenuItem>
+                  )}
+                  {status !== 'archived' && postId && (
+                    <DropdownMenuItem onSelect={() => runTransition('archive')} className="gap-2.5"><Archive className="h-4 w-4" /> Archive</DropdownMenuItem>
+                  )}
+                  {server?.published && (
+                    <DropdownMenuItem asChild className="gap-2.5">
+                      <a href={`${SITE_URL}/blog/${server.slug}`} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-4 w-4" /> View on site</a>
+                    </DropdownMenuItem>
+                  )}
+                  {postId && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="gap-2.5 text-danger-fg focus:text-danger-fg"><Trash2 className="h-4 w-4" /> Delete post</DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           }
         />
       </div>
 
-      {/* ── Main grid ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+      {recovery && (
+        <div role="status" className={cn('mb-5 flex flex-wrap items-center gap-3 rounded-xl border p-3 text-[13px]', recovery.kind === 'local' ? 'border-warning/40 bg-warning-subtle text-warning-fg' : 'border-info/40 bg-info-subtle text-info-fg')}>
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="flex-1">
+            {recovery.kind === 'local'
+              ? `Unsaved edits from ${new Date(recovery.at).toLocaleString()} were found on this device.`
+              : `Showing unpublished changes autosaved ${new Date(recovery.at).toLocaleString()}. Click Update to put them live.`}
+          </span>
+          {recovery.kind === 'local' ? (
+            <>
+              <Button type="button" size="xs" onClick={() => { restoreSnapshot(recovery.data); setRecovery(null); }}>Restore them</Button>
+              <Button type="button" size="xs" variant="ghost" onClick={() => { localBackup.clear(postId); setRecovery(null); }}>Discard</Button>
+            </>
+          ) : (
+            <Button type="button" size="xs" variant="ghost" onClick={discardPending}>Discard changes</Button>
+          )}
+        </div>
+      )}
 
-        {/* ══ Left column - content ══════════════════════════════ */}
-        <div className="xl:col-span-3 space-y-5">
+      {issues.length > 0 && (
+        <div role="alert" className="mb-5 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-[13px] text-danger-fg">
+          <p className="font-medium">Fix these before going live:</p>
+          <ul className="mt-1 list-disc pl-5">{issues.map((i) => <li key={i}>{i}</li>)}</ul>
+        </div>
+      )}
 
-          {/* Title + slug + excerpt */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border-subtle))' }}
-          >
-            <div className="p-5 space-y-4">
-              {/* Title */}
-              <Field error={errors.title?.message}>
-                <input
-                  {...register('title')}
-                  placeholder="Post title…"
-                  className="w-full bg-transparent border-none text-[22px] font-medium placeholder:opacity-20 focus:outline-none leading-snug"
-                  style={{ color: 'hsl(var(--foreground) / 0.92)', letterSpacing: '-0.02em' }}
-                />
-              </Field>
-
-              {/* Slug */}
-              <div
-                className="flex items-center gap-2 pt-3"
-                style={{ borderTop: '1px solid hsl(var(--border-subtle))' }}
-              >
-                <span className="text-[12px] font-medium flex-shrink-0" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-                  /blog/
-                </span>
-                <input
-                  {...register('slug')}
-                  placeholder="url-slug"
-                  className="flex-1 bg-transparent border-none text-[12px] font-mono focus:outline-none"
-                  style={{ color: 'hsl(var(--foreground) / 0.55)' }}
-                />
-                {errors.slug && <p className="text-xs text-danger flex-shrink-0">{errors.slug.message}</p>}
-              </div>
-            </div>
-
-            {/* Excerpt */}
-            <div
-              className="px-5 pb-5"
-              style={{ borderTop: '1px solid hsl(var(--border-subtle))' }}
-            >
-              <div className="flex items-center justify-between pt-4 mb-2">
-                <Label>Excerpt</Label>
-                <span className="text-[12px]" style={{ color: excerptLen > 280 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground) / 0.60)' }}>
-                  {excerptLen}/300
-                </span>
-              </div>
-              <StyledTextarea
-                {...register('excerpt', {
-                  onChange: e => setExcerptLen(e.target.value.length),
-                })}
-                rows={2}
-                placeholder="A compelling summary displayed on the blog archive page…"
-              />
-              {errors.excerpt && <p className="text-xs text-danger mt-1">{errors.excerpt.message}</p>}
-            </div>
-          </div>
-
-          {/* Rich text editor */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border-subtle))' }}
-          >
-            {/* Toolbar */}
-            {editor && (
-              <div
-                className="flex flex-wrap items-center gap-0.5 p-2"
-                style={{ borderBottom: '1px solid hsl(var(--border-subtle))' }}
-              >
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
-                  <Bold className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Italic">
-                  <Italic className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarDivider />
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Heading 2">
-                  <Heading2 className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Heading 3">
-                  <Heading3 className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarDivider />
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Bullet List">
-                  <List className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Numbered List">
-                  <ListOrdered className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarDivider />
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Quote Block">
-                  <Quote className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Inline Code">
-                  <Code className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="Code Block">
-                  <span className="text-[12px] font-medium font-mono leading-none px-0.5">{'{ }'}</span>
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().togglePrompt().run()} active={editor.isActive('prompt')} title="Copyable Prompt (Ctrl+Alt+P)">
-                  <Sparkles className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarDivider />
-                <ToolbarBtn onClick={handleSetLink} active={editor.isActive('link')} title="Insert Link">
-                  <LinkIcon className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={isInlineUploading ? () => {} : handleInsertImage} active={false} title="Insert Image">
-                  {isInlineUploading
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    : <ImageIcon className="w-3.5 h-3.5" />}
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Divider">
-                  <Minus className="w-3.5 h-3.5" />
-                </ToolbarBtn>
-                <div className="ml-auto flex items-center gap-0.5">
-                  <ToolbarDivider />
-                  <ToolbarBtn onClick={() => editor.chain().focus().undo().run()} active={false} title="Undo">
-                    <Undo className="w-3.5 h-3.5" />
-                  </ToolbarBtn>
-                  <ToolbarBtn onClick={() => editor.chain().focus().redo().run()} active={false} title="Redo">
-                    <Redo className="w-3.5 h-3.5" />
-                  </ToolbarBtn>
-                </div>
-              </div>
-            )}
-            <EditorContent editor={editor} className="[&_.ProseMirror]:outline-none" />
-            {contentError && (
-              <p className="text-xs text-danger px-5 pb-4">{contentError}</p>
-            )}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+        {/* ── Main content ─────────────────────────────────────── */}
+        <div className="min-w-0 space-y-5">
+          <div className="space-y-4 rounded-xl border border-border-subtle bg-card p-5">
             <input
-              type="file"
-              ref={inlineImageInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleInlineImageFile}
+              value={draft.title ?? ''}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Post title"
+              aria-label="Title"
+              className="w-full border-none bg-transparent text-[26px] font-medium leading-snug tracking-[-0.02em] text-foreground placeholder:text-foreground/25 focus:outline-none"
             />
+            <input
+              value={draft.subtitle ?? ''}
+              onChange={(e) => update({ subtitle: e.target.value })}
+              placeholder="Subtitle (optional)"
+              aria-label="Subtitle"
+              className="w-full border-none bg-transparent text-[16px] text-fg-2 placeholder:text-foreground/25 focus:outline-none"
+            />
+            <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle pt-3">
+              <label htmlFor="slug" className="font-mono text-[12px] text-muted-foreground">/blog/</label>
+              <input
+                id="slug"
+                value={draft.slug ?? ''}
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') });
+                }}
+                placeholder="url-slug"
+                className="min-w-[160px] flex-1 border-none bg-transparent font-mono text-[12px] text-fg-2 focus:outline-none"
+              />
+              <Button type="button" size="xs" variant="ghost" onClick={() => { setSlugTouched(true); update({ slug: slugify(draft.title) }); }}>
+                <Wand2 aria-hidden="true" /> From title
+              </Button>
+            </div>
+            {slugChangedWhileLive && (
+              <p className="flex gap-1.5 text-[12px] text-warning-fg">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                This article is live at /blog/{server?.publishedSlug ?? server?.slug}. Changing the URL adds a permanent (301) redirect from the old one when you update.
+              </p>
+            )}
+            <div className="space-y-1.5 border-t border-border-subtle pt-3">
+              <div className="flex items-center justify-between">
+                <label htmlFor="excerpt" className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Excerpt<span className="text-accent"> *</span></label>
+                <CharCount value={draft.excerpt ?? ''} max={300} min={10} />
+              </div>
+              <textarea
+                id="excerpt"
+                rows={2}
+                value={draft.excerpt ?? ''}
+                onChange={(e) => update({ excerpt: e.target.value })}
+                placeholder="A one or two sentence summary for listings, feeds and search."
+                className="w-full resize-y rounded-lg border border-border bg-secondary px-3 py-2 text-[13px] text-foreground outline-none focus:border-accent"
+              />
+            </div>
           </div>
 
+          <BlogEditor key={editorKey} content={editorContent} onChange={onEditorChange} />
+          <p className="text-[12px] text-muted-foreground">
+            {wordCount.toLocaleString()} words · {draft.readingTimeMinutes ?? 1} min read · Autosaves {live ? 'privately ' : ''}a few seconds after you stop typing.
+          </p>
         </div>
 
-        {/* ══ Right sidebar ══════════════════════════════════════ */}
-        <div className="space-y-4">
-
-          {/* ── Publish settings ── */}
-          <SectionCard title="Publishing" icon={Globe}>
-            {/* Publish mode selector */}
-            <div
-              className="grid grid-cols-3 gap-1 p-1 rounded-lg"
-              style={{ background: 'hsl(var(--secondary) / 0.6)' }}
-            >
-              {(['draft', 'publish', 'schedule'] as const).map(mode => (
+        {/* ── Settings panels ─────────────────────────────────── */}
+        <aside className="min-w-0 xl:sticky xl:top-[84px] xl:self-start">
+          <div className="overflow-hidden rounded-xl border border-border-subtle bg-card">
+            <div role="tablist" aria-label="Post settings" className="no-scrollbar flex overflow-x-auto border-b border-border-subtle px-1">
+              {TABS.map((t) => (
                 <button
-                  key={mode}
+                  key={t.id}
+                  id={`tab-${t.id}`}
                   type="button"
-                  onClick={() => {
-                    setPublishMode(mode);
-                    setValue('published', mode === 'publish');
-                  }}
-                  className="py-1.5 rounded-md text-[12px] font-medium capitalize transition-all"
-                  style={{
-                    background:   publishMode === mode ? 'hsl(var(--accent))' : 'transparent',
-                    color:        publishMode === mode ? 'hsl(var(--accent-foreground))' : 'hsl(var(--foreground) / 0.60)',
-                    boxShadow:    publishMode === mode ? '0 2px 8px hsl(var(--accent) / 0.25)' : 'none',
-                  }}
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  aria-controls={`panel-${t.id}`}
+                  onClick={() => setTab(t.id)}
+                  className={cn('relative whitespace-nowrap px-3 py-2.5 text-[13px] transition-colors', tab === t.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')}
                 >
-                  {mode === 'publish' ? 'Live' : mode === 'schedule' ? 'Schedule' : 'Draft'}
+                  {t.label}
+                  {t.id === 'seo' && seo.checks.some((c) => c.status === 'fail') && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-danger align-middle" aria-label="has problems" />}
+                  {tab === t.id && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-accent" aria-hidden="true" />}
                 </button>
               ))}
             </div>
-
-            {/* Schedule date */}
-            {publishMode === 'schedule' && (
-              <Field error={errors.scheduledDate?.message}>
-                <Label>Publish Date</Label>
-                <StyledInput
-                  type="datetime-local"
-                  {...register('scheduledDate')}
-                  style={{ colorScheme: 'dark' }}
-                />
-              </Field>
-            )}
-
-            {/* Visibility */}
-            <div>
-              <Label>Visibility</Label>
-              <div role="radiogroup" aria-label="Visibility" className="space-y-1.5">
-                {([
-                  { value: false, icon: Globe, title: 'Public',   desc: 'Listed on /blog, the homepage and in search.' },
-                  { value: true,  icon: Link2, title: 'Unlisted', desc: 'Only people with the link can read it.' },
-                ] as const).map(opt => {
-                  const active = isUnlisted === opt.value;
-                  return (
-                    <button
-                      key={opt.title}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      onClick={() => setValue('unlisted', opt.value, { shouldDirty: true })}
-                      className="w-full flex items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors"
-                      style={{
-                        background: active ? 'hsl(var(--accent) / 0.08)' : 'hsl(var(--secondary) / 0.6)',
-                        border: `1px solid ${active ? 'hsl(var(--accent) / 0.45)' : 'hsl(var(--border-subtle))'}`,
-                      }}
-                    >
-                      <opt.icon
-                        className="w-4 h-4 mt-0.5 flex-shrink-0"
-                        style={{ color: active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.50)' }}
-                      />
-                      <span className="flex-1 min-w-0">
-                        <span className="block text-[13px] font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                          {opt.title}
-                        </span>
-                        <span className="block text-[12px] leading-snug" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
-                          {opt.desc}
-                        </span>
-                      </span>
-                      <span
-                        aria-hidden="true"
-                        className="mt-1 w-3.5 h-3.5 rounded-full flex-shrink-0 flex items-center justify-center"
-                        style={{ border: `1.5px solid ${active ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.30)'}` }}
-                      >
-                        {active && <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'hsl(var(--accent))' }} />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Share link for unlisted posts */}
-            {isUnlisted && (
-              <div>
-                <Label>Share link</Label>
-                <div
-                  className="flex items-center gap-1 rounded-lg pl-3 pr-1 py-1"
-                  style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
-                >
-                  <span className="flex-1 min-w-0 truncate font-mono text-[12px]" style={{ color: 'hsl(var(--foreground) / 0.75)' }} title={postUrl}>
-                    {postUrl.replace(/^https?:\/\/(www\.)?/, '')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={copyPostLink}
-                    aria-label={linkCopied ? 'Link copied' : 'Copy link'}
-                    className="flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-background/60"
-                    style={{ color: linkCopied ? 'hsl(var(--accent))' : 'hsl(var(--foreground) / 0.70)' }}
-                  >
-                    {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {linkCopied ? 'Copied' : 'Copy'}
-                  </button>
+            <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="max-h-none overflow-y-auto p-4 xl:max-h-[calc(100vh-170px)]">
+              {tab === 'publish' && <PublishPanel post={{ ...server, ...draft }} status={status} update={update} schedule={schedule} setSchedule={setSchedule} wordCount={wordCount} wpm={wpm} />}
+              {tab === 'details' && <DetailsPanel post={draft} update={update} authors={authors} series={series} settings={settings} knownTags={knownTags} knownCategories={knownCategories} />}
+              {tab === 'media' && (
+                <div className="space-y-8">
+                  <ImageAssetField
+                    label="Featured image"
+                    purpose="cover"
+                    folder="blog/covers"
+                    nameHint={draft.slug || undefined}
+                    value={draft.cover ?? (draft.image ? { url: draft.image } : null)}
+                    onChange={(asset) => update({ cover: asset ?? undefined, image: asset?.url ?? undefined })}
+                    hint="Shown at the top of the article and on cards. At least 1200×600."
+                  />
+                  <ImageAssetField
+                    label="Social sharing image"
+                    purpose="social"
+                    folder="blog/social"
+                    nameHint={draft.slug ? `${draft.slug}-social` : undefined}
+                    value={draft.socialImage}
+                    onChange={(asset) => update({ socialImage: asset ?? undefined })}
+                    hint="Optional. Used for LinkedIn, X, Facebook and WhatsApp cards instead of the featured image. 1200×630 works everywhere."
+                    showCaption={false}
+                  />
                 </div>
-                <p className="text-[12px] mt-1.5" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
-                  {publishMode === 'publish'
-                    ? 'Hidden from your blog list, homepage, sitemap and search engines.'
-                    : 'The link works once the post is live.'}
-                </p>
-              </div>
-            )}
-
-            {/* Status indicator */}
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: 'hsl(var(--secondary) / 0.6)', border: '1px solid hsl(var(--border-subtle))' }}
-            >
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{
-                  background: publishMode === 'publish' ? 'hsl(var(--accent))'
-                    : publishMode === 'schedule' ? 'hsl(var(--warning))'
-                    : 'hsl(var(--foreground) / 0.60)',
-                }}
-              />
-              <span className="text-[12px] font-medium" style={{ color: 'hsl(var(--foreground) / 0.55)' }}>
-                {publishMode === 'publish' ? (isUnlisted ? 'Live, but only for people with the link' : 'Will go live immediately')
-                  : publishMode === 'schedule' ? (schedDate ? `Scheduled for ${new Date(schedDate).toLocaleDateString()}` : 'Pick a date above')
-                  : 'Saved as draft'}
-              </span>
+              )}
+              {tab === 'seo' && <SeoPanel post={draft} update={update} />}
+              {tab === 'social' && (
+                <PanelSection title="How it looks when shared">
+                  <SocialPreviews post={{ ...draft, publishedAt: server?.publishedAt }} />
+                </PanelSection>
+              )}
+              {tab === 'related' && <RelatedPanel post={{ ...draft, id: postId ?? undefined }} update={update} allPosts={allPosts} />}
+              {tab === 'sources' && <SourcesPanel post={draft} update={update} />}
+              {tab === 'history' && <HistoryPanel postId={postId} current={draft} onRestore={restoreSnapshot} refreshKey={historyKey} />}
             </div>
-          </SectionCard>
-
-          {/* ── Featured image ── */}
-          <SectionCard title="Featured image" icon={ImageIcon}>
-            <ImageUpload
-              value={watch('image')}
-              onChange={url => setValue('image', url)}
-              label="Cover Image"
-            />
-          </SectionCard>
-
-          {/* ── SEO ── */}
-          <SectionCard title="SEO & search" icon={Search}>
-            <Field error={errors.metaDescription?.message}>
-              <div className="flex items-center justify-between mb-1.5">
-                <Label>Meta Description</Label>
-                <span className="text-[12px]" style={{ color: metaLen > 150 ? 'hsl(var(--destructive))' : 'hsl(var(--foreground) / 0.60)' }}>
-                  {metaLen}/160
-                </span>
-              </div>
-              <StyledTextarea
-                {...register('metaDescription', { onChange: e => setMetaLen(e.target.value.length) })}
-                rows={3}
-                placeholder="Brief summary for search engine results…"
-              />
-            </Field>
-
-            <Field error={errors.keywords?.message}>
-              <Label>Keywords</Label>
-              <StyledInput
-                {...register('keywords')}
-                placeholder="react, typescript, web dev"
-              />
-              <p className="text-[12px] mt-1" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-                Comma-separated primary &amp; secondary keywords
-              </p>
-            </Field>
-          </SectionCard>
-
-          {/* ── Organisation ── */}
-          <SectionCard title="Organization" icon={TagIcon}>
-            <Field error={errors.category?.message}>
-              <Label>Category</Label>
-              <StyledInput {...register('category')} placeholder="Tech" />
-            </Field>
-
-            {/* Tag chip input */}
-            <div>
-              <Label>Tags</Label>
-              <div
-                className="flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg"
-                style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
-              >
-                {tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[12px] font-medium"
-                    style={{ background: 'hsl(var(--accent) / 0.12)', color: 'hsl(var(--accent-hover))', border: '1px solid hsl(var(--accent) / 0.20)' }}
-                  >
-                    {tag}
-                    <button type="button" onClick={() => removeTag(tag)} className="opacity-60 hover:opacity-100">
-                      <X className="w-2.5 h-2.5" />
-                    </button>
-                  </span>
-                ))}
-                <input
-                  value={tagInput}
-                  onChange={e => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  onBlur={() => tagInput && addTag(tagInput)}
-                  placeholder={tags.length ? '' : 'Add tags, press Enter'}
-                  className="flex-1 min-w-[80px] bg-transparent border-none outline-none text-[12px]"
-                  style={{ color: 'hsl(var(--foreground) / 0.75)', minWidth: 80 }}
-                />
-              </div>
-              <p className="text-[12px] mt-1" style={{ color: 'hsl(var(--foreground) / 0.60)' }}>
-                Press Enter or comma to add
-              </p>
-            </div>
-
-            <Field error={errors.author?.message}>
-              <Label>Author</Label>
-              <StyledInput {...register('author')} />
-            </Field>
-          </SectionCard>
-
-        </div>
+          </div>
+        </aside>
       </div>
 
+      <PreviewDialog postId={postId} open={previewOpen} onOpenChange={setPreviewOpen} beforeOpen={beforePreview} />
+
       <ConfirmDialog
-        open={showDeleteModal}
-        onOpenChange={o => !isLoading && setShowDeleteModal(o)}
+        open={deleteOpen}
+        onOpenChange={(o) => busy !== 'delete' && setDeleteOpen(o)}
         title="Delete post?"
-        description="This post will be permanently deleted and can’t be recovered."
+        description={server?.published ? 'This post is live. Deleting it removes it from the site and erases its revision history. This can’t be undone.' : 'The post and its revision history will be permanently deleted.'}
         confirmLabel="Delete post"
-        isLoading={isLoading}
+        requireText={server?.published ? 'DELETE' : undefined}
+        isLoading={busy === 'delete'}
         onConfirm={onDelete}
       />
-    </form>
+
+      <AlertDialog open={!!conflict}>
+        <AlertDialogContent className="max-w-[480px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>This post changed somewhere else</AlertDialogTitle>
+            <AlertDialogDescription>
+              {conflict?.editedBy ? `${conflict.editedBy} saved` : 'Someone saved'} a newer version
+              {conflict?.editedAt ? ` at ${new Date(conflict.editedAt).toLocaleString()}` : ''} (another tab or device). Autosave is paused so nothing is overwritten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => resolveConflict('theirs')}>Load the newer version</Button>
+            <Button onClick={() => resolveConflict('mine')}>Keep my version</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
 
