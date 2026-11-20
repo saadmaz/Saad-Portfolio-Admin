@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  AlertTriangle, Archive, BookOpenText, CalendarClock, ChevronDown, Clock, CloudOff, Eye, ExternalLink, FileClock,
-  History, Image as ImageIcon, Link2, Loader2, Quote, RotateCcw, Rocket, Save, Search, Send, Settings2,
-  Share2, Trash2, Undo2, Wand2,
+  AlertTriangle, Archive, CalendarClock, ChevronDown, ChevronLeft, CloudOff, Eye, ExternalLink, FileClock, Loader2,
+  RotateCcw, Save, Send, Trash2, Undo2, Wand2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,6 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import FormHeader from './FormHeader';
 import { SITE_URL } from './navConfig';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -34,7 +32,7 @@ import { PreviewDialog } from './blog/PreviewDialog';
 import { SocialPreviews } from './blog/previews';
 import { PublishPanel } from './blog/panels/PublishPanel';
 import { DetailsPanel } from './blog/panels/DetailsPanel';
-import { SeoPanel, SeoScore } from './blog/panels/SeoPanel';
+import { SeoPanel } from './blog/panels/SeoPanel';
 import { RelatedPanel, SourcesPanel } from './blog/panels/RelatedSourcesPanels';
 import { HistoryPanel } from './blog/panels/HistoryPanel';
 import { scheduleFromPost, type ScheduleValue } from './blog/schedule';
@@ -56,17 +54,15 @@ const NEW_DRAFT: Draft = {
 };
 
 const TABS = [
-  { id: 'publish', label: 'Publish', icon: Rocket },
-  { id: 'details', label: 'Details', icon: Settings2 },
-  { id: 'media', label: 'Images', icon: ImageIcon },
-  { id: 'seo', label: 'SEO', icon: Search },
-  { id: 'social', label: 'Social', icon: Share2 },
-  { id: 'related', label: 'Related', icon: Link2 },
-  { id: 'sources', label: 'Sources', icon: Quote },
-  { id: 'history', label: 'History', icon: History },
+  { id: 'publish', label: 'Publish' },
+  { id: 'details', label: 'Details' },
+  { id: 'media', label: 'Images' },
+  { id: 'seo', label: 'SEO' },
+  { id: 'social', label: 'Social' },
+  { id: 'related', label: 'Related' },
+  { id: 'sources', label: 'Sources' },
+  { id: 'history', label: 'History' },
 ] as const;
-
-const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 /** Borderless textarea that grows with its content, for the title and lede. */
 function GrowingTextarea({
@@ -117,7 +113,7 @@ function SaveIndicator({ state, at, live }: { state: SaveState; at: Date | null;
     <span
       role="status"
       aria-live="polite"
-      className={cn('flex h-8 items-center gap-2 whitespace-nowrap rounded-full border border-border-subtle bg-card/60 px-3 text-[12px] tabular', m.tone)}
+      className={cn('mr-2 hidden items-center gap-2 whitespace-nowrap text-[12px] tabular md:flex', m.tone)}
     >
       {m.icon}
       {m.text}
@@ -432,58 +428,62 @@ const BlogForm = () => {
   const hasSeoProblems = seo.checks.some((c) => c.status === 'fail');
 
   return (
-    <div ref={rootRef} className="relative isolate animate-in fade-in pb-24 duration-300 [--editor-top:72px]">
-      {/* Ambient ember glow behind the canvas. */}
-      <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-[8%] -z-10 h-[420px] w-[70%] rounded-full bg-accent/[0.06] blur-[120px]" />
-
+    <div ref={rootRef} className="animate-in fade-in pb-24 duration-300 [--editor-top:64px]">
       {/* ── Top bar ─────────────────────────────────────────────── */}
       <div
         ref={headerRef}
-        className="sticky top-0 z-30 -mx-4 mb-6 border-b border-border-subtle/70 bg-background/70 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:-mx-8 md:px-8"
+        className="sticky top-0 z-30 -mx-4 mb-6 border-b border-border-subtle bg-background/90 px-4 backdrop-blur sm:-mx-6 sm:px-6 md:-mx-8 md:px-8"
       >
-        <FormHeader
-          backTo="/blogs"
-          title={draft.title?.trim() || (postId ? 'Untitled post' : 'New post')}
-          subtitle={postId ? `Blog · ${STATUS_LABELS[status]}` : 'Blog · New'}
-          badge={
-            <span className="flex items-center gap-2">
-              <Badge variant={STATUS_BADGE[status]} dot>{STATUS_LABELS[status]}</Badge>
-              {pendingLive && <Badge variant="warning">Unpublished changes</Badge>}
+        <div className="flex min-h-[64px] flex-wrap items-center gap-x-3 gap-y-2 py-3">
+          <button
+            type="button"
+            onClick={() => navigate('/blogs')}
+            aria-label="Back to posts"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-fg-2 transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="flex min-w-0 items-center gap-2 text-[13px]">
+            <span className="text-muted-foreground">Blog</span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="max-w-[260px] truncate font-medium text-foreground">
+              {draft.title?.trim() || (postId ? 'Untitled post' : 'New post')}
             </span>
-          }
-          actions={
-            <>
-              <SaveIndicator state={autosave.state} at={autosave.lastSavedAt} live={live} />
-              <span className="mx-1 hidden h-6 w-px bg-border-subtle sm:block" aria-hidden="true" />
-              <Button type="button" variant="ghost" size="xs" onClick={() => setPreviewOpen(true)} disabled={!postId && !draft.title?.trim()}>
-                <Eye aria-hidden="true" /> Preview
+            <Badge variant={STATUS_BADGE[status]} dot className="ml-1">{STATUS_LABELS[status]}</Badge>
+            {pendingLive && <Badge variant="warning">Unpublished changes</Badge>}
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <SaveIndicator state={autosave.state} at={autosave.lastSavedAt} live={live} />
+            <Button type="button" variant="ghost" size="xs" onClick={() => setPreviewOpen(true)} disabled={!postId && !draft.title?.trim()}>
+              <Eye aria-hidden="true" /> <span className="hidden sm:inline">Preview</span>
+            </Button>
+            <Button type="button" variant="ghost" size="xs" onClick={manualSave} loading={busy === 'save'} disabled={!!busy}>
+              <Save aria-hidden="true" /> <span className="hidden sm:inline">Save</span>
+            </Button>
+            <div className="ml-1 flex items-center">
+              <Button
+                type="button"
+                size="xs"
+                className="rounded-r-none"
+                onClick={() => runTransition(primary.action)}
+                loading={busy === primary.action}
+                disabled={!!busy}
+              >
+                <primary.icon aria-hidden="true" /> {primary.label}
               </Button>
-              <Button type="button" variant="outline" size="xs" onClick={manualSave} loading={busy === 'save'} disabled={!!busy}>
-                <Save aria-hidden="true" /> Save
-              </Button>
-              <div className="flex items-center rounded-full shadow-ember">
-                <Button
-                  type="button"
-                  size="xs"
-                  className="rounded-r-none pr-3.5"
-                  onClick={() => runTransition(primary.action)}
-                  loading={busy === primary.action}
-                  disabled={!!busy}
-                >
-                  <primary.icon aria-hidden="true" /> {primary.label}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      size="xs"
-                      aria-label="More actions"
-                      disabled={!!busy}
-                      className="rounded-l-none border-l border-accent-foreground/15 px-2"
-                    >
-                      <ChevronDown />
-                    </Button>
-                  </DropdownMenuTrigger>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="xs"
+                    aria-label="More actions"
+                    disabled={!!busy}
+                    className="rounded-l-none border-l border-accent-foreground/20 px-2"
+                  >
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     {status !== 'in_review' && status !== 'published' && status !== 'scheduled' && (
                       <DropdownMenuItem onSelect={() => runTransition('review')} className="gap-2.5"><FileClock className="h-4 w-4" /> Mark ready for review</DropdownMenuItem>
@@ -520,9 +520,8 @@ const BlogForm = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            </>
-          }
-        />
+          </div>
+        </div>
       </div>
 
       {recovery && (
@@ -553,110 +552,92 @@ const BlogForm = () => {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         {/* ── Writing canvas ───────────────────────────────────── */}
-        <article className="relative min-w-0 rounded-2xl border border-border-subtle bg-card shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.04),0_30px_60px_-30px_rgb(0_0_0/0.7)]">
-          <div aria-hidden="true" className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-
-          <header className="mx-auto max-w-[780px] px-5 pb-2 pt-9 sm:px-10 sm:pt-14">
-            {/* URL */}
-            <div className="group flex w-fit max-w-full items-center rounded-full border border-border-subtle bg-background/50 py-1 pl-3 pr-1 font-mono text-[12px] transition-colors focus-within:border-accent/50 hover:border-border">
-              <label htmlFor="slug" className="shrink-0 text-muted-foreground">
-                <span className="hidden sm:inline">{SITE_HOST}</span>/blog/
-              </label>
-              <input
-                id="slug"
-                value={draft.slug ?? ''}
-                onChange={(e) => {
-                  setSlugTouched(true);
-                  update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') });
-                }}
-                placeholder="url-slug"
-                size={Math.max(10, (draft.slug ?? '').length + 1)}
-                className="min-w-0 max-w-[420px] border-none bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-              />
-              <button
-                type="button"
-                title="Generate the URL from the title"
-                onClick={() => { setSlugTouched(true); update({ slug: slugify(draft.title) }); }}
-                className="ml-1 flex h-6 shrink-0 items-center gap-1 rounded-full px-2 font-sans text-[11.5px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Wand2 className="h-3 w-3" aria-hidden="true" /> From title
-              </button>
-            </div>
-            {slugChangedWhileLive && (
-              <p className="mt-2.5 flex gap-1.5 text-[12px] text-warning-fg">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                This article is live at /blog/{server?.publishedSlug ?? server?.slug}. Changing the URL adds a permanent (301) redirect from the old one when you update.
-              </p>
-            )}
-
+        <article className="min-w-0 rounded-xl border border-border-subtle bg-card">
+          <header className="mx-auto max-w-[720px] px-5 pb-8 pt-10 sm:px-12 sm:pt-14">
             <GrowingTextarea
               value={draft.title ?? ''}
               onChange={(e) => setTitle(e.target.value.replace(/\n/g, ' '))}
               onEnter={() => document.getElementById('post-subtitle')?.focus()}
               placeholder="Post title"
               aria-label="Title"
-              className="mt-7 text-[32px] font-semibold leading-[1.12] tracking-[-0.035em] text-foreground placeholder:text-foreground/20 sm:text-[42px]"
+              className="text-[32px] font-semibold leading-[1.15] tracking-[-0.03em] text-foreground placeholder:text-foreground/20 sm:text-[40px]"
             />
             <GrowingTextarea
               id="post-subtitle"
               value={draft.subtitle ?? ''}
               onChange={(e) => update({ subtitle: e.target.value.replace(/\n/g, ' ') })}
               onEnter={() => document.getElementById('excerpt')?.focus()}
-              placeholder="Add a subtitle…"
+              placeholder="Subtitle (optional)"
               aria-label="Subtitle"
-              className="mt-3 text-[18px] leading-relaxed tracking-[-0.01em] text-fg-2 placeholder:text-foreground/20 sm:text-[20px]"
+              className="mt-3 text-[18px] leading-relaxed text-fg-2 placeholder:text-foreground/20"
             />
 
-            {/* Excerpt */}
-            <div className="mt-7 rounded-xl border border-border-subtle bg-background/40 transition-colors focus-within:border-accent/40">
-              <div className="flex items-center justify-between gap-2 px-4 pt-3">
-                <label htmlFor="excerpt" className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  <BookOpenText className="h-3.5 w-3.5" aria-hidden="true" />
-                  Excerpt<span className="text-accent">*</span>
-                </label>
-                <CharCount value={draft.excerpt ?? ''} max={300} min={10} />
+            <dl className="mt-8 space-y-4 border-t border-border-subtle pt-6 text-[13px]">
+              <div className="grid gap-1.5 sm:grid-cols-[88px_minmax(0,1fr)] sm:items-center sm:gap-4">
+                <dt><label htmlFor="slug" className="text-muted-foreground">URL</label></dt>
+                <dd className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-9 min-w-0 flex-1 items-center rounded-lg border border-border-subtle bg-background/40 px-3 font-mono text-[12.5px] transition-colors focus-within:border-accent/60">
+                    <span className="shrink-0 text-muted-foreground">/blog/</span>
+                    <input
+                      id="slug"
+                      value={draft.slug ?? ''}
+                      onChange={(e) => {
+                        setSlugTouched(true);
+                        update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') });
+                      }}
+                      placeholder="url-slug"
+                      className="min-w-0 flex-1 border-none bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                    />
+                  </span>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    title="Generate the URL from the title"
+                    onClick={() => { setSlugTouched(true); update({ slug: slugify(draft.title) }); }}
+                  >
+                    <Wand2 aria-hidden="true" /> From title
+                  </Button>
+                </dd>
               </div>
-              <GrowingTextarea
-                id="excerpt"
-                value={draft.excerpt ?? ''}
-                onChange={(e) => update({ excerpt: e.target.value })}
-                placeholder="A one or two sentence summary for listings, feeds and search."
-                className="min-h-[52px] px-4 pb-3 pt-1.5 text-[14px] leading-relaxed text-foreground/90 placeholder:text-muted-foreground/70"
-              />
-            </div>
+              {slugChangedWhileLive && (
+                <p className="flex gap-1.5 text-[12px] text-warning-fg sm:pl-[104px]">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  This article is live at /blog/{server?.publishedSlug ?? server?.slug}. Changing the URL adds a permanent (301) redirect from the old one when you update.
+                </p>
+              )}
+              <div className="grid gap-1.5 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-4">
+                <dt className="sm:pt-2.5">
+                  <label htmlFor="excerpt" className="text-muted-foreground">Excerpt<span className="text-accent"> *</span></label>
+                </dt>
+                <dd className="min-w-0 space-y-1">
+                  <GrowingTextarea
+                    id="excerpt"
+                    value={draft.excerpt ?? ''}
+                    onChange={(e) => update({ excerpt: e.target.value })}
+                    placeholder="One or two sentences for listings, feeds and search."
+                    className="min-h-[60px] rounded-lg border border-border-subtle bg-background/40 px-3 py-2 text-[13.5px] leading-relaxed text-foreground transition-colors placeholder:text-muted-foreground/70 focus:border-accent/60"
+                  />
+                  <div className="flex justify-end"><CharCount value={draft.excerpt ?? ''} max={300} min={10} /></div>
+                </dd>
+              </div>
+            </dl>
           </header>
 
           <BlogEditor key={editorKey} content={editorContent} onChange={onEditorChange} />
 
-          <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 rounded-b-2xl border-t border-border-subtle bg-background/30 px-5 py-3 text-[12px] text-muted-foreground sm:px-6">
-            <span className="flex items-center gap-3 tabular">
-              <span><span className="text-foreground">{wordCount.toLocaleString()}</span> words</span>
-              <span className="h-3 w-px bg-border" aria-hidden="true" />
-              <span className="flex items-center gap-1"><Clock className="h-3 w-3" aria-hidden="true" /> {draft.readingTimeMinutes ?? 1} min read</span>
+          <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border-subtle px-5 py-3 text-[12px] text-muted-foreground sm:px-6">
+            <span className="tabular">
+              {wordCount.toLocaleString()} words · {draft.readingTimeMinutes ?? 1} min read
             </span>
-            <span>Autosaves {live ? 'privately ' : ''}a few seconds after you stop typing</span>
+            <span>Autosaves {live ? 'privately ' : ''}as you write</span>
           </footer>
         </article>
 
         {/* ── Settings panels ─────────────────────────────────── */}
-        <aside className="min-w-0 xl:sticky xl:top-[calc(var(--editor-top)+16px)] xl:self-start">
-          <div className="rounded-2xl border border-border-subtle bg-card shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.04)]">
-            <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4">
-              <div>
-                <p className="label text-[11px]">Post settings</p>
-                <p className="mt-1 text-[13px] text-fg-2">{TABS.find((t) => t.id === tab)?.label}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setTab('seo')}
-                title="SEO completeness"
-                className="flex items-center gap-2 rounded-full border border-border-subtle py-1 pl-3 pr-1 text-[12px] text-muted-foreground transition-colors hover:border-border hover:text-foreground"
-              >
-                SEO
-                <SeoScore score={seo.score} size={28} />
-              </button>
-            </div>
-            <div role="tablist" aria-label="Post settings" className="mx-3 grid grid-cols-4 gap-1 rounded-xl border border-border-subtle bg-background/50 p-1">
+        <aside className="min-w-0 xl:sticky xl:top-[calc(var(--editor-top)+24px)] xl:self-start">
+          <div className="rounded-xl border border-border-subtle bg-card">
+            <div role="tablist" aria-label="Post settings" className="grid grid-cols-4 gap-1 border-b border-border-subtle p-2">
               {TABS.map((t) => (
                 <button
                   key={t.id}
@@ -667,24 +648,27 @@ const BlogForm = () => {
                   aria-controls={`panel-${t.id}`}
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    'relative flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-[11.5px] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    tab === t.id
-                      ? 'bg-secondary text-foreground shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.06),0_1px_2px_rgb(0_0_0/0.3)]'
-                      : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground',
+                    'flex h-8 items-center justify-center gap-1.5 rounded-md text-[12.5px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    tab === t.id ? 'bg-secondary font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
-                  <t.icon className={cn('h-4 w-4', tab === t.id && 'text-accent')} aria-hidden="true" />
                   {t.label}
-                  {t.id === 'seo' && hasSeoProblems && <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-danger" aria-label="has problems" />}
+                  {t.id === 'seo' && (
+                    <span
+                      className={cn('tabular text-[11px]', seo.score >= 80 ? 'text-success-fg' : seo.score >= 55 ? 'text-warning-fg' : 'text-danger-fg')}
+                      aria-label={`score ${seo.score}${hasSeoProblems ? ', has problems' : ''}`}
+                    >
+                      {seo.score}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
             <div
-              key={tab}
               id={`panel-${tab}`}
               role="tabpanel"
               aria-labelledby={`tab-${tab}`}
-              className="animate-in fade-in slide-in-from-bottom-1 max-h-none overflow-y-auto px-4 pb-5 pt-5 duration-200 xl:max-h-[calc(100vh-var(--editor-top)-200px)]"
+              className="max-h-none overflow-y-auto p-5 xl:max-h-[calc(100vh-var(--editor-top)-120px)]"
             >
               {tab === 'publish' && <PublishPanel post={{ ...server, ...draft }} status={status} update={update} schedule={schedule} setSchedule={setSchedule} wordCount={wordCount} wpm={wpm} />}
               {tab === 'details' && <DetailsPanel post={draft} update={update} authors={authors} series={series} settings={settings} knownTags={knownTags} knownCategories={knownCategories} />}

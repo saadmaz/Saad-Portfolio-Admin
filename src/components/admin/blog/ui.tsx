@@ -48,7 +48,7 @@ export function CharCount({ value, max, min }: { value: string; max: number; min
 }
 
 const control =
-  'w-full rounded-lg border border-border-subtle bg-background/60 px-3 py-2 text-[13px] text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.2)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground/70 hover:border-border focus:border-accent/60 focus:ring-4 focus:ring-accent/10 aria-[invalid=true]:border-danger';
+  'w-full rounded-lg border border-border-subtle bg-background/40 px-3 py-2 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-border focus:border-accent/60 aria-[invalid=true]:border-danger';
 
 interface FieldBase {
   label: string;
@@ -67,7 +67,7 @@ export function TextField({ label, value, onChange, hint, error, placeholder, ma
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={id} className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+        <label htmlFor={id} className="text-[12.5px] font-medium text-fg-2">
           {label}{required && <span className="text-accent"> *</span>}
         </label>
         {max && <CharCount value={value} max={max} min={min} />}
@@ -83,7 +83,7 @@ export function TextAreaField({ label, value, onChange, hint, error, placeholder
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={id} className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
+        <label htmlFor={id} className="text-[12.5px] font-medium text-fg-2">
           {label}{required && <span className="text-accent"> *</span>}
         </label>
         {max && <CharCount value={value} max={max} min={min} />}
@@ -112,7 +112,7 @@ export function SelectField({
   const id = useId();
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{label}</label>
+      <label htmlFor={id} className="text-[12.5px] font-medium text-fg-2">{label}</label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={cn(control, 'h-9 py-0')}>
         {placeholder !== undefined && <option value="">{placeholder}</option>}
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -124,12 +124,9 @@ export function SelectField({
 
 export function PanelSection({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="space-y-3.5">
+    <section className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-fg-2">
-          <span className="h-3 w-0.5 rounded-full bg-accent/70" aria-hidden="true" />
-          {title}
-        </h3>
+        <h3 className="text-[13px] font-medium text-foreground">{title}</h3>
         {action}
       </div>
       {children}
