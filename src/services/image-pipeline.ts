@@ -6,7 +6,9 @@
  * can serve responsive `srcset`s without a server-side image service. Large
  * originals are never stored: the biggest rendition becomes the main URL.
  * GIFs (possibly animated) are uploaded untouched. Browsers that can't
- * encode WebP fall back to uploading the original file.
+ * encode WebP fall back to uploading the original file. Social images are
+ * the exception: a single 1200px-wide JPEG, the format every link-preview
+ * crawler (LinkedIn included) renders.
  *
  * Each upload is registered in the `media` collection (the media library).
  */
@@ -21,6 +23,9 @@ export const ACCEPT_ATTR = ACCEPTED_TYPES.join(',');
 export const MAX_BYTES = 15 * 1024 * 1024;
 export const VARIANT_WIDTHS = [640, 1280, 1920] as const;
 const WEBP_QUALITY = 0.82;
+/** Social cards: LinkedIn and some chat apps don't render WebP link previews, so these are JPEG. */
+export const SOCIAL_WIDTH = 1200;
+const JPEG_QUALITY = 0.9;
 
 export type ImagePurpose = 'cover' | 'social' | 'inline' | 'avatar';
 
@@ -64,7 +69,7 @@ async function decode(file: Blob): Promise<ImageBitmap> {
   return createImageBitmap(file);
 }
 
-async function encodeWebp(bitmap: ImageBitmap, width: number): Promise<Blob | null> {
+async function encode(bitmap: ImageBitmap, width: number, type: 'image/webp' | 'image/jpeg'): Promise<Blob | null> {
   const height = Math.round((bitmap.height / bitmap.width) * width);
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -72,10 +77,17 @@ async function encodeWebp(bitmap: ImageBitmap, width: number): Promise<Blob | nu
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   ctx.imageSmoothingQuality = 'high';
+  if (type === 'image/jpeg') {
+    // JPEG has no alpha: flatten transparent areas onto white, not black.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+  }
   ctx.drawImage(bitmap, 0, 0, width, height);
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', WEBP_QUALITY));
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, type, type === 'image/jpeg' ? JPEG_QUALITY : WEBP_QUALITY),
+  );
   // Safari < 16 silently returns PNG when it can't encode WebP.
-  return blob && blob.type === 'image/webp' ? blob : null;
+  return blob && blob.type === type ? blob : null;
 }
 
 export interface UploadResult {
@@ -104,8 +116,11 @@ export async function processAndUpload(
   try {
     let variants: { blob: Blob; width: number }[] = [];
     if (file.type !== 'image/gif') {
-      for (const w of variantWidths(width)) {
-        const blob = await encodeWebp(bitmap, w);
+      // Social images are only used as link-preview cards: one JPEG at card width.
+      const social = purpose === 'social';
+      const widths = social ? [Math.min(width, SOCIAL_WIDTH)] : variantWidths(width);
+      for (const w of widths) {
+        const blob = await encode(bitmap, w, social ? 'image/jpeg' : 'image/webp');
         if (!blob) {
           variants = [];
           break;
@@ -120,7 +135,8 @@ export async function processAndUpload(
     let done = 0;
     const uploaded: (ImageVariant & { path: string })[] = [];
     for (const u of uploads) {
-      const ext = u.blob.type === 'image/webp' ? 'webp' : file.name.split('.').pop() || 'jpg';
+      const ext =
+        u.blob.type === 'image/webp' ? 'webp' : u.blob.type === 'image/jpeg' && variants.length ? 'jpg' : file.name.split('.').pop() || 'jpg';
       const named = new File([u.blob], `${hint}-${u.width}w.${ext}`, { type: u.blob.type || file.type });
       const { url, path } = await uploadImageWithPath(
         named,
@@ -147,7 +163,7 @@ export async function processAndUpload(
       path: main.path,
       variantPaths: uploaded.map((u) => u.path),
       bytes: total,
-      type: variants.length ? 'image/webp' : file.type,
+      type: variants.length ? variants[0].blob.type : file.type,
       name: file.name,
       createdAt: new Date().toISOString(),
     }).catch(() => undefined);
