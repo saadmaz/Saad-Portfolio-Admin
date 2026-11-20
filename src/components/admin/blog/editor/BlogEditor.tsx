@@ -32,8 +32,8 @@ const Btn = ({ onClick, active, label, disabled, children }: { onClick: () => vo
     onMouseDown={(e) => e.preventDefault()} // keep the editor selection
     onClick={onClick}
     className={cn(
-      'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-30 [&_svg]:h-[15px] [&_svg]:w-[15px]',
-      active ? 'bg-accent/15 text-accent shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.25)]' : 'text-fg-2 hover:bg-surface-3 hover:text-foreground',
+      'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors duration-150 disabled:opacity-30 [&_svg]:h-[15px] [&_svg]:w-[15px]',
+      active ? 'bg-secondary text-accent' : 'text-fg-2 hover:bg-secondary hover:text-foreground',
     )}
   >
     {children}
@@ -167,11 +167,29 @@ function Toolbar({ editor }: { editor: Editor }) {
     else chain().insertContent(content).run();
   };
 
+  type MoreItem = { label: string; icon: React.ComponentType<{ className?: string }>; run: () => void; hint?: string; active?: boolean; disabled?: boolean };
+  const more: (MoreItem | 'sep')[] = [
+    { label: 'Undo', icon: Undo, hint: 'Ctrl+Z', disabled: !s.canUndo, run: () => chain().undo().run() },
+    { label: 'Redo', icon: Redo, hint: 'Ctrl+Y', disabled: !s.canRedo, run: () => chain().redo().run() },
+    'sep',
+    { label: 'Underline', icon: Underline, hint: 'Ctrl+U', active: s.underline, run: () => chain().toggleUnderline().run() },
+    { label: 'Strikethrough', icon: Strikethrough, active: s.strike, run: () => chain().toggleStrike().run() },
+    { label: 'Inline code', icon: Code, hint: 'Ctrl+E', active: s.code, run: () => chain().toggleCode().run() },
+    'sep',
+    { label: 'Align left', icon: AlignLeft, active: s.align === 'left', run: () => chain().setTextAlign('left').run() },
+    { label: 'Align center', icon: AlignCenter, active: s.align === 'center', run: () => chain().setTextAlign('center').run() },
+    { label: 'Align right', icon: AlignRight, active: s.align === 'right', run: () => chain().setTextAlign('right').run() },
+    { label: 'Justify', icon: AlignJustify, active: s.align === 'justify', run: () => chain().setTextAlign('justify').run() },
+    'sep',
+    { label: 'Indent', icon: Indent, hint: 'Tab', disabled: !s.inList, run: () => chain().sinkListItem('listItem').run() },
+    { label: 'Outdent', icon: Outdent, hint: 'Shift+Tab', disabled: !s.inList, run: () => chain().liftListItem('listItem').run() },
+  ];
   return (
-    <div className="sticky top-[calc(var(--editor-top,72px)+10px)] z-20 mx-3 flex flex-wrap items-center gap-0.5 rounded-xl border border-border bg-popover/85 p-1 shadow-lg backdrop-blur-xl sm:mx-6" role="toolbar" aria-label="Formatting">
-      <Btn label="Undo" onClick={() => chain().undo().run()} disabled={!s.canUndo}><Undo /></Btn>
-      <Btn label="Redo" onClick={() => chain().redo().run()} disabled={!s.canRedo}><Redo /></Btn>
-      <Sep />
+    <div
+      className="sticky top-[var(--editor-top,64px)] z-20 flex items-center gap-0.5 overflow-x-auto border-y border-border-subtle bg-card/95 px-3 py-1.5 backdrop-blur no-scrollbar sm:px-5"
+      role="toolbar"
+      aria-label="Formatting"
+    >
       <select
         aria-label="Text style"
         value={s.block}
@@ -180,32 +198,21 @@ function Toolbar({ editor }: { editor: Editor }) {
           if (v === 'p') chain().setParagraph().run();
           else chain().toggleHeading({ level: Number(v[1]) as 1 | 2 | 3 | 4 }).run();
         }}
-        className="h-8 cursor-pointer rounded-lg border border-transparent bg-transparent px-2 text-[13px] font-medium text-foreground transition-colors hover:bg-surface-3 focus:border-accent/50 focus:outline-none"
+        className="h-8 shrink-0 cursor-pointer rounded-md bg-transparent px-2 text-[13px] text-foreground transition-colors hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <option value="p">Paragraph</option>
-        <option value="h1">Heading 1</option>
-        <option value="h2">Heading 2</option>
-        <option value="h3">Heading 3</option>
-        <option value="h4">Heading 4</option>
+        <option value="h2">Heading</option>
+        <option value="h3">Subheading</option>
+        <option value="h4">Small heading</option>
+        <option value="h1">Title (H1)</option>
       </select>
       <Sep />
       <Btn label="Bold (Ctrl+B)" active={s.bold} onClick={() => chain().toggleBold().run()}><Bold /></Btn>
       <Btn label="Italic (Ctrl+I)" active={s.italic} onClick={() => chain().toggleItalic().run()}><Italic /></Btn>
-      <Btn label="Underline (Ctrl+U)" active={s.underline} onClick={() => chain().toggleUnderline().run()}><Underline /></Btn>
-      <Btn label="Strikethrough" active={s.strike} onClick={() => chain().toggleStrike().run()}><Strikethrough /></Btn>
-      <Btn label="Inline code" active={s.code} onClick={() => chain().toggleCode().run()}><Code /></Btn>
       <Btn label="Link (Ctrl+K)" active={s.link} onClick={() => setLinkOpen(true)}><LinkIcon /></Btn>
-      <Sep />
-      <Btn label="Align left" active={s.align === 'left'} onClick={() => chain().setTextAlign('left').run()}><AlignLeft /></Btn>
-      <Btn label="Align center" active={s.align === 'center'} onClick={() => chain().setTextAlign('center').run()}><AlignCenter /></Btn>
-      <Btn label="Align right" active={s.align === 'right'} onClick={() => chain().setTextAlign('right').run()}><AlignRight /></Btn>
-      <Btn label="Justify" active={s.align === 'justify'} onClick={() => chain().setTextAlign('justify').run()}><AlignJustify /></Btn>
       <Sep />
       <Btn label="Bulleted list" active={s.bullet} onClick={() => chain().toggleBulletList().run()}><List /></Btn>
       <Btn label="Numbered list" active={s.ordered} onClick={() => chain().toggleOrderedList().run()}><ListOrdered /></Btn>
-      <Btn label="Indent (Tab)" disabled={!s.inList} onClick={() => chain().sinkListItem('listItem').run()}><Indent /></Btn>
-      <Btn label="Outdent (Shift+Tab)" disabled={!s.inList} onClick={() => chain().liftListItem('listItem').run()}><Outdent /></Btn>
-      <Sep />
       <Btn label="Quote" active={s.quote} onClick={() => chain().toggleBlockquote().run()}><Quote /></Btn>
       <Btn label="Code block" active={s.codeBlock} onClick={() => chain().toggleCodeBlock().run()}><Code2 /></Btn>
       {s.codeBlock && (
@@ -213,7 +220,7 @@ function Toolbar({ editor }: { editor: Editor }) {
           aria-label="Code language"
           value={s.language}
           onChange={(e) => chain().updateAttributes('codeBlock', { language: e.target.value }).run()}
-          className="h-8 rounded-lg border border-border-subtle bg-background/60 px-2 font-mono text-[12px] text-foreground focus:border-accent/50 focus:outline-none"
+          className="ml-1 h-7 shrink-0 rounded-md border border-border-subtle bg-background px-2 font-mono text-[12px] text-foreground focus:outline-none"
         >
           {CODE_LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
@@ -221,7 +228,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       {s.table && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className="flex h-8 items-center gap-1 rounded-lg bg-accent/15 px-2 text-[12px] text-accent"><TableIcon className="h-3.5 w-3.5" /> Table</button>
+            <button type="button" className="ml-1 flex h-7 shrink-0 items-center gap-1 rounded-md bg-accent/15 px-2 text-[12px] text-accent"><TableIcon className="h-3.5 w-3.5" /> Table</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onSelect={() => chain().addRowBefore().run()}>Add row above</DropdownMenuItem>
@@ -238,10 +245,44 @@ function Toolbar({ editor }: { editor: Editor }) {
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-      <div className="ml-auto">
+
+      {/* Less common formatting lives here to keep the bar calm. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            title="More formatting"
+            aria-label="More formatting"
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-fg-2 transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <MoreHorizontal className="h-[15px] w-[15px]" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          {more.map((m, i) =>
+            m === 'sep' ? (
+              <DropdownMenuSeparator key={i} />
+            ) : (
+              <DropdownMenuItem key={m.label} disabled={m.disabled} onSelect={m.run} className="gap-2.5">
+                <m.icon className={cn('h-4 w-4', m.active ? 'text-accent' : 'text-muted-foreground')} />
+                <span className="flex-1">{m.label}</span>
+                {m.hint && <span className="font-mono text-[11px] text-muted-foreground">{m.hint}</span>}
+              </DropdownMenuItem>
+            ),
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <div className="ml-auto pl-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" size="xs" variant="secondary" className="h-8 rounded-lg bg-surface-3 hover:bg-accent hover:text-accent-foreground"><Plus aria-hidden="true" /> Insert</Button>
+            <button
+              type="button"
+              className="flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-foreground transition-colors hover:bg-secondary"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> Insert
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-[70vh] w-56 overflow-y-auto">
             {INSERTS.map((g, gi) => (
@@ -289,7 +330,7 @@ export function BlogEditor({
     content,
     editorProps: {
       attributes: {
-        class: 'article-editor prose-editor mx-auto min-h-[520px] max-w-[780px] px-5 pb-16 pt-8 focus:outline-none sm:px-10',
+        class: 'article-editor prose-editor mx-auto min-h-[520px] max-w-[720px] px-5 pb-16 pt-8 focus:outline-none sm:px-12',
         'aria-label': 'Article content',
         role: 'textbox',
         'aria-multiline': 'true',
@@ -315,7 +356,7 @@ export function BlogEditor({
 
   if (!editor) return <div className="mx-6 my-6 min-h-[520px] animate-pulse rounded-xl bg-secondary/40" />;
   return (
-    <div className={cn('relative pt-4', invalid && 'rounded-xl ring-1 ring-danger/60')}>
+    <div className={cn('relative', invalid && 'ring-1 ring-danger/60')}>
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>

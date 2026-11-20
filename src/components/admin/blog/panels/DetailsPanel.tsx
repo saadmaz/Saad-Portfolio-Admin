@@ -66,7 +66,7 @@ export function DetailsPanel({
         </datalist>
 
         <div className="space-y-1.5">
-          <label htmlFor="tag-input" className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Tags</label>
+          <label htmlFor="tag-input" className="text-[12.5px] font-medium text-fg-2">Tags</label>
           <div className="flex min-h-[40px] flex-wrap items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-1.5 focus-within:border-accent">
             {tags.map((t) => (
               <span key={t} className="inline-flex items-center gap-1 rounded-md border border-accent/20 bg-accent/10 px-2 py-0.5 text-[12px] text-accent-hover">

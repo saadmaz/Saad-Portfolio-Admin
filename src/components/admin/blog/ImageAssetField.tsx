@@ -128,7 +128,7 @@ export function ImageAssetField({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="text-[12.5px] font-medium text-fg-2">{label}</span>
         {value && <span className="tabular text-[12px] text-muted-foreground">{value.width}×{value.height}{value.variants?.length ? ` · ${value.variants.length} sizes` : ''}</span>}
       </div>
 
