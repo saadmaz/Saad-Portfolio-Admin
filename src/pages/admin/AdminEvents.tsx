@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Search, Calendar, Trash2, Images, X } from 'lucide-react';
+import { Plus, Search, Calendar, Trash2, Images, X, EyeOff } from 'lucide-react';
+import { EVENT_MIN_WORDS, eventWordCount, isEventIndexable } from '@/shared/lib/indexing';
 import { toast } from "sonner";
 import PageHeader from '@/components/admin/PageHeader';
 import { useCreateIntent } from '@/components/admin/useAdminOverview';
@@ -41,7 +42,23 @@ const eventSchema = z.object({
   link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   images: z.array(z.string()).min(1, 'At least one image is required'),
   imageCaptions: z.array(z.string()).optional(),
+  seo_visibility: z.enum(['auto', 'index', 'noindex']).optional(),
 });
+
+const VISIBILITY_OPTIONS = [
+  { value: 'auto', label: `Auto (index at ${EVENT_MIN_WORDS}+ words)` },
+  { value: 'index', label: 'Always index' },
+  { value: 'noindex', label: 'Hide from search' },
+] as const;
+
+/** Live explanation of what search engines will do with this event as written. */
+function visibilityHint(visibility: string | undefined, words: number) {
+  if (visibility === 'index') return 'Always indexed, even with a short write-up.';
+  if (visibility === 'noindex') return 'Hidden from Google and the sitemap. Still visible on your site.';
+  return words >= EVENT_MIN_WORDS
+    ? `Indexed by Google · ${words} words.`
+    : `Hidden from Google · ${words} of ${EVENT_MIN_WORDS} words. Expand the description or highlights to get it indexed.`;
+}
 
 type EventFormData = z.infer<typeof eventSchema>;
 
@@ -83,8 +100,9 @@ const toFormValues = (ev: Event | null): Partial<EventFormData> =>
         link: ev.link ?? '',
         images: photosOf(ev),
         imageCaptions: ev.imageCaptions ?? [],
+        seo_visibility: ev.seo_visibility ?? 'auto',
       }
-    : { images: [], imageCaptions: [], highlights: [] };
+    : { images: [], imageCaptions: [], highlights: [], seo_visibility: 'auto' };
 
 function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawerProps) {
   const isDesktop = useIsDesktop();
@@ -102,6 +120,7 @@ function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawer
   }, [isOpen, event, form]);
 
   const highlights = form.watch('highlights') ?? [];
+  const writeUpWords = eventWordCount({ description: form.watch('description'), highlights });
 
   const addHighlight = () => {
     const val = newHighlight.trim();
@@ -282,6 +301,21 @@ function EventDrawer({ isOpen, onClose, event, onSubmit, onDelete }: EventDrawer
                   <FormMessage />
                 </FormItem>
               )} />
+
+              <FormField control={form.control} name="seo_visibility" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Search visibility</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value ?? 'auto'}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {VISIBILITY_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="meta" aria-live="polite">{visibilityHint(field.value, writeUpWords)}</p>
+                </FormItem>
+              )} />
             </div>
 
             <div className="flex shrink-0 items-center gap-2 border-t border-border-subtle px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom))] md:pb-4">
@@ -343,6 +377,14 @@ function EventCard({ event, onOpen }: { event: Event; onOpen: () => void }) {
         {event.role && (
           <span className="absolute left-3 top-3 rounded-full bg-[rgba(26,26,28,0.7)] px-2.5 py-1 font-mono text-label uppercase text-foreground backdrop-blur-sm">
             {event.role}
+          </span>
+        )}
+        {!isEventIndexable(event) && (
+          <span
+            title="Not indexed by search engines (open to see why)"
+            className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-[rgba(26,26,28,0.7)] px-2 py-1 font-mono text-label uppercase text-fg-2 backdrop-blur-sm"
+          >
+            <EyeOff className="h-3 w-3" aria-hidden="true" /> Hidden
           </span>
         )}
         {photos.length > 1 && (

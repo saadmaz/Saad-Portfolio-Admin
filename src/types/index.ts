@@ -355,6 +355,8 @@ export interface Event {
   link?: string;
   tags?: string[];
   type: string;          // Event category: Conference, Workshop, Summit, etc.
+  /** Search visibility; "auto" (default) indexes once the write-up reaches 100 words (shared/lib/indexing.ts). */
+  seo_visibility?: 'auto' | 'index' | 'noindex';
 }
 
 export interface Newsletter {
