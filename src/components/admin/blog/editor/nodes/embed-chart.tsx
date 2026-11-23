@@ -4,6 +4,7 @@ import type { DOMOutputSpec } from '@tiptap/pm/model';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { BarChart3, PlaySquare } from 'lucide-react';
 import { BlockFrame, BlockInput, Segmented, type NodeViewProps } from '../BlockFrame';
+import { withBlockView } from '../block-view-context';
 import { EMBED_PROVIDERS, parseEmbedUrl, type EmbedProviderId } from '../embeds';
 import { chartFromText, chartToText, type ChartData } from '../chart-data';
 
@@ -76,7 +77,7 @@ export const Embed = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(EmbedView);
+    return ReactNodeViewRenderer(withBlockView(EmbedView));
   },
 });
 
@@ -229,6 +230,6 @@ export const Chart = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ChartView);
+    return ReactNodeViewRenderer(withBlockView(ChartView));
   },
 });

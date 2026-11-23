@@ -10,6 +10,7 @@ import type { DOMOutputSpec } from '@tiptap/pm/model';
 import { NodeViewContent, ReactNodeViewRenderer } from '@tiptap/react';
 import { BookMarked, Code2, Columns2, ListTree, Megaphone, Quote } from 'lucide-react';
 import { BlockFrame, BlockInput, Segmented, type NodeViewProps } from '../BlockFrame';
+import { withBlockView } from '../block-view-context';
 import { CALLOUT_VARIANTS, sanitizeCustomHtml } from '../block-config';
 
 // ── Callout / info / warning boxes ───────────────────────────────────────
@@ -61,7 +62,7 @@ export const Callout = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CalloutView);
+    return ReactNodeViewRenderer(withBlockView(CalloutView));
   },
 });
 
@@ -105,7 +106,7 @@ export const PullQuote = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(PullQuoteView);
+    return ReactNodeViewRenderer(withBlockView(PullQuoteView));
   },
 });
 
@@ -135,7 +136,7 @@ export const Columns = Node.create({
   parseHTML: () => [{ tag: 'div[data-columns]' }],
   renderHTML: () => ['div', { 'data-columns': '' }, 0],
   addNodeView() {
-    return ReactNodeViewRenderer(ColumnsView);
+    return ReactNodeViewRenderer(withBlockView(ColumnsView));
   },
 });
 
@@ -168,7 +169,7 @@ function placeholder(name: string, attr: string, label: string, note: string, Ic
     parseHTML: () => [{ tag: `div[${attr}]` }],
     renderHTML: () => ['div', { [attr]: '' }],
     addNodeView() {
-      return ReactNodeViewRenderer(View);
+      return ReactNodeViewRenderer(withBlockView(View));
     },
   });
 }
@@ -226,7 +227,7 @@ export const HtmlBlock = Node.create({
   parseHTML: () => [{ tag: 'div[data-html-block]' }],
   renderHTML: ({ node }) => ['div', { 'data-html-block': '', 'data-html': node.attrs.html ?? '' }],
   addNodeView() {
-    return ReactNodeViewRenderer(HtmlView);
+    return ReactNodeViewRenderer(withBlockView(HtmlView));
   },
 });
 
