@@ -17,7 +17,7 @@ import("./App.tsx")
   .catch((error: unknown) => {
     console.error("Failed to start app:", error);
     rootElement.innerHTML = `
-      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Geist Variable',system-ui,sans-serif;background:#19191B;color:#EDEDEA;text-align:center;">
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Geist Variable',system-ui,sans-serif;background:#111113;color:#F5F5F2;text-align:center;">
         <div style="max-width:480px;">
           <h1 style="font-size:20px;font-weight:500;margin-bottom:12px;">App failed to start</h1>
           <p style="color:#8E8E89;margin-bottom:16px;">${error instanceof Error ? error.message : "Unknown startup error."}</p>
