@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/shared/lib/utils';
 import { CODE_LANGUAGES, editorExtensions } from './extensions';
 import { CALLOUT_VARIANTS } from './block-config';
+import { ConvertPromptsDialog } from './ConvertPromptsDialog';
+import { suggestedPromptCount } from './convert-prompts';
 
 export interface EditorChange {
   html: string;
@@ -85,6 +87,7 @@ const INSERTS: { group: string; items: { label: string; icon: React.ComponentTyp
       { label: 'Resource list', icon: Library, content: { type: 'resources' } },
       { label: 'Downloadable file', icon: FileDown, content: { type: 'attachment' } },
       { label: 'Custom HTML', icon: Code2, content: { type: 'htmlBlock' } },
+      { label: 'Convert to prompts…', icon: Sparkles, content: { type: '__convertPrompts' } },
     ],
   },
   {
@@ -141,6 +144,7 @@ function LinkDialog({ editor, open, onOpenChange }: { editor: Editor; open: bool
 
 function Toolbar({ editor }: { editor: Editor }) {
   const [linkOpen, setLinkOpen] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
   useEffect(() => {
     const open = () => setLinkOpen(true);
     document.addEventListener('blog-editor:link', open);
@@ -172,12 +176,14 @@ function Toolbar({ editor }: { editor: Editor }) {
       align: (['center', 'right', 'justify'] as const).find((a) => e.isActive({ textAlign: a })) ?? 'left',
       canUndo: e.can().undo(),
       canRedo: e.can().redo(),
+      promptSuggestions: suggestedPromptCount(e),
     }),
   });
   const chain = () => editor.chain().focus();
 
   const insert = (content: Record<string, unknown>) => {
-    if (content.type === '__table') chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    if (content.type === '__convertPrompts') setConvertOpen(true);
+    else if (content.type === '__table') chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
     else chain().insertContent(content).run();
   };
 
@@ -298,7 +304,18 @@ function Toolbar({ editor }: { editor: Editor }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="ml-auto pl-2">
+      <div className="ml-auto flex items-center gap-1 pl-2">
+        {s.promptSuggestions > 0 && (
+          <button
+            type="button"
+            onClick={() => setConvertOpen(true)}
+            title="Turn prompts written as code blocks or inline code into Prompt blocks"
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-accent/10 px-2.5 text-[12.5px] font-medium text-accent transition-colors hover:bg-accent/20"
+          >
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            {s.promptSuggestions} prompt{s.promptSuggestions === 1 ? '' : 's'} found · Convert
+          </button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -325,6 +342,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         </DropdownMenu>
       </div>
       <LinkDialog editor={editor} open={linkOpen} onOpenChange={setLinkOpen} />
+      <ConvertPromptsDialog editor={editor} open={convertOpen} onOpenChange={setConvertOpen} />
     </div>
   );
 }

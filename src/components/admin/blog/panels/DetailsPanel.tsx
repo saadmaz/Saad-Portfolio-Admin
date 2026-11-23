@@ -129,6 +129,7 @@ export function DetailsPanel({
         <Switch checked={post.tableOfContents !== false} onChange={(v) => update({ tableOfContents: v })} label="Table of contents" description="Generated from H2 and H3 headings." />
         <Switch checked={post.reactionsEnabled !== false} onChange={(v) => update({ reactionsEnabled: v })} label="Reader reactions" description={settings.reactionsEnabled === false ? 'Currently off for the whole blog (Blog settings).' : 'Helpful, Insightful, Interesting, Loved it.'} />
         <Switch checked={post.socialShareEnabled !== false} onChange={(v) => update({ socialShareEnabled: v })} label="Share buttons" />
+        <Switch checked={post.promptDownloads !== false} onChange={(v) => update({ promptDownloads: v })} label="Prompt downloads" description="Readers can download this article's prompts as .md and .txt files. Copy buttons always stay." />
       </PanelSection>
 
       <PanelSection title="Call to action">

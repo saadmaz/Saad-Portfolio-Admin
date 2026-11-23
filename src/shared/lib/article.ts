@@ -116,7 +116,7 @@ export const SNAPSHOT_FIELDS = [
   'title', 'subtitle', 'slug', 'excerpt', 'content', 'contentJson', 'category', 'articleType', 'tags',
   'authorId', 'author', 'cover', 'socialImage', 'seoTitle', 'metaDescription', 'keywords', 'canonicalUrl',
   'noIndex', 'unlisted', 'sources', 'seriesId', 'relatedPostIds', 'featured', 'featuredOrder',
-  'tableOfContents', 'reactionsEnabled', 'socialShareEnabled', 'ctaText', 'ctaUrl', 'readingTimeMinutes',
+  'tableOfContents', 'reactionsEnabled', 'socialShareEnabled', 'promptDownloads', 'ctaText', 'ctaUrl', 'readingTimeMinutes',
   'image',
 ] as const satisfies readonly (keyof BlogPost)[];
 

@@ -50,7 +50,7 @@ const pickEditable = (post: Partial<BlogPost>): Draft => {
 
 const NEW_DRAFT: Draft = {
   title: '', subtitle: '', slug: '', excerpt: '', content: '', category: '', tags: [], author: 'Saad Mazhar',
-  tableOfContents: true, reactionsEnabled: true, socialShareEnabled: true, unlisted: false, featured: false,
+  tableOfContents: true, reactionsEnabled: true, socialShareEnabled: true, promptDownloads: true, unlisted: false, featured: false,
 };
 
 const TABS = [
