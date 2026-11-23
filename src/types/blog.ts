@@ -88,6 +88,8 @@ export interface BlogPost {
   tableOfContents?: boolean; // default on; false hides it
   reactionsEnabled?: boolean; // default on
   socialShareEnabled?: boolean; // default on
+  /** Readers can download the article's prompts as .md / .txt (default on). */
+  promptDownloads?: boolean;
 
   /* Relations */
   relatedPostIds?: string[];
