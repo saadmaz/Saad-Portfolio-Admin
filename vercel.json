@@ -50,12 +50,12 @@
   "redirects": [
     {
       "source": "/logo.png",
-      "destination": "/icons/icon-v2-512.png",
+      "destination": "/icons/icon-v3-512.png",
       "permanent": true
     },
     {
       "source": "/favicon.svg",
-      "destination": "/icons/favicon-v2.svg",
+      "destination": "/icons/favicon-v3.svg",
       "permanent": true
     }
   ],
