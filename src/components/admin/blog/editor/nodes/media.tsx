@@ -10,6 +10,7 @@ import { NodeViewContent, ReactNodeViewRenderer } from '@tiptap/react';
 import { ArrowLeft, ArrowRight, Columns2, GalleryHorizontal, Image as ImageIcon, X } from 'lucide-react';
 import type { ImageAsset } from '@/types/blog';
 import { BlockFrame, BlockInput, Segmented, type NodeViewProps } from '../BlockFrame';
+import { withBlockView } from '../block-view-context';
 import { useBlockUpload } from '../useBlockUpload';
 
 const srcsetOf = (asset: ImageAsset) =>
@@ -151,7 +152,7 @@ export const Figure = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(FigureView);
+    return ReactNodeViewRenderer(withBlockView(FigureView));
   },
 });
 
@@ -295,7 +296,7 @@ export const Gallery = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(GalleryView);
+    return ReactNodeViewRenderer(withBlockView(GalleryView));
   },
 });
 
@@ -391,6 +392,6 @@ export const MediaText = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(MediaTextView);
+    return ReactNodeViewRenderer(withBlockView(MediaTextView));
   },
 });

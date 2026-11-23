@@ -4,7 +4,7 @@ import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, BarChart3, Bold, BookMarked, Code, Code2, Columns2,
   GalleryHorizontal, Image as ImageIcon, Indent, Italic, Link as LinkIcon, List, ListOrdered, ListTree,
   Megaphone, Minus, MoreHorizontal, Outdent, PlaySquare, Plus, Quote, Redo, Sparkles, Strikethrough,
-  Table as TableIcon, TextQuote, Underline, Undo,
+  Table as TableIcon, TextQuote, Underline, Undo, Heading2, Pilcrow, Columns3, Library, FileDown,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -42,50 +42,62 @@ const Btn = ({ onClick, active, label, disabled, children }: { onClick: () => vo
 
 const Sep = () => <span className="mx-1 h-5 w-px shrink-0 bg-border-subtle" aria-hidden="true" />;
 
-/** Every block the Insert menu can add, as editor content. */
+/** Every block the Insert menu can add, as editor content, in the groups authors think in. */
 const INSERTS: { group: string; items: { label: string; icon: React.ComponentType<{ className?: string }>; content: Record<string, unknown> }[] }[] = [
+  {
+    group: 'Writing',
+    items: [
+      { label: 'Heading', icon: Heading2, content: { type: 'heading', attrs: { level: 2 } } },
+      { label: 'Paragraph', icon: Pilcrow, content: { type: 'paragraph' } },
+      { label: 'Quote', icon: Quote, content: { type: 'blockquote', content: [{ type: 'paragraph' }] } },
+      { label: 'Pull quote', icon: TextQuote, content: { type: 'pullQuote' } },
+      { label: 'Divider (line)', icon: Minus, content: { type: 'divider', attrs: { variant: 'line' } } },
+      { label: 'Divider (dots)', icon: MoreHorizontal, content: { type: 'divider', attrs: { variant: 'dots' } } },
+      { label: 'Table', icon: TableIcon, content: { type: '__table' } },
+      {
+        label: 'Two columns',
+        icon: Columns2,
+        content: { type: 'columns', content: [{ type: 'column', content: [{ type: 'paragraph' }] }, { type: 'column', content: [{ type: 'paragraph' }] }] },
+      },
+    ],
+  },
   {
     group: 'Media',
     items: [
       { label: 'Image', icon: ImageIcon, content: { type: 'figure' } },
       { label: 'Image gallery', icon: GalleryHorizontal, content: { type: 'gallery', attrs: { layout: 'grid' } } },
       { label: 'Image carousel', icon: GalleryHorizontal, content: { type: 'gallery', attrs: { layout: 'carousel' } } },
-      { label: 'Image beside text', icon: Columns2, content: { type: 'mediaText', content: [{ type: 'paragraph' }] } },
+      { label: 'Image + text', icon: Columns2, content: { type: 'mediaText', content: [{ type: 'paragraph' }] } },
       { label: 'Video or embed', icon: PlaySquare, content: { type: 'embed' } },
       { label: 'Chart', icon: BarChart3, content: { type: 'chart' } },
     ],
   },
   {
-    group: 'Text',
+    group: 'Developer resources',
     items: [
-      { label: 'Pull quote', icon: TextQuote, content: { type: 'pullQuote' } },
+      { label: 'Prompt block', icon: Sparkles, content: { type: 'prompt' } },
+      { label: 'Code block', icon: Code2, content: { type: 'codeBlock' } },
+      {
+        label: 'Step-by-step',
+        icon: ListOrdered,
+        content: { type: 'steps', content: [{ type: 'step', content: [{ type: 'paragraph' }] }, { type: 'step', content: [{ type: 'paragraph' }] }] },
+      },
+      { label: 'Resource list', icon: Library, content: { type: 'resources' } },
+      { label: 'Downloadable file', icon: FileDown, content: { type: 'attachment' } },
+      { label: 'Custom HTML', icon: Code2, content: { type: 'htmlBlock' } },
+    ],
+  },
+  {
+    group: 'Information',
+    items: [
       ...CALLOUT_VARIANTS.map((v) => ({
-        label: `${v.label} box`,
+        label: `${v.label} callout`,
         icon: Megaphone,
         content: { type: 'callout', attrs: { variant: v.value }, content: [{ type: 'paragraph' }] },
       })),
-      { label: 'Copyable prompt', icon: Sparkles, content: { type: 'prompt' } },
-    ],
-  },
-  {
-    group: 'Layout',
-    items: [
-      {
-        label: 'Two columns',
-        icon: Columns2,
-        content: { type: 'columns', content: [{ type: 'column', content: [{ type: 'paragraph' }] }, { type: 'column', content: [{ type: 'paragraph' }] }] },
-      },
-      { label: 'Table', icon: TableIcon, content: { type: '__table' } },
-      { label: 'Divider (line)', icon: Minus, content: { type: 'divider', attrs: { variant: 'line' } } },
-      { label: 'Divider (dots)', icon: MoreHorizontal, content: { type: 'divider', attrs: { variant: 'dots' } } },
-    ],
-  },
-  {
-    group: 'Generated',
-    items: [
+      { label: 'Comparison', icon: Columns3, content: { type: 'comparison' } },
       { label: 'Table of contents', icon: ListTree, content: { type: 'tocBlock' } },
       { label: 'Sources & references', icon: BookMarked, content: { type: 'sourcesBlock' } },
-      { label: 'Custom HTML', icon: Code2, content: { type: 'htmlBlock' } },
     ],
   },
 ];
@@ -154,6 +166,8 @@ function Toolbar({ editor }: { editor: Editor }) {
       quote: e.isActive('blockquote'),
       codeBlock: e.isActive('codeBlock'),
       language: (e.getAttributes('codeBlock').language as string) || 'plaintext',
+      codeWrap: !!e.getAttributes('codeBlock').wrap,
+      codeLines: !!e.getAttributes('codeBlock').lineNumbers,
       table: e.isActive('table'),
       align: (['center', 'right', 'justify'] as const).find((a) => e.isActive({ textAlign: a })) ?? 'left',
       canUndo: e.can().undo(),
@@ -224,6 +238,16 @@ function Toolbar({ editor }: { editor: Editor }) {
         >
           {CODE_LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
+      )}
+      {s.codeBlock && (
+        <>
+          <button type="button" aria-pressed={s.codeWrap} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().updateAttributes('codeBlock', { wrap: !s.codeWrap }).run()} className={cn('ml-1 h-7 shrink-0 rounded-md px-2 text-[12px]', s.codeWrap ? 'bg-accent/15 text-accent' : 'text-fg-2 hover:bg-secondary')}>
+            Wrap lines
+          </button>
+          <button type="button" aria-pressed={s.codeLines} onMouseDown={(e) => e.preventDefault()} onClick={() => chain().updateAttributes('codeBlock', { lineNumbers: !s.codeLines }).run()} className={cn('h-7 shrink-0 rounded-md px-2 text-[12px]', s.codeLines ? 'bg-accent/15 text-accent' : 'text-fg-2 hover:bg-secondary')}>
+            Line numbers
+          </button>
+        </>
       )}
       {s.table && (
         <DropdownMenu>

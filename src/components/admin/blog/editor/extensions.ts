@@ -8,8 +8,28 @@ import { PromptBlock } from '../../PromptBlock';
 import { Figure, Gallery, MediaText } from './nodes/media';
 import { Callout, Column, Columns, Divider, HtmlBlock, PullQuote, SourcesBlock, TocBlock } from './nodes/blocks';
 import { Chart, Embed } from './nodes/embed-chart';
+import { Attachment, Comparison, Resources, Step, Steps } from './nodes/dev-blocks';
 
 const lowlight = createLowlight(common);
+
+/** Code blocks with per-block display options, stored as data-* on the <pre>. */
+const CodeBlock = CodeBlockLowlight.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      wrap: {
+        default: false,
+        parseHTML: (el: HTMLElement) => el.hasAttribute('data-wrap'),
+        renderHTML: (attrs: Record<string, unknown>) => (attrs.wrap ? { 'data-wrap': '' } : {}),
+      },
+      lineNumbers: {
+        default: false,
+        parseHTML: (el: HTMLElement) => el.hasAttribute('data-line-numbers'),
+        renderHTML: (attrs: Record<string, unknown>) => (attrs.lineNumbers ? { 'data-line-numbers': '' } : {}),
+      },
+    };
+  },
+});
 
 /** Languages offered in the code-block picker (all are in lowlight's `common` set). */
 export const CODE_LANGUAGES = [
@@ -36,7 +56,7 @@ export function editorExtensions() {
         HTMLAttributes: { rel: 'noopener noreferrer', target: null },
       },
     }),
-    CodeBlockLowlight.configure({ lowlight, defaultLanguage: 'plaintext' }),
+    CodeBlock.configure({ lowlight, defaultLanguage: 'plaintext' }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TableKit.configure({ table: { resizable: false } }),
     PromptBlock,
@@ -53,6 +73,11 @@ export function editorExtensions() {
     HtmlBlock,
     Embed,
     Chart,
+    Steps,
+    Step,
+    Comparison,
+    Resources,
+    Attachment,
     Placeholder.configure({
       placeholder: ({ node }) =>
         node.type.name === 'prompt'
