@@ -34,12 +34,44 @@ block, so existing posts load without conversion. Added:
 - Headings H1–H4, bold/italic/underline/strike, inline code, links (Ctrl+K),
   alignment, bulleted/numbered lists with indent/outdent, quotes, code blocks with
   a language picker and highlighting, tables (rows/columns/header/merge), undo/redo.
-- **Insert** menu: image (width ¾/½/⅓, left/right/wide, alt, caption, credit +
-  link), gallery, carousel, image beside text, video/embed (YouTube, Vimeo, Loom,
-  CodePen only), chart (bar/line from pasted rows), pull quote with attribution,
-  info/tip/note/warning/important boxes, copyable prompt, two columns, table,
-  line/dots dividers, table of contents, sources & references, custom HTML
-  (sanitised on the site with a strict allow-list).
+- **Insert** menu, grouped:
+  - *Writing:* heading, paragraph, quote, pull quote, line/dots dividers, table,
+    two columns.
+  - *Media:* image (width ¾/½/⅓, left/right/wide, alt, caption, credit + link),
+    gallery, carousel, image beside text, video/embed (YouTube, Vimeo, Loom,
+    CodePen only), chart (bar/line from pasted rows).
+  - *Developer resources:* prompt block, code block, step-by-step, resource list,
+    downloadable file, custom HTML (sanitised on the site with a strict allow-list).
+  - *Information:* info/tip/note/warning/important callouts, comparison, table of
+    contents, sources & references.
+- **Every block** has move up / move down, duplicate and a two-step remove
+  (Remove / Keep; cancels itself after 4 s) in its header, and can be dragged by
+  the grip.
+
+### Developer blocks
+
+- **Prompt block:** title, stage (e.g. "Stage 1: Planning"; earlier stages are
+  suggested), description, language (plain prompt, Markdown, Bash, JSON, YAML,
+  TypeScript, JavaScript, Python, SQL), the prompt itself (whitespace kept
+  exactly), how to use, notes, and card / minimal style. Placeholders written as
+  UPPERCASE in square brackets (`[PROJECT IDEA]`, `[TASK / FEATURE]`) are listed
+  under the prompt; readers get an input for each. Markdown checkboxes and links
+  are never treated as variables. *Preview* shows the reader view with a working
+  copy button. Prompts are numbered automatically on the site in reading order.
+- **Code block:** language, plus *Wrap lines* and *Line numbers* toggles in the
+  toolbar while the cursor is in the block.
+- **Step-by-step:** numbered steps, each with a title and a body that can hold
+  text, code and prompt blocks. *Add step* appends one.
+- **Comparison:** 2–4 columns, each with a title, a tone (neutral, pros ✓, cons ✕)
+  and one point per line.
+- **Resource list:** title, link, description and category per item. Only
+  `https://`/`http://` links become links (opened in a new tab, `noopener`).
+- **Downloadable file:** PDF, Markdown, TXT, CSV or ZIP up to 25 MB, stored in
+  `blog/attachments/`. Executables, HTML/SVG and disguised names such as
+  `invoice.exe.pdf` are refused here and by Storage rules.
+
+Older posts load unchanged: prompts that only had a label and text keep working,
+and gain the new fields once edited.
 
 Content is saved as HTML for the site plus the editor's JSON document.
 
@@ -83,7 +115,10 @@ against `vercel dev`.
 
 ## Tests
 
-`npm test` covers: editor round-trips for every block and for legacy HTML, the
+`npm test` covers: editor round-trips for every block (prompt fields and exact
+whitespace, code options, steps with nested prompts, comparison, resources incl.
+unsafe links, attachments) and for legacy HTML, prompt variable detection,
+attachment validation, the
 embed URL allow-list, chart data parsing, autosave (debounce, dedupe, conflicts,
 retries, live-post routing, creation), SEO checks and previews, revision diffs,
 reading time (shared vectors with the site), redirects, time zones and image
