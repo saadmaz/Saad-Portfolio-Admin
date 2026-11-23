@@ -9,19 +9,19 @@
   "theme_color": "#111113",
   "icons": [
     {
-      "src": "/icons/favicon-v2.svg",
+      "src": "/icons/favicon-v3.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-v2-192.png",
+      "src": "/icons/icon-v3-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-v2-512.png",
+      "src": "/icons/icon-v3-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

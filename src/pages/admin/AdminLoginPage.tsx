@@ -62,7 +62,7 @@ const AdminLoginPage = () => {
       <aside className="relative hidden overflow-hidden border-r border-border-subtle bg-card lg:flex lg:flex-col lg:justify-between lg:p-20">
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse 70% 55% at 10% 100%, rgb(255 122 77 / 0.22), transparent 70%)' }}
+          style={{ background: 'radial-gradient(ellipse 70% 55% at 10% 100%, rgb(255 106 0 / 0.22), transparent 70%)' }}
           aria-hidden="true"
         />
         <BrandAppIcon className="relative h-14 w-14" />
@@ -83,7 +83,7 @@ const AdminLoginPage = () => {
       <main className="relative flex min-h-screen flex-col px-5 pb-6 pt-16 sm:px-10 lg:items-center lg:justify-center lg:py-12">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-80 lg:hidden"
-          style={{ background: 'radial-gradient(ellipse 90% 70% at 20% 0%, rgb(255 122 77 / 0.18), transparent 70%)' }}
+          style={{ background: 'radial-gradient(ellipse 90% 70% at 20% 0%, rgb(255 106 0 / 0.18), transparent 70%)' }}
           aria-hidden="true"
         />
 
