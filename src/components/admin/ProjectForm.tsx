@@ -55,6 +55,7 @@ const projectSchema = z.object({
   heroImage: z.string().optional().or(z.literal('')),
   altText: z.string().optional().or(z.literal('')),
   image: z.string().optional().or(z.literal('')),
+  cardImage: z.string().optional().or(z.literal('')),
   screenshots: z.array(z.string()).optional().default([]),
   images: z.array(z.string()).optional().default([]),
   video: z.string().optional().or(z.literal('')),
@@ -211,6 +212,7 @@ const ProjectForm = () => {
           heroImage:        p.heroImage        || p.image || '',
           altText:          p.altText          || '',
           image:            p.image            || '',
+          cardImage:        p.cardImage        || '',
           screenshots:      p.screenshots      ?? p.images ?? [],
           images:           p.images           ?? [],
           video:            p.video            || p.videoDemo || '',
@@ -556,6 +558,21 @@ const ProjectForm = () => {
               <label className={LABEL_CLS}>Image Alt Text</label>
               <Input {...register('altText')} placeholder={watch('title') || 'Falls back to the project title if left blank'} />
             </div>
+          </Section>
+
+          {/* Homepage card image */}
+          <Section icon={ImageIcon} title="Homepage card image">
+            <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
+              Shown on the homepage project cards. Upload a square image of exactly{' '}
+              <span className="font-medium text-foreground">1200 × 1200 px</span>. Other sizes are rejected.
+              Keep the bottom-right corner clear: the arrow button sits there. If empty, the hero image is cropped instead.
+            </p>
+            <ImageUpload
+              value={watch('cardImage')}
+              onChange={url => setValue('cardImage', url, { shouldDirty: true })}
+              requiredSize={{ width: 1200, height: 1200 }}
+              aspectClass="aspect-square"
+            />
           </Section>
 
           {/* Gallery */}

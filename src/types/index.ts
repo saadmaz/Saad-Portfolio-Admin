@@ -26,6 +26,8 @@ export interface Project {
   /** Alt text for heroImage. Falls back to the project title when unset - never derived from free-text fields like tagline/description. */
   altText?: string;
   image?: string;           // legacy alias for heroImage
+  /** Square 1200×1200 image for the homepage project card. Falls back to heroImage. */
+  cardImage?: string;
   images?: string[];        // legacy gallery
   screenshots?: string[];
   video?: string;           // YouTube / video URL
