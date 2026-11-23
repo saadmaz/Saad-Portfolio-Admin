@@ -9,9 +9,24 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   label?: string;
   className?: string;
+  /** Reject files that are not exactly this size (pixels). */
+  requiredSize?: { width: number; height: number };
+  /** Preview / drop-zone shape. Defaults to 16:9. */
+  aspectClass?: string;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, className }) => {
+/** Natural pixel size of an image file. */
+function readImageSize(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { resolve({ width: img.naturalWidth, height: img.naturalHeight }); URL.revokeObjectURL(url); };
+    img.onerror = () => { reject(new Error('Could not read that image')); URL.revokeObjectURL(url); };
+    img.src = url;
+  });
+}
+
+const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, className, requiredSize, aspectClass = 'aspect-video' }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +42,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, class
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Image must be under 10 MB');
       return;
+    }
+    if (requiredSize) {
+      try {
+        const { width, height } = await readImageSize(file);
+        if (width !== requiredSize.width || height !== requiredSize.height) {
+          toast.error(`Image must be exactly ${requiredSize.width} × ${requiredSize.height} px. This one is ${width} × ${height} px.`);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Could not read that image');
+        return;
+      }
     }
 
     setIsUploading(true);
@@ -55,7 +83,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, class
 
       <div className="relative group">
         {value ? (
-          <div className="relative aspect-video rounded-xl overflow-hidden border">
+          <div className={`relative ${aspectClass} rounded-xl overflow-hidden border`}>
             <img src={value} alt="Uploaded" className="w-full h-full object-cover" />
             {/* Change / Remove overlay */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -85,7 +113,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, class
             aria-label={label ? `Upload ${label}` : 'Upload image'}
             onClick={() => !isUploading && fileInputRef.current?.click()}
             onKeyDown={(e) => { if (!isUploading && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fileInputRef.current?.click(); } }}
-            className="aspect-video rounded-xl border-2 border-dashed border-border bg-card hover:bg-secondary hover:border-accent/40 transition-all cursor-pointer flex flex-col items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className={`${aspectClass} rounded-xl border-2 border-dashed border-border bg-card hover:bg-secondary hover:border-accent/40 transition-all cursor-pointer flex flex-col items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
           >
             {isUploading ? (
               <>
@@ -106,7 +134,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ value, onChange, label, class
                 <span className="text-sm font-medium text-muted-foreground group-hover:text-accent transition-colors">
                   Click to upload
                 </span>
-                <span className="text-[12px] text-muted-foreground">JPG, PNG or WebP · Max 10 MB</span>
+                <span className="text-[12px] text-muted-foreground">
+                  {requiredSize ? `Exactly ${requiredSize.width} × ${requiredSize.height} px · ` : ''}JPG, PNG or WebP · Max 10 MB
+                </span>
               </>
             )}
           </div>
