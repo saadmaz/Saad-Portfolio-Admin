@@ -5,28 +5,28 @@
 /* Graphite + ember. Dark only; values match the Figma variables shared with the public site. */
 @layer base {
   :root {
-    --background: 240 4% 10%;          /* #19191B */
-    --foreground: 60 7% 92%;           /* #EDEDEA */
+    --background: 240 6% 7%;          /* #111113 */
+    --foreground: 60 13% 95.5%;           /* #F5F5F2 */
 
     --card: 240 4% 13.5%;              /* #212124 */
-    --card-foreground: 60 7% 92%;
+    --card-foreground: 60 13% 95.5%;
 
     --popover: 240 5% 17%;             /* #29292D */
-    --popover-foreground: 60 7% 92%;
+    --popover-foreground: 60 13% 95.5%;
 
-    --primary: 60 7% 92%;
+    --primary: 60 13% 95.5%;
     --primary-foreground: 240 5% 8%;
 
     --secondary: 240 5% 17%;           /* #29292D */
-    --secondary-foreground: 60 7% 92%;
+    --secondary-foreground: 60 13% 95.5%;
     --surface-3: 240 5% 21%;           /* #323237 */
 
     --muted: 240 5% 17%;
     --muted-foreground: 60 2% 55%;     /* #8E8E89 */
     --fg-2: 60 3% 63%;                 /* #A3A39E */
 
-    --accent: 14 100% 62%;             /* #FF6A3D */
-    --accent-hover: 15 100% 67%;       /* #FF8259 */
+    --accent: 15 100% 65%;             /* #FF7A4D */
+    --accent-hover: 15 100% 71%;       /* #FF916B */
     --accent-foreground: 240 5% 8%;
     --accent-subtle: 14 60% 17%;
 
@@ -55,7 +55,7 @@
     --border-subtle: 240 4% 18%;       /* ~white 7% */
     --input: 240 3% 32%;
     --border-strong: 240 3% 40%;
-    --ring: 14 100% 62%;
+    --ring: 15 100% 65%;
 
     --radius: 0.75rem;
 
