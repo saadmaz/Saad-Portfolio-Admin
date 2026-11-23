@@ -67,7 +67,7 @@ function CardImage({ image, ratio = 'aspect-[1.91/1]' }: { image: ImageAsset | n
   return image ? (
     <img src={image.variants?.[1]?.url ?? image.url} alt="" className={`${ratio} w-full object-cover`} style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }} />
   ) : (
-    <div className={`${ratio} flex w-full items-center justify-center bg-[radial-gradient(ellipse_at_85%_0%,rgba(255,106,0,0.35),transparent_55%)] bg-[#111113] text-[12px] text-[#a3a39e]`}>
+    <div className={`${ratio} flex w-full items-center justify-center bg-[radial-gradient(ellipse_at_85%_0%,rgba(255,95,0,0.35),transparent_55%)] bg-[#111113] text-[12px] text-[#a3a39e]`}>
       Generated site card
     </div>
   );

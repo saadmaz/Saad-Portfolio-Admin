@@ -25,10 +25,10 @@
     --muted-foreground: 60 2% 55%;     /* #8E8E89 */
     --fg-2: 60 3% 63%;                 /* #A3A39E */
 
-    --accent: 25 100% 50%;             /* #FF6A00 */
-    --accent-hover: 24 100% 60%;       /* #FF8533 */
+    --accent: 22 100% 50%;             /* #FF5F00 */
+    --accent-hover: 23 100% 57%;       /* #FF7A26 */
     --accent-foreground: 240 5% 8%;
-    --accent-subtle: 25 70% 15%;
+    --accent-subtle: 22 70% 15%;
 
     --destructive: 358 86% 64%;
     --destructive-foreground: 240 5% 8%;
@@ -55,7 +55,7 @@
     --border-subtle: 240 4% 18%;       /* ~white 7% */
     --input: 240 3% 32%;
     --border-strong: 240 3% 40%;
-    --ring: 25 100% 50%;
+    --ring: 22 100% 50%;
 
     --radius: 0.75rem;
 
