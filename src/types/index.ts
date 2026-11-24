@@ -17,6 +17,7 @@ export interface Project {
   published?: boolean;
   /** Search engine visibility; "auto" indexes once the write-up reaches PROJECT_MIN_WORDS (shared/lib/indexing). */
   seo_visibility?: 'auto' | 'index' | 'noindex';
+  updated_at?: FirestoreLikeTimestamp;
 
   // Descriptions
   description?: string;
@@ -56,6 +57,49 @@ export interface Project {
   impact?: string;
   gradientStart?: string;
   gradientEnd?: string;
+
+  // ── SEO (all optional; fall back to title / tagline / generated card) ──
+  /** Overrides the <title> (keep under ~60 characters). */
+  seo_title?: string;
+  /** Overrides the meta description (aim for 140–160 characters). */
+  seo_description?: string;
+  /** 1200×630 share image for social cards. Falls back to the generated card. */
+  og_image?: string;
+  /** Only when the original case study lives elsewhere; otherwise the page is its own canonical. */
+  canonical_url?: string;
+
+  // ── Story ──
+  /** What I personally designed, built, managed or led. */
+  contribution?: string[];
+  /** Headline numbers, e.g. { value: "2,000+", label: "monthly users" }. */
+  results?: { value: string; label: string }[];
+  industry?: string;
+  target_audience?: string;
+  /** Names from the Skills collection this project demonstrates. */
+  skills?: string[];
+
+  // ── Timeline (YYYY-MM) ──
+  start_date?: string;
+  end_date?: string;
+  is_ongoing?: boolean;
+
+  // ── Architecture ──
+  architecture?: { description?: string; diagramUrl?: string; diagramAlt?: string };
+  technical_decisions?: string[];
+
+  // ── Team & credits ──
+  team_size?: number | null;
+  client?: string;
+  collaborators?: { name: string; role?: string; url?: string }[];
+
+  // ── Social proof & links ──
+  testimonials?: { quote: string; name: string; role?: string; organisation?: string }[];
+  related_project_ids?: string[];
+  /** Gallery with per-image alt text and captions (screenshots[] stays in sync for older views). */
+  gallery?: { url: string; alt?: string; caption?: string }[];
+  videos?: { url: string; title?: string }[];
+  /** Documentation, publications, press and write-ups about the project. */
+  resources?: { label: string; url: string; kind?: string }[];
 
   // Cross-entity linking (source of truth for education/experience associations)
   linked_education_ids?: string[];

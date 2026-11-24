@@ -31,7 +31,8 @@ export function isEventIndexable(event: {
 /**
  * Projects follow the same rule (mirror of isProjectIndexable in the public
  * site): a case study is indexed once its write-up (tagline, overview,
- * description, long description) reaches PROJECT_MIN_WORDS. /projects itself
+ * description, long description, impact, contribution, architecture notes and
+ * technical decisions) reaches PROJECT_MIN_WORDS. /projects itself
  * is only indexed while at least one project qualifies.
  */
 export const PROJECT_MIN_WORDS = 100;
@@ -41,13 +42,19 @@ type ProjectWriteUp = {
   overview?: string;
   description?: string;
   long_description?: string;
+  impact?: string;
+  contribution?: string[];
+  technical_decisions?: string[];
+  architecture?: { description?: string };
 };
 
 export function projectWordCount(project: ProjectWriteUp): number {
-  return (['tagline', 'overview', 'description', 'long_description'] as const).reduce(
+  const text = (['tagline', 'overview', 'description', 'long_description', 'impact'] as const).reduce(
     (n, key) => n + words(project[key]),
     0,
   );
+  const lists = [...(project.contribution ?? []), ...(project.technical_decisions ?? [])];
+  return text + words(project.architecture?.description) + lists.reduce((n, item) => n + words(item), 0);
 }
 
 export function isProjectIndexable(project: ProjectWriteUp & { seo_visibility?: SeoVisibility }): boolean {
