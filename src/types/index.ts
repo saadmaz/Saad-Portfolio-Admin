@@ -15,6 +15,8 @@ export interface Project {
   featured?: boolean;
   /** Defaults to visible when absent (legacy docs). Set to false to hide from the public site and sitemap. */
   published?: boolean;
+  /** Search engine visibility; "auto" indexes once the write-up reaches PROJECT_MIN_WORDS (shared/lib/indexing). */
+  seo_visibility?: 'auto' | 'index' | 'noindex';
 
   // Descriptions
   description?: string;

@@ -19,6 +19,7 @@ import { CommonService } from '@/shared/services/common-service';
 import { toast } from "sonner";
 import type { Education, Experience } from '@/types';
 import FormHeader from './FormHeader';
+import { isProjectIndexable, PROJECT_MIN_WORDS, projectWordCount } from '@/shared/lib/indexing';
 import ImageUpload from './ImageUpload';
 import MultiImageUpload from './MultiImageUpload';
 import {
@@ -45,6 +46,7 @@ const projectSchema = z.object({
   order_index: z.number().optional(),
   featured: z.boolean().default(false),
   published: z.boolean().default(true),
+  seo_visibility: z.enum(['auto', 'index', 'noindex']).default('auto'),
 
   // Descriptions
   description: z.string().optional().or(z.literal('')),
@@ -77,6 +79,12 @@ const projectSchema = z.object({
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
+
+const VISIBILITY_OPTIONS = [
+  { value: 'auto', label: `Auto (index at ${PROJECT_MIN_WORDS}+ words)` },
+  { value: 'index', label: 'Always index' },
+  { value: 'noindex', label: 'Hide from search' },
+] as const;
 
 const toSlug = (s: string) =>
   s.toLowerCase().trim()
@@ -166,11 +174,29 @@ const ProjectForm = () => {
     defaultValues: {
       techStack: [], technologies: [], screenshots: [], images: [],
       challenges: [], learnings: [], features: [],
-      status: 'Completed', featured: false, published: true,
+      status: 'Completed', featured: false, published: true, seo_visibility: 'auto',
     },
   });
 
   const w = (field: keyof ProjectFormValues) => watch(field);
+  // Live explanation of what search engines will do with this project as written
+  // (same rule the public site applies; see shared/lib/indexing).
+  const writeUp = {
+    tagline: w('tagline') as string,
+    overview: w('overview') as string,
+    description: w('description') as string,
+    long_description: w('long_description') as string,
+  };
+  const writeUpWords = projectWordCount(writeUp);
+  const visibility = (w('seo_visibility') as ProjectFormValues['seo_visibility']) ?? 'auto';
+  const visibilityHint =
+    visibility === 'index'
+      ? 'Always indexed, even with a short write-up.'
+      : visibility === 'noindex'
+        ? 'Hidden from Google and the sitemap. Still visible on your site.'
+        : isProjectIndexable(writeUp)
+          ? `Indexed by Google · ${writeUpWords} words.`
+          : `Hidden from Google · ${writeUpWords} of ${PROJECT_MIN_WORDS} words. Expand the overview or long description to get it indexed.`;
   const techStack    = (w('techStack')    as string[]) ?? [];
   const technologies = (w('technologies') as string[]) ?? [];
   const screenshots  = (w('screenshots')  as string[]) ?? [];
@@ -206,6 +232,7 @@ const ProjectForm = () => {
           order_index:      p.order_index,
           featured:         p.featured         ?? false,
           published:        p.published        ?? true,
+          seo_visibility:   p.seo_visibility   ?? 'auto',
           description:      p.description      || '',
           long_description: p.long_description || '',
           overview:         p.overview         || '',
@@ -675,6 +702,23 @@ const ProjectForm = () => {
               <input type="checkbox" {...register('published')}
                 className="h-4 w-4 rounded accent-accent" />
             </label>
+            <div className="pt-1">
+              <label className={LABEL_CLS}>Search visibility</label>
+              <Select
+                value={(watch('seo_visibility') as string) ?? 'auto'}
+                onValueChange={(v) => setValue('seo_visibility', v as ProjectFormValues['seo_visibility'], { shouldDirty: true })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border text-foreground">
+                  {VISIBILITY_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="meta mt-1.5" aria-live="polite">{visibilityHint}</p>
+            </div>
           </Section>
         </div>
       </div>

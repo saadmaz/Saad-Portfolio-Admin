@@ -27,3 +27,31 @@ export function isEventIndexable(event: {
   if (event.seo_visibility === 'noindex') return false;
   return eventWordCount(event) >= EVENT_MIN_WORDS;
 }
+
+/**
+ * Projects follow the same rule (mirror of isProjectIndexable in the public
+ * site): a case study is indexed once its write-up (tagline, overview,
+ * description, long description) reaches PROJECT_MIN_WORDS. /projects itself
+ * is only indexed while at least one project qualifies.
+ */
+export const PROJECT_MIN_WORDS = 100;
+
+type ProjectWriteUp = {
+  tagline?: string;
+  overview?: string;
+  description?: string;
+  long_description?: string;
+};
+
+export function projectWordCount(project: ProjectWriteUp): number {
+  return (['tagline', 'overview', 'description', 'long_description'] as const).reduce(
+    (n, key) => n + words(project[key]),
+    0,
+  );
+}
+
+export function isProjectIndexable(project: ProjectWriteUp & { seo_visibility?: SeoVisibility }): boolean {
+  if (project.seo_visibility === 'index') return true;
+  if (project.seo_visibility === 'noindex') return false;
+  return projectWordCount(project) >= PROJECT_MIN_WORDS;
+}

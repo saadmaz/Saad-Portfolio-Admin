@@ -21,6 +21,7 @@ import {
 import { ProjectService } from '@/services/project-service';
 import type { FirestoreLikeTimestamp, Project } from '@/types';
 import { cn, plural, toJsDate } from '@/shared/lib/utils';
+import { isProjectIndexable, PROJECT_MIN_WORDS } from '@/shared/lib/indexing';
 import { formatDistanceToNowStrict, format } from 'date-fns';
 
 type Filter = 'all' | 'published' | 'hidden' | 'featured';
@@ -55,7 +56,16 @@ const Thumb = ({ project }: { project: Project }) => {
 };
 
 const StatusBadge = ({ project }: { project: Project }) =>
-  isPublished(project) ? <Badge variant="success" dot>Published</Badge> : <Badge variant="neutral" dot>Hidden</Badge>;
+  !isPublished(project) ? (
+    <Badge variant="neutral" dot>Hidden</Badge>
+  ) : isProjectIndexable(project) ? (
+    <Badge variant="success" dot>Published</Badge>
+  ) : (
+    // Live on the site but kept out of Google (same rule the public site applies).
+    <Badge variant="warning" dot title={`Not indexed by Google: the write-up is under ${PROJECT_MIN_WORDS} words. Open the project to expand it or change Search visibility.`}>
+      Not in Google
+    </Badge>
+  );
 
 const AdminProjects = () => {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
