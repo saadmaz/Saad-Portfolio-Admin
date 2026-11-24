@@ -27,6 +27,17 @@ describe('event indexing (mirror of the site rule)', () => {
 });
 
 describe('project indexing (mirror of the site rule)', () => {
+  it('counts contribution, impact, architecture and technical decisions too', () => {
+    expect(
+      projectWordCount({
+        impact: 'a b',
+        contribution: ['c d', 'e'],
+        technical_decisions: ['f'],
+        architecture: { description: 'g h' },
+      }),
+    ).toBe(8);
+  });
+
   it('counts tagline, overview, description and long description', () => {
     expect(projectWordCount({ tagline: 'a b', overview: 'c', description: 'd e', long_description: 'f' })).toBe(6);
   });
