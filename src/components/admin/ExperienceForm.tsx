@@ -151,6 +151,7 @@ function MonthYearPicker({
 const schema = z.object({
   company_name: z.string().min(2, 'Company name is required'),
   company_logo: z.string().optional(),
+  journey_image: z.string().optional(),
   employment_type: z.string().default('Full-time'),
   location: z.string().min(2, 'Location is required'),
   location_type: z.string().default('On-site'),
@@ -428,6 +429,7 @@ const ExperienceForm = () => {
   const endMonth      = watch('end_month');
   const endYear       = watch('end_year');
   const companyLogo   = watch('company_logo');
+  const journeyImage  = watch('journey_image');
   const locationType  = watch('location_type');
   const isFeatured    = watch('is_featured');
   const employmentType = watch('employment_type');
@@ -468,6 +470,7 @@ const ExperienceForm = () => {
       reset({
         company_name:    item.company_name ?? item.company ?? '',
         company_logo:    item.company_logo ?? item.companyLogo ?? '',
+        journey_image:   item.journey_image ?? '',
         employment_type: item.employment_type ?? item.employmentType ?? 'Full-time',
         location:        item.location ?? '',
         location_type:   (item.location_type ?? item.workMode ?? 'On-site') as FormValues['location_type'],
@@ -519,6 +522,7 @@ const ExperienceForm = () => {
 
     const saveData: Partial<Experience> = {
       company_name: data.company_name,  company_logo: data.company_logo,
+      journey_image: data.journey_image ?? '',
       employment_type: data.employment_type, location: data.location,
       location_type: data.location_type as Experience['location_type'],
       is_current: data.is_current,
@@ -945,6 +949,26 @@ const ExperienceForm = () => {
                 onChange={(url) => setValue('company_logo', url)}
                 required label="Company Logo" size={80}
               />
+            </CardContent>
+          </Card>
+
+          {/* Journey illustration (shown on the road on /experience) */}
+          <Card>
+            <CardHeader className="border-b border-border-subtle pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-accent" />
+                Journey illustration <span className="text-muted-foreground text-[12px] font-normal">(optional)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-2">
+              <LogoUpload
+                value={journeyImage ?? ''}
+                onChange={(url) => setValue('journey_image', url)}
+                label="3D illustration" size={160}
+              />
+              <p className="text-[12px] text-muted-foreground">
+                Square PNG with a transparent background works best. Falls back to the logo.
+              </p>
             </CardContent>
           </Card>
 

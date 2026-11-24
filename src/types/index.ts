@@ -142,6 +142,8 @@ export interface Experience {
   // ── New schema fields ──────────────────────────────────────────
   company_name?: string;
   company_logo?: string;
+  /** 3D illustration for the experience journey road. */
+  journey_image?: string;
   employment_type?: string;
   location_type?: 'On-site' | 'Remote' | 'Hybrid';
   is_current?: boolean;
