@@ -17,10 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
-  Sparkles,
 } from 'lucide-react';
 import SkillLevelsTable from '@/components/admin/SkillLevelsTable';
-import { applySuggestions } from '@/shared/lib/skillPlan';
 import LogoUpload from '@/components/admin/LogoUpload';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
@@ -59,13 +57,6 @@ const AdminSkills = () => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const loadSuggestions = () => {
-    const { sets, changed } = applySuggestions(skillSets);
-    setSkillSets(sets);
-    setView('table');
-    toast.success(changed ? `Suggested years/levels applied to ${changed} skills. Review, then save.` : 'Everything already matches the suggestions');
   };
 
   const addCategory = () => {
@@ -127,9 +118,6 @@ const AdminSkills = () => {
                 </button>
               ))}
             </div>
-            <Button variant="outline" onClick={loadSuggestions} disabled={isLoading}>
-              <Sparkles className="w-4 h-4" /> Load suggestions
-            </Button>
             <Button
               variant="outline"
               onClick={addCategory}
