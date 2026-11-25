@@ -18,10 +18,12 @@ import {
   ChevronUp,
   Save,
   Download,
+  LayoutGrid,
 } from 'lucide-react';
 import LogoUpload from '@/components/admin/LogoUpload';
 import { uploadImage } from '@/services/storage';
 import { TOOL_LABELS, foldToolDuplicates, hasToolIcon, mergeToolLogos } from '@/shared/lib/toolLogos';
+import { organiseSkills } from '@/shared/lib/skillCategories';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
 import { plural } from '@/shared/lib/utils';
@@ -47,6 +49,19 @@ const AdminSkills = () => {
   const [importing, setImporting] = useState<string | null>(null);
 
   /** Upload the bundled logos the skills don't have yet, then merge them in (saved with "Save all changes"). */
+  /** Sort imported tools into categories (saved with "Save all changes"). */
+  const organise = () => {
+    const r = organiseSkills(skillSets);
+    setSkillSets(r.sets);
+    if (!r.moved) {
+      toast.info('Nothing to sort: the Tools category is already empty or unmapped');
+      return;
+    }
+    toast.success(
+      `Moved ${r.moved} tools into categories${r.left.length ? `; ${r.left.length} left in Tools to review` : ''}. Press "Save all changes" to publish.`,
+    );
+  };
+
   const importLogos = async () => {
     // Earlier imports may have added strip-only copies of real skills; fold those first.
     const { sets: base, folded } = foldToolDuplicates(skillSets);
@@ -146,6 +161,9 @@ const AdminSkills = () => {
         subtitle={`${plural(skillSets.reduce((n, s) => n + s.skills.length, 0), "skill")} · ${plural(skillSets.length, "category", "categories")}`}
         actions={
           <>
+            <Button variant="outline" onClick={organise}>
+              <LayoutGrid className="w-4 h-4" /> Sort tools into categories
+            </Button>
             <Button variant="outline" onClick={importLogos} loading={importing !== null}>
               <Download className="w-4 h-4" /> {importing ? `Importing ${importing}` : 'Import tool logos'}
             </Button>
