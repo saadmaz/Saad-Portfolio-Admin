@@ -17,7 +17,10 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
+  Sparkles,
 } from 'lucide-react';
+import SkillLevelsTable from '@/components/admin/SkillLevelsTable';
+import { applySuggestions } from '@/shared/lib/skillPlan';
 import LogoUpload from '@/components/admin/LogoUpload';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
@@ -30,6 +33,7 @@ const AdminSkills = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deleteCatIndex, setDeleteCatIndex] = useState<number | null>(null);
+  const [view, setView] = useState<'cards' | 'table'>('cards');
   useEffect(() => {
     fetchSkills();
   }, []);
@@ -55,6 +59,13 @@ const AdminSkills = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const loadSuggestions = () => {
+    const { sets, changed } = applySuggestions(skillSets);
+    setSkillSets(sets);
+    setView('table');
+    toast.success(changed ? `Suggested years/levels applied to ${changed} skills. Review, then save.` : 'Everything already matches the suggestions');
   };
 
   const addCategory = () => {
@@ -102,6 +113,23 @@ const AdminSkills = () => {
         subtitle={`${plural(skillSets.reduce((n, s) => n + s.skills.length, 0), "skill")} · ${plural(skillSets.length, "category", "categories")}`}
         actions={
           <>
+            <div className="flex rounded-md border border-border p-0.5 text-[13px]" role="tablist" aria-label="View">
+              {(['cards', 'table'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  role="tab"
+                  aria-selected={view === v}
+                  onClick={() => setView(v)}
+                  className={`rounded px-3 py-1 ${view === v ? 'bg-secondary font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  {v === 'cards' ? 'Cards' : 'Levels & years'}
+                </button>
+              ))}
+            </div>
+            <Button variant="outline" onClick={loadSuggestions} disabled={isLoading}>
+              <Sparkles className="w-4 h-4" /> Load suggestions
+            </Button>
             <Button
               variant="outline"
               onClick={addCategory}
@@ -118,7 +146,9 @@ const AdminSkills = () => {
         }
       />
 
-      <div className="space-y-8">
+      {!isLoading && view === 'table' && <SkillLevelsTable skillSets={skillSets} onChange={setSkillSets} />}
+
+      <div className={view === 'table' ? 'hidden' : 'space-y-8'}>
         {isLoading ? (
           <div className="h-40 w-full animate-pulse rounded-xl border border-border-subtle bg-card" />
         ) : skillSets.map((set, catIndex) => (
