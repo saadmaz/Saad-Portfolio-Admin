@@ -25,6 +25,7 @@ const ExperienceForm = React.lazy(() => import("@/components/admin/ExperienceFor
 const AdminSkills = React.lazy(() => import("@/pages/admin/AdminSkills"));
 const AdminAbout = React.lazy(() => import("@/pages/admin/AdminAbout"));
 const AdminContact = React.lazy(() => import("@/pages/admin/AdminContact"));
+const AdminSubscribers = React.lazy(() => import("@/pages/admin/AdminSubscribers"));
 const AdminCertificates = React.lazy(() => import("@/pages/admin/AdminCertificates"));
 const CertificateForm = React.lazy(() => import("@/components/admin/CertificateForm"));
 const AdminAwards = React.lazy(() => import("@/pages/admin/AdminAwards"));
@@ -101,6 +102,7 @@ const App = () => (
                   <Route path="skills" element={<AdminSkills />} />
                   <Route path="about" element={<AdminAbout />} />
                   <Route path="contact-page" element={<AdminContact />} />
+                  <Route path="subscribers" element={<AdminSubscribers />} />
                   <Route path="certificates" element={<AdminCertificates />} />
                   <Route path="certificates/new" element={<CertificateForm />} />
                   <Route path="certificates/:id" element={<CertificateForm />} />

@@ -2,7 +2,7 @@ import {
   LayoutGrid, Inbox, History, Code2, BookOpen, Briefcase, Zap, BadgeCheck,
   CalendarDays, GraduationCap, Award, Globe, Quote, Trophy, Newspaper,
   BookMarked, FileText, Lightbulb, Building2, Heart, Leaf, ClipboardList,
-  UserRound, Layers, CornerDownRight, FileQuestion, BarChart3, Settings2, Smile, PhoneCall,
+  UserRound, Layers, CornerDownRight, FileQuestion, BarChart3, Settings2, Smile, PhoneCall, UsersRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -78,6 +78,7 @@ export const navGroups: NavGroup[] = [
       { icon: Quote,         label: 'Testimonials', path: '/testimonials', countKey: 'testimonials' },
       { icon: Trophy,        label: 'Hackathons',   path: '/hackathons',   countKey: 'hackathons' },
       { icon: Newspaper,     label: 'Newsletters',  path: '/newsletters',  countKey: 'newsletters' },
+      { icon: UsersRound,    label: 'Subscribers',  path: '/subscribers' },
     ],
   },
   {
