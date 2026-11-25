@@ -25,18 +25,41 @@ const publicationSchema = z.object({
   description: z.string().optional(),
   link: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   tags: z.string().optional(),
+  type: z.string().optional(),
+  doi: z.string().optional(),
+  abstract: z.string().optional(),
+  pdf: z.string().optional(),
+  logo: z.string().optional(),
+  featured: z.boolean().optional(),
 });
 
 type PublicationFormData = z.infer<typeof publicationSchema>;
 
 const publicationFields = [
   { name: 'title', label: 'Publication Title', type: 'text' as const, placeholder: 'e.g. Deep Learning for NLP: A Survey' },
+  {
+    name: 'type',
+    label: 'Type',
+    type: 'select' as const,
+    placeholder: 'Select type…',
+    options: [
+      { label: 'Paper', value: 'paper' },
+      { label: 'Article', value: 'article' },
+      { label: 'Talk', value: 'talk' },
+      { label: 'Book', value: 'book' },
+    ],
+  },
   { name: 'publisher', label: 'Publisher / Journal / Conference', type: 'text' as const, placeholder: 'e.g. IEEE, ArXiv, Medium' },
   { name: 'date', label: 'Publication Date', type: 'text' as const, placeholder: 'e.g. March 2024' },
   { name: 'authors', label: 'Authors (comma-separated, Optional)', type: 'text' as const, placeholder: 'e.g. Saad Mazhar, John Doe' },
-  { name: 'description', label: 'Description / Abstract (Optional)', type: 'textarea' as const, placeholder: 'Brief summary of the publication…' },
+  { name: 'description', label: 'Short description (Optional)', type: 'textarea' as const, placeholder: 'One or two lines for the card…' },
+  { name: 'abstract', label: 'Abstract (Optional)', type: 'textarea' as const, placeholder: 'Full abstract, shown on the featured card and when expanded' },
   { name: 'tags', label: 'Tags (comma-separated, Optional)', type: 'text' as const, placeholder: 'e.g. AI, NLP, Research' },
   { name: 'link', label: 'Publication Link (Optional)', type: 'text' as const, placeholder: 'https://...' },
+  { name: 'doi', label: 'DOI (Optional)', type: 'text' as const, placeholder: 'e.g. 10.1109/ACCESS.2025.123456' },
+  { name: 'pdf', label: 'PDF (Optional)', type: 'file' as const, accept: '.pdf', placeholder: 'Upload a PDF or paste a link' },
+  { name: 'logo', label: 'Publisher logo (Optional)', type: 'logo' as const },
+  { name: 'featured', label: 'Featured', type: 'checkbox' as const, placeholder: 'Show as the featured card on /publications' },
 ] as const;
 
 const AdminPublications = () => {

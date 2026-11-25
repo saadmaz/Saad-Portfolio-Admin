@@ -25,12 +25,15 @@ import {
 import { cn } from '@/shared/lib/utils';
 import ImageUpload from './ImageUpload';
 import LogoUpload from './LogoUpload';
+import FileUrlField from './FileUrlField';
 import { useIsDesktop } from './useIsDesktop';
 
 interface FieldConfig {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'textarea' | 'select' | 'date' | 'image' | 'logo';
+  type: 'text' | 'number' | 'textarea' | 'select' | 'date' | 'image' | 'logo' | 'file' | 'checkbox';
+  /** For `file`: allowed extensions, e.g. ".pdf". */
+  accept?: string;
   placeholder?: string;
   options?: readonly { readonly label: string; readonly value: string }[];
   required?: boolean;
@@ -147,6 +150,23 @@ function AdminEntityDialog<T extends FieldValues = EntityFormValues>({
                           </Select>
                         ) : field.type === 'image' ? (
                           <ImageUpload value={formField.value as string} onChange={formField.onChange} />
+                        ) : field.type === 'file' ? (
+                          <FileUrlField
+                            value={formField.value as string}
+                            onChange={formField.onChange}
+                            accept={field.accept}
+                            placeholder={field.placeholder}
+                          />
+                        ) : field.type === 'checkbox' ? (
+                          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <input
+                              type="checkbox"
+                              className="accent-[var(--accent,#ff5f00)]"
+                              checked={!!formField.value}
+                              onChange={(e) => formField.onChange(e.target.checked)}
+                            />
+                            {field.placeholder}
+                          </label>
                         ) : field.type === 'logo' ? (
                           <LogoUpload
                             value={formField.value as string}
