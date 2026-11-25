@@ -17,78 +17,19 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
-  Download,
-  LayoutGrid,
 } from 'lucide-react';
 import LogoUpload from '@/components/admin/LogoUpload';
-import { uploadImage } from '@/services/storage';
-import { TOOL_LABELS, foldToolDuplicates, hasToolIcon, mergeToolLogos } from '@/shared/lib/toolLogos';
-import { organiseSkills } from '@/shared/lib/skillCategories';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
 import { plural } from '@/shared/lib/utils';
 import { SkillSet, Skill } from '@/types';
 import { toast } from "sonner";
 
-// Devicon logos (MIT) bundled with the admin as SVG text. Imported raw so the
-// upload never fetches a data: URL, which the admin's CSP (connect-src) blocks.
-const BUNDLED_LOGOS = Object.entries(
-  import.meta.glob<string>('@/assets/tool-logos/*.svg', { eager: true, query: '?raw', import: 'default' }),
-)
-  .map(([path, svg]) => {
-    const id = path.split('/').pop()!.replace('.svg', '').split('-')[0];
-    return { id, svg, label: TOOL_LABELS[id] ?? id };
-  })
-  .filter((t, i, all) => all.findIndex((x) => x.label === t.label) === i);
-
 const AdminSkills = () => {
   const [skillSets, setSkillSets] = useState<SkillSet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deleteCatIndex, setDeleteCatIndex] = useState<number | null>(null);
-  const [importing, setImporting] = useState<string | null>(null);
-
-  /** Upload the bundled logos the skills don't have yet, then merge them in (saved with "Save all changes"). */
-  /** Sort imported tools into categories (saved with "Save all changes"). */
-  const organise = () => {
-    const r = organiseSkills(skillSets);
-    setSkillSets(r.sets);
-    if (!r.moved) {
-      toast.info('Nothing to sort: the Tools category is already empty or unmapped');
-      return;
-    }
-    toast.success(
-      `Moved ${r.moved} tools into categories${r.left.length ? `; ${r.left.length} left in Tools to review` : ''}. Press "Save all changes" to publish.`,
-    );
-  };
-
-  const importLogos = async () => {
-    // Earlier imports may have added strip-only copies of real skills; fold those first.
-    const { sets: base, folded } = foldToolDuplicates(skillSets);
-    const todo = BUNDLED_LOGOS.filter((t) => !hasToolIcon(base, t.label));
-    if (!todo.length) {
-      setSkillSets(base);
-      toast.info(folded ? `Merged ${folded} duplicate tools. Press "Save all changes".` : 'Every bundled tool already has a logo');
-      return;
-    }
-    const uploaded: { label: string; url: string }[] = [];
-    try {
-      for (const [i, t] of todo.entries()) {
-        setImporting(`${i + 1}/${todo.length}`);
-        const file = new File([t.svg], `${t.id}.svg`, { type: 'image/svg+xml' });
-        uploaded.push({ label: t.label, url: await uploadImage(file, 'tools', undefined, t.id) });
-      }
-    } catch {
-      toast.error(`Upload stopped after ${uploaded.length} logos. Run the import again to continue.`);
-    } finally {
-      setImporting(null);
-    }
-    if (!uploaded.length) return;
-    const r = mergeToolLogos(base, uploaded);
-    setSkillSets(r.sets);
-    toast.success(`${r.matched + folded} skills got logos, ${r.added} tools added. Press "Save all changes" to publish.`);
-  };
-
   useEffect(() => {
     fetchSkills();
   }, []);
@@ -161,12 +102,6 @@ const AdminSkills = () => {
         subtitle={`${plural(skillSets.reduce((n, s) => n + s.skills.length, 0), "skill")} · ${plural(skillSets.length, "category", "categories")}`}
         actions={
           <>
-            <Button variant="outline" onClick={organise}>
-              <LayoutGrid className="w-4 h-4" /> Sort tools into categories
-            </Button>
-            <Button variant="outline" onClick={importLogos} loading={importing !== null}>
-              <Download className="w-4 h-4" /> {importing ? `Importing ${importing}` : 'Import tool logos'}
-            </Button>
             <Button
               variant="outline"
               onClick={addCategory}
