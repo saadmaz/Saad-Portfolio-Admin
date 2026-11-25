@@ -2,7 +2,7 @@ import {
   LayoutGrid, Inbox, History, Code2, BookOpen, Briefcase, Zap, BadgeCheck,
   CalendarDays, GraduationCap, Award, Globe, Quote, Trophy, Newspaper,
   BookMarked, FileText, Lightbulb, Building2, Heart, Leaf, ClipboardList,
-  UserRound, Layers, CornerDownRight, FileQuestion, BarChart3, Settings2,
+  UserRound, Layers, CornerDownRight, FileQuestion, BarChart3, Settings2, Smile,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -70,6 +70,7 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Profile',
     items: [
+      { icon: Smile,         label: 'About page',   path: '/about' },
       { icon: GraduationCap, label: 'Education',    path: '/education',    countKey: 'education' },
       { icon: Award,         label: 'Awards',       path: '/awards',       countKey: 'awards' },
       { icon: Globe,         label: 'Languages',    path: '/languages',    countKey: 'languages' },
