@@ -144,6 +144,12 @@ export interface Experience {
   company_logo?: string;
   /** 3D illustration for the experience journey road. */
   journey_image?: string;
+  /** Headline numbers for the company page, e.g. { value: "2,000+", label: "users" }. */
+  impact_metrics?: { value: string; label: string }[];
+  /** Up to three "what I did" cards for the company page. */
+  highlights?: { title: string; description: string }[];
+  /** One quote from a manager, client or colleague. */
+  testimonial?: { quote: string; name: string; role?: string } | null;
   employment_type?: string;
   location_type?: 'On-site' | 'Remote' | 'Hybrid';
   is_current?: boolean;
