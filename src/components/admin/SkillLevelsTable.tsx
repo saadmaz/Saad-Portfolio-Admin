@@ -128,6 +128,7 @@ export default function SkillLevelsTable({ skillSets, onChange }: Props) {
               <th className="px-3 py-2 font-medium">Category</th>
               <th className="px-3 py-2 font-medium">Level</th>
               <th className="px-3 py-2 font-medium">Since</th>
+              <th className="px-3 py-2 font-medium">Link</th>
             </tr>
           </thead>
           <tbody>
@@ -163,12 +164,22 @@ export default function SkillLevelsTable({ skillSets, onChange }: Props) {
                       ))}
                     </select>
                   </td>
+                  <td className="px-3 py-1.5">
+                    <input
+                      type="url"
+                      className={`${fieldCls} w-56`}
+                      value={r.skill.url ?? ''}
+                      onChange={(e) => patch(new Set([id]), { url: e.target.value })}
+                      placeholder="Auto (official site)"
+                      aria-label={`Link for ${r.skill.name}`}
+                    />
+                  </td>
                 </tr>
               );
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No skills match.</td>
+                <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No skills match.</td>
               </tr>
             )}
           </tbody>

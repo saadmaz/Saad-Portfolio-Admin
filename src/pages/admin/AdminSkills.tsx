@@ -219,6 +219,14 @@ const AdminSkills = () => {
                         </label>
                       </div>
                     </div>
+                    <Input
+                      type="url"
+                      value={skill.url ?? ''}
+                      onChange={(e) => updateSkill(catIndex, skillIndex, 'url', e.target.value)}
+                      placeholder="Official link (auto if empty)"
+                      aria-label={`Link for ${skill.name}`}
+                      className="h-8 text-[12px]"
+                    />
                     <div className="grid grid-cols-2 gap-3 pt-2">
                       <Select
                         value={skill.level}
