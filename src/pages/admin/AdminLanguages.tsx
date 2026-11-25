@@ -19,6 +19,10 @@ const languageSchema = z.object({
   name: z.string().min(1, 'Language name is required'),
   level: z.string().min(1, 'Proficiency level is required'),
   percentage: z.number().min(0).max(100, 'Percentage must be between 0 and 100'),
+  speaking: z.number().min(0).max(100).optional(),
+  reading: z.number().min(0).max(100).optional(),
+  writing: z.number().min(0).max(100).optional(),
+  note: z.string().max(120).optional(),
 });
 
 type LanguageFormData = z.infer<typeof languageSchema>;
@@ -38,6 +42,10 @@ const languageFields = [
     ]
   },
   { name: 'percentage', label: 'Proficiency Percentage', type: 'number', placeholder: 'e.g. 95' },
+  { name: 'speaking', label: 'Speaking (0–100, optional)', type: 'number', placeholder: 'e.g. 95' },
+  { name: 'reading', label: 'Reading (0–100, optional)', type: 'number', placeholder: 'e.g. 90' },
+  { name: 'writing', label: 'Writing (0–100, optional)', type: 'number', placeholder: 'e.g. 85' },
+  { name: 'note', label: 'Where you use it (optional)', type: 'text', placeholder: 'e.g. Hosting events, client work' },
 ] as const;
 
 const AdminLanguages = () => {
@@ -85,7 +93,11 @@ const AdminLanguages = () => {
     finally { setDeleteTarget(null); }
   };
 
-  const handleSubmit = async (data: LanguageFormData) => {
+  const handleSubmit = async (form: LanguageFormData) => {
+    // Firestore rejects undefined; cleared optional fields are dropped instead.
+    const data = Object.fromEntries(
+      Object.entries(form).filter(([, v]) => v !== undefined && v !== ''),
+    ) as LanguageFormData;
     try {
       if (currentLanguage) {
         await CommonService.updateLanguage(currentLanguage.id, data);
