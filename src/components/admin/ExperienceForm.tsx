@@ -17,6 +17,7 @@ import {
   Image as ImageIcon, Link as LinkIcon, FileText, Presentation, X, Star, GripVertical, Check,
 } from 'lucide-react';
 import LogoUpload from './LogoUpload';
+import { ObjectListEditor } from './ObjectListEditor';
 import FormHeader from './FormHeader';
 import { CommonService } from '@/shared/services/common-service';
 import { ProjectService } from '@/services/project-service';
@@ -408,6 +409,9 @@ const ExperienceForm = () => {
   const [collapsedRoles, setCollapsedRoles] = useState<Set<number>>(new Set());
   const [topSkills, setTopSkills] = useState<string[]>([]);
   const [topMedia, setTopMedia] = useState<ExperienceMedia[]>([]);
+  const [metrics, setMetrics] = useState<{ value: string; label: string }[]>([]);
+  const [highlights, setHighlights] = useState<{ title: string; description: string }[]>([]);
+  const [testimonial, setTestimonial] = useState<{ quote: string; name: string; role: string }[]>([]);
   const [newTopSkill, setNewTopSkill] = useState('');
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -463,6 +467,9 @@ const ExperienceForm = () => {
 
       setTopSkills(item.skills ?? item.technologies ?? []);
       setTopMedia(item.media ?? []);
+      setMetrics(item.impact_metrics ?? []);
+      setHighlights(item.highlights ?? []);
+      setTestimonial(item.testimonial ? [{ quote: item.testimonial.quote, name: item.testimonial.name, role: item.testimonial.role ?? '' }] : []);
 
       const cStart = parseLegacyDateStr(item.startDate);
       const cEnd   = parseLegacyDateStr(item.endDate);
@@ -529,6 +536,9 @@ const ExperienceForm = () => {
       start_month: data.start_month, start_year: data.start_year,
       end_month: data.end_month,     end_year: data.end_year,
       roles, description: data.description, achievements: data.achievements,
+      impact_metrics: metrics.filter(m => m.value.trim() && m.label.trim()),
+      highlights: highlights.filter(h => h.title.trim()),
+      testimonial: testimonial[0]?.quote.trim() && testimonial[0]?.name.trim() ? testimonial[0] : null,
       skills: topSkills, media: topMedia,
       is_featured: data.is_featured, display_order: data.display_order,
       // Backward-compat aliases
@@ -790,6 +800,61 @@ const ExperienceForm = () => {
               <Textarea {...register('achievements')}
                 placeholder="e.g. Grew user base by 40%, Led a team of 8, Shipped 3 major features…"
                 maxLength={2000} rows={4} className="resize-none" />
+            </CardContent>
+          </Card>
+
+          {/* Company page story: numbers, highlight cards, testimonial */}
+          <Card>
+            <CardHeader className="border-b border-border-subtle pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-accent" /> Company page story
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-6">
+              <ObjectListEditor
+                label="Impact numbers"
+                hint="Big numbers that count up on the company page. Keep each one short and true."
+                items={metrics}
+                fields={[
+                  { key: 'value', label: 'Number', placeholder: 'e.g. 2,000+' },
+                  { key: 'label', label: 'What it measures', placeholder: 'e.g. monthly active users' },
+                ]}
+                blank={() => ({ value: '', label: '' })}
+                onChange={setMetrics}
+                addLabel="Add number"
+                max={4}
+              />
+              <div className="border-t border-border-subtle pt-5">
+                <ObjectListEditor
+                  label="What I did (highlight cards)"
+                  hint="Up to three cards. Falls back to the role descriptions when empty."
+                  items={highlights}
+                  fields={[
+                    { key: 'title', label: 'Title', placeholder: 'e.g. Built the booking platform' },
+                    { key: 'description', label: 'Description', type: 'textarea', placeholder: 'One or two sentences', span: 2 },
+                  ]}
+                  blank={() => ({ title: '', description: '' })}
+                  onChange={setHighlights}
+                  addLabel="Add highlight"
+                  max={3}
+                />
+              </div>
+              <div className="border-t border-border-subtle pt-5">
+                <ObjectListEditor
+                  label="Testimonial"
+                  hint="One quote from a manager, client or colleague."
+                  items={testimonial}
+                  fields={[
+                    { key: 'quote', label: 'Quote', type: 'textarea', placeholder: 'What they said, in their words', span: 2 },
+                    { key: 'name', label: 'Name', placeholder: 'e.g. Jane Perera' },
+                    { key: 'role', label: 'Role', placeholder: 'e.g. CTO, Acme' },
+                  ]}
+                  blank={() => ({ quote: '', name: '', role: '' })}
+                  onChange={setTestimonial}
+                  addLabel="Add testimonial"
+                  max={1}
+                />
+              </div>
             </CardContent>
           </Card>
 
