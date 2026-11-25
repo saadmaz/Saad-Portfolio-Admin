@@ -153,6 +153,7 @@ const schema = z.object({
   company_name: z.string().min(2, 'Company name is required'),
   company_logo: z.string().optional(),
   journey_image: z.string().optional(),
+  company_url: z.string().url('Enter a full URL, e.g. https://example.com').or(z.literal('')).optional(),
   employment_type: z.string().default('Full-time'),
   location: z.string().min(2, 'Location is required'),
   location_type: z.string().default('On-site'),
@@ -478,6 +479,7 @@ const ExperienceForm = () => {
         company_name:    item.company_name ?? item.company ?? '',
         company_logo:    item.company_logo ?? item.companyLogo ?? '',
         journey_image:   item.journey_image ?? '',
+        company_url:     item.company_url ?? item.companyUrl ?? '',
         employment_type: item.employment_type ?? item.employmentType ?? 'Full-time',
         location:        item.location ?? '',
         location_type:   (item.location_type ?? item.workMode ?? 'On-site') as FormValues['location_type'],
@@ -530,6 +532,7 @@ const ExperienceForm = () => {
     const saveData: Partial<Experience> = {
       company_name: data.company_name,  company_logo: data.company_logo,
       journey_image: data.journey_image ?? '',
+      company_url: data.company_url ?? '', companyUrl: data.company_url ?? '',
       employment_type: data.employment_type, location: data.location,
       location_type: data.location_type as Experience['location_type'],
       is_current: data.is_current,
@@ -644,6 +647,13 @@ const ExperienceForm = () => {
                 <label className="label">Company / Organization *</label>
                 <Input {...register('company_name')} placeholder="e.g. Google" />
                 {errors.company_name && <p className="text-xs text-danger">{errors.company_name.message}</p>}
+              </div>
+
+              {/* Company website */}
+              <div className="space-y-1.5">
+                <label className="label">Company website</label>
+                <Input {...register('company_url')} type="url" placeholder="https://example.com" />
+                {errors.company_url && <p className="text-xs text-danger">{errors.company_url.message}</p>}
               </div>
 
               {/* Employment Type */}
