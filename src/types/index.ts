@@ -453,6 +453,12 @@ export interface Publication {
   link?: string;
   authors?: string[];
   tags?: string[];
+  type?: string;
+  doi?: string;
+  abstract?: string;
+  pdf?: string;
+  logo?: string;
+  featured?: boolean;
 }
 
 export interface Patent {
