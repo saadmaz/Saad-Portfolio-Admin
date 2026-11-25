@@ -260,6 +260,10 @@ export interface Language {
   name: string;
   level: string; // e.g., 'Native', 'Fluent', 'Professional'
   percentage: number;
+  speaking?: number;
+  reading?: number;
+  writing?: number;
+  note?: string;
 }
 
 export interface Hackathon {
