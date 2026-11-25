@@ -144,6 +144,8 @@ export interface Experience {
   company_logo?: string;
   /** 3D illustration for the experience journey road. */
   journey_image?: string;
+  /** Company website; companyUrl is the legacy alias. */
+  company_url?: string;
   /** Headline numbers for the company page, e.g. { value: "2,000+", label: "users" }. */
   impact_metrics?: { value: string; label: string }[];
   /** Up to three "what I did" cards for the company page. */
