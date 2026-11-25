@@ -145,7 +145,7 @@ const AdminBlogSettings = () => {
                 <ul className="space-y-2.5">
                   <Check ok={integ.previewSecret} label="Draft previews" hint="PREVIEW_SECRET on the site" />
                   <Check ok={integ.cronSecret} label="Scheduled publishing" hint={status?.scheduler?.lastRunAt ? `Last run ${new Date(status.scheduler.lastRunAt).toLocaleString()}` : 'CRON_SECRET on the site; not run yet'} />
-                  <Check ok={integ.deployHook} label="Automatic rebuilds" hint={status?.rebuild?.lastTriggeredAt ? `Last rebuild queued ${new Date(status.rebuild.lastTriggeredAt).toLocaleString()}` : 'VERCEL_DEPLOY_HOOK_URL on the site'} />
+                  <Check ok={integ.deployHook} label="Automatic rebuilds" hint={status?.rebuild?.lastTriggeredAt ? `Last rebuild queued ${new Date(status.rebuild.lastTriggeredAt).toLocaleString()}` : 'DEPLOY_HOOK_URL (Cloudflare Pages deploy hook) on the site'} />
                   <Check ok={integ.analyticsSalt} label="First-party analytics & reactions" hint="ANALYTICS_SALT on the site" />
                 </ul>
               )}

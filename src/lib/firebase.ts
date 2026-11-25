@@ -14,7 +14,7 @@
  *
  * How to set these up:
  *   • Local dev  → create frontend/.env  (never commit to git)
- *   • Production → add each VITE_FIREBASE_* key in the Vercel dashboard
+ *   • Production → add each VITE_FIREBASE_* key in Cloudflare Pages (build variables)
  *                  under Settings → Environment Variables
  */
 
@@ -35,7 +35,7 @@ const firebaseConfig = {
 };
 
 // Fail loud, at startup, instead of letting `initializeApp` silently accept
-// `undefined` fields - a missing/misnamed Vercel env var used to degrade
+// `undefined` fields - a missing/misnamed build variable used to degrade
 // into a confusing "looks like you're logged out" screen (AuthContext's
 // generic error path) instead of a clear configuration error.
 const missingKeys = Object.entries(firebaseConfig)

@@ -1,0 +1,14 @@
+# Cloudflare Pages response headers (the CMS is a single-page app; Pages
+# serves index.html for every unknown path because there's no 404.html).
+/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://www.saadmaz.com https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com; frame-src https://www.saadmaz.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.loom.com https://codepen.io; object-src 'none'; base-uri 'self';
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
