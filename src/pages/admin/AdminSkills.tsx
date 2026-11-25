@@ -21,20 +21,21 @@ import {
 } from 'lucide-react';
 import LogoUpload from '@/components/admin/LogoUpload';
 import { uploadImage } from '@/services/storage';
-import { TOOL_LABELS, hasToolIcon, mergeToolLogos } from '@/shared/lib/toolLogos';
+import { TOOL_LABELS, foldToolDuplicates, hasToolIcon, mergeToolLogos } from '@/shared/lib/toolLogos';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
 import { plural } from '@/shared/lib/utils';
 import { SkillSet, Skill } from '@/types';
 import { toast } from "sonner";
 
-// Devicon logos (MIT) bundled with the admin; the import uploads them to Storage.
+// Devicon logos (MIT) bundled with the admin as SVG text. Imported raw so the
+// upload never fetches a data: URL, which the admin's CSP (connect-src) blocks.
 const BUNDLED_LOGOS = Object.entries(
-  import.meta.glob<string>('@/assets/tool-logos/*.svg', { eager: true, query: '?url', import: 'default' }),
+  import.meta.glob<string>('@/assets/tool-logos/*.svg', { eager: true, query: '?raw', import: 'default' }),
 )
-  .map(([path, src]) => {
+  .map(([path, svg]) => {
     const id = path.split('/').pop()!.replace('.svg', '').split('-')[0];
-    return { id, src, label: TOOL_LABELS[id] ?? id };
+    return { id, svg, label: TOOL_LABELS[id] ?? id };
   })
   .filter((t, i, all) => all.findIndex((x) => x.label === t.label) === i);
 
@@ -47,17 +48,19 @@ const AdminSkills = () => {
 
   /** Upload the bundled logos the skills don't have yet, then merge them in (saved with "Save all changes"). */
   const importLogos = async () => {
-    const todo = BUNDLED_LOGOS.filter((t) => !hasToolIcon(skillSets, t.label));
+    // Earlier imports may have added strip-only copies of real skills; fold those first.
+    const { sets: base, folded } = foldToolDuplicates(skillSets);
+    const todo = BUNDLED_LOGOS.filter((t) => !hasToolIcon(base, t.label));
     if (!todo.length) {
-      toast.info('Every bundled tool already has a logo');
+      setSkillSets(base);
+      toast.info(folded ? `Merged ${folded} duplicate tools. Press "Save all changes".` : 'Every bundled tool already has a logo');
       return;
     }
     const uploaded: { label: string; url: string }[] = [];
     try {
       for (const [i, t] of todo.entries()) {
         setImporting(`${i + 1}/${todo.length}`);
-        const blob = await (await fetch(t.src)).blob();
-        const file = new File([blob], `${t.id}.svg`, { type: 'image/svg+xml' });
+        const file = new File([t.svg], `${t.id}.svg`, { type: 'image/svg+xml' });
         uploaded.push({ label: t.label, url: await uploadImage(file, 'tools', undefined, t.id) });
       }
     } catch {
@@ -66,9 +69,9 @@ const AdminSkills = () => {
       setImporting(null);
     }
     if (!uploaded.length) return;
-    const r = mergeToolLogos(skillSets, uploaded);
+    const r = mergeToolLogos(base, uploaded);
     setSkillSets(r.sets);
-    toast.success(`${r.matched} skills got logos, ${r.added} tools added. Press "Save all changes" to publish.`);
+    toast.success(`${r.matched + folded} skills got logos, ${r.added} tools added. Press "Save all changes" to publish.`);
   };
 
   useEffect(() => {
@@ -215,15 +218,17 @@ const AdminSkills = () => {
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <LogoUpload
-                        value={skill.icon ?? ''}
-                        onChange={(url) => updateSkill(catIndex, skillIndex, 'icon', url)}
-                        label="Logo"
-                        size={44}
-                      />
-                      <div className="flex flex-col gap-1.5 text-[12px] text-muted-foreground">
-                        <label className="flex items-center gap-2">
+                    <LogoUpload
+                      value={skill.icon ?? ''}
+                      onChange={(url) => updateSkill(catIndex, skillIndex, 'icon', url)}
+                      label="Logo"
+                      size={52}
+                      light
+                      compact
+                    />
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-muted-foreground">
+                      <div className="contents">
+                        <label className="flex items-center gap-2 whitespace-nowrap">
                           <input
                             type="checkbox"
                             className="accent-[var(--accent,#ff5f00)]"
@@ -232,7 +237,7 @@ const AdminSkills = () => {
                           />
                           In tools strip
                         </label>
-                        <label className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 whitespace-nowrap">
                           <input
                             type="checkbox"
                             className="accent-[var(--accent,#ff5f00)]"
