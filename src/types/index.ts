@@ -115,6 +115,8 @@ export interface Skill {
   showInTools?: boolean;
   /** Strip only: kept off the public /skills page. */
   toolOnly?: boolean;
+  /** Official homepage linked from the /skills page. Empty = the site picks a known one. */
+  url?: string;
 }
 
 export interface SkillSet {
