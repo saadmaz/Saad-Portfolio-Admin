@@ -17,18 +17,59 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
+  Download,
 } from 'lucide-react';
+import LogoUpload from '@/components/admin/LogoUpload';
+import { uploadImage } from '@/services/storage';
+import { TOOL_LABELS, hasToolIcon, mergeToolLogos } from '@/shared/lib/toolLogos';
 import { CommonService } from '@/shared/services/common-service';
 import PageHeader from '@/components/admin/PageHeader';
 import { plural } from '@/shared/lib/utils';
 import { SkillSet, Skill } from '@/types';
 import { toast } from "sonner";
 
+// Devicon logos (MIT) bundled with the admin; the import uploads them to Storage.
+const BUNDLED_LOGOS = Object.entries(
+  import.meta.glob<string>('@/assets/tool-logos/*.svg', { eager: true, query: '?url', import: 'default' }),
+)
+  .map(([path, src]) => {
+    const id = path.split('/').pop()!.replace('.svg', '').split('-')[0];
+    return { id, src, label: TOOL_LABELS[id] ?? id };
+  })
+  .filter((t, i, all) => all.findIndex((x) => x.label === t.label) === i);
+
 const AdminSkills = () => {
   const [skillSets, setSkillSets] = useState<SkillSet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deleteCatIndex, setDeleteCatIndex] = useState<number | null>(null);
+  const [importing, setImporting] = useState<string | null>(null);
+
+  /** Upload the bundled logos the skills don't have yet, then merge them in (saved with "Save all changes"). */
+  const importLogos = async () => {
+    const todo = BUNDLED_LOGOS.filter((t) => !hasToolIcon(skillSets, t.label));
+    if (!todo.length) {
+      toast.info('Every bundled tool already has a logo');
+      return;
+    }
+    const uploaded: { label: string; url: string }[] = [];
+    try {
+      for (const [i, t] of todo.entries()) {
+        setImporting(`${i + 1}/${todo.length}`);
+        const blob = await (await fetch(t.src)).blob();
+        const file = new File([blob], `${t.id}.svg`, { type: 'image/svg+xml' });
+        uploaded.push({ label: t.label, url: await uploadImage(file, 'tools', undefined, t.id) });
+      }
+    } catch {
+      toast.error(`Upload stopped after ${uploaded.length} logos. Run the import again to continue.`);
+    } finally {
+      setImporting(null);
+    }
+    if (!uploaded.length) return;
+    const r = mergeToolLogos(skillSets, uploaded);
+    setSkillSets(r.sets);
+    toast.success(`${r.matched} skills got logos, ${r.added} tools added. Press "Save all changes" to publish.`);
+  };
 
   useEffect(() => {
     fetchSkills();
@@ -74,7 +115,7 @@ const AdminSkills = () => {
     setSkillSets(newSkillSets);
   };
 
-  const updateSkill = (catIndex: number, skillIndex: number, field: keyof Skill, value: string | number) => {
+  const updateSkill = (catIndex: number, skillIndex: number, field: keyof Skill, value: string | number | boolean) => {
     const newSkillSets = [...skillSets];
     const skill = { ...newSkillSets[catIndex].skills[skillIndex], [field]: value };
     newSkillSets[catIndex].skills[skillIndex] = skill as Skill;
@@ -102,6 +143,9 @@ const AdminSkills = () => {
         subtitle={`${plural(skillSets.reduce((n, s) => n + s.skills.length, 0), "skill")} · ${plural(skillSets.length, "category", "categories")}`}
         actions={
           <>
+            <Button variant="outline" onClick={importLogos} loading={importing !== null}>
+              <Download className="w-4 h-4" /> {importing ? `Importing ${importing}` : 'Import tool logos'}
+            </Button>
             <Button
               variant="outline"
               onClick={addCategory}
@@ -170,6 +214,34 @@ const AdminSkills = () => {
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <LogoUpload
+                        value={skill.icon ?? ''}
+                        onChange={(url) => updateSkill(catIndex, skillIndex, 'icon', url)}
+                        label="Logo"
+                        size={44}
+                      />
+                      <div className="flex flex-col gap-1.5 text-[12px] text-muted-foreground">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="accent-[var(--accent,#ff5f00)]"
+                            checked={!!skill.showInTools}
+                            onChange={(e) => updateSkill(catIndex, skillIndex, 'showInTools', e.target.checked)}
+                          />
+                          In tools strip
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="accent-[var(--accent,#ff5f00)]"
+                            checked={!!skill.toolOnly}
+                            onChange={(e) => updateSkill(catIndex, skillIndex, 'toolOnly', e.target.checked)}
+                          />
+                          Hide on skills page
+                        </label>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 pt-2">
                       <Select

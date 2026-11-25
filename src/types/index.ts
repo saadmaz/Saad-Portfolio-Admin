@@ -111,6 +111,10 @@ export interface Skill {
   level: 'Beginner' | 'Intermediate' | 'Advance' | 'Expert';
   startYear: number;
   icon?: string;
+  /** Shown in the scrolling tools strip on the home page (needs an icon). */
+  showInTools?: boolean;
+  /** Strip only: kept off the public /skills page. */
+  toolOnly?: boolean;
 }
 
 export interface SkillSet {
