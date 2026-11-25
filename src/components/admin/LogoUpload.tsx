@@ -10,9 +10,13 @@ interface LogoUploadProps {
   required?: boolean;
   label?: string;
   size?: number;
+  /** White preview background, so dark logos stay visible on the dark admin. */
+  light?: boolean;
+  /** Hide the file-type hint (tight layouts). */
+  compact?: boolean;
 }
 
-const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, label = 'Logo', size = 80 }) => {
+const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, label = 'Logo', size = 80, light, compact }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,14 +56,14 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
         role="button"
         tabIndex={0}
         aria-label={value ? `Replace ${label}` : `Upload ${label}`}
-        className="relative group flex-shrink-0 rounded-xl border flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className={`relative group flex-shrink-0 rounded-xl border flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${light ? 'bg-white' : ''}`}
         style={{ width: size, height: size }}
         onClick={() => !isUploading && fileInputRef.current?.click()}
         onKeyDown={(e) => { if (!isUploading && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); fileInputRef.current?.click(); } }}
       >
         {value ? (
           <>
-            <img src={value} alt="Logo" className="w-full h-full object-contain p-1" />
+            <img src={value} alt="Logo" className={`w-full h-full object-contain ${light ? 'p-2' : 'p-1'}`} />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity flex items-center justify-center">
               {isUploading ? (
                 <span className="text-[12px] font-medium text-accent">{progress}%</span>
@@ -85,7 +89,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ value, onChange, required, labe
         <p className="text-xs font-medium text-fg-2">
           {label} {required && <span className="text-danger">*</span>}
         </p>
-        <p className="text-[12px] text-muted-foreground">JPG, PNG, WebP · Max 5 MB</p>
+        {!compact && <p className="text-[12px] text-muted-foreground">JPG, PNG, WebP, SVG · Max 5 MB</p>}
         <div className="flex gap-2">
           <Button
             type="button"

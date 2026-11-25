@@ -29,16 +29,50 @@ export const TOOLS_CATEGORY = 'Tools';
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-/** Keys a skill name can match a tool by: "React.js" matches "React", "Node.js" matches "Node.js". */
+/**
+ * Keys a skill name can match a tool by. "React.js" matches "React",
+ * "AWS (EC2, S3, IAM)" matches "AWS", and "HTML5 & CSS3" matches either.
+ */
 const keysOf = (name: string) => {
-  const n = norm(name);
-  return n.endsWith('js') ? [n, n.slice(0, -2)] : [n];
+  const base = name.replace(/\(.*?\)/g, ' ');
+  const parts = [name, base, ...base.split(/[&/,+]| and /i)];
+  const keys = new Set<string>();
+  for (const p of parts) {
+    const n = norm(p);
+    if (!n) continue;
+    keys.add(n);
+    if (n.endsWith('js') && n.length > 2) keys.add(n.slice(0, -2));
+  }
+  return [...keys];
 };
 
 /** True when some skill already carries an icon under this tool's name. */
 export function hasToolIcon(sets: SkillSet[], label: string): boolean {
   const k = norm(label);
   return sets.some((s) => s.skills.some((sk) => sk.icon && keysOf(sk.name).includes(k)));
+}
+
+/**
+ * Folds strip-only tools into a real skill of the same name: the skill takes
+ * the logo (unless it has one) and joins the strip; the duplicate goes.
+ */
+export function foldToolDuplicates(sets: SkillSet[]): { sets: SkillSet[]; folded: number } {
+  const next = sets.map((s) => ({ ...s, skills: s.skills.map((sk) => ({ ...sk })) }));
+  const real = next.flatMap((s) => s.skills).filter((sk) => !sk.toolOnly);
+  let folded = 0;
+  for (const set of next) {
+    set.skills = set.skills.filter((tool) => {
+      if (!tool.toolOnly) return true;
+      const k = norm(tool.name);
+      const hit = real.find((sk) => keysOf(sk.name).includes(k));
+      if (!hit) return true;
+      if (!hit.icon) hit.icon = tool.icon;
+      hit.showInTools = true;
+      folded++;
+      return false;
+    });
+  }
+  return { sets: next.filter((s) => s.skills.length || s.category !== TOOLS_CATEGORY), folded };
 }
 
 /**
