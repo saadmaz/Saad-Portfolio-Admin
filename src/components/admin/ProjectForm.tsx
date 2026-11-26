@@ -22,6 +22,7 @@ import type { Education, Experience, Project, SkillSet } from '@/types';
 import FormHeader from './FormHeader';
 import { isProjectIndexable, PROJECT_MIN_WORDS, projectWordCount } from '@/shared/lib/indexing';
 import ImageUpload from './ImageUpload';
+import { PROJECT_GROUPS, groupLabel, inferredGroupOf, type ProjectGroupId } from '@/shared/lib/projectGroups';
 import MultiImageUpload from './MultiImageUpload';
 import { ObjectListEditor } from './ObjectListEditor';
 import {
@@ -42,6 +43,7 @@ const projectSchema = z.object({
   role: z.string().optional().or(z.literal('')),
   type: z.string().optional().or(z.literal('')),
   category: z.string().optional().or(z.literal('')),
+  group: z.enum(['venture', 'client', 'lab', 'academic']).optional().or(z.literal('')),
   stage: z.string().optional().or(z.literal('')),
   status: z.string().default('Completed'),
   colour: z.string().optional().or(z.literal('')),
@@ -300,6 +302,7 @@ const ProjectForm = () => {
           role:             p.role             || '',
           type:             p.type             || '',
           category:         p.category         || '',
+          group:            p.group            || '',
           stage:            p.stage            || '',
           status:           p.status           || 'Completed',
           colour:           p.colour           || '',
@@ -515,6 +518,24 @@ const ProjectForm = () => {
                 <label className={LABEL_CLS}>Industry</label>
                 <Input {...register('industry')} placeholder="e.g. Logistics, EdTech" />
               </div>
+            </div>
+
+            <div>
+              <label className={LABEL_CLS}>Projects page section</label>
+              <Select value={(watch('group') as string) || 'auto'} onValueChange={(v) => setValue('group', v === 'auto' ? '' : (v as ProjectGroupId), { shouldDirty: true })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border text-foreground">
+                  <SelectItem value="auto">
+                    Automatic ({groupLabel(inferredGroupOf({ role: watch('role'), category: watch('category'), type: watch('type'), client: watch('client') }))})
+                  </SelectItem>
+                  {PROJECT_GROUPS.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="meta mt-1.5">Automatic uses the role (founder → ventures), category and client.</p>
             </div>
 
             <div>
@@ -970,6 +991,9 @@ const ProjectForm = () => {
               value={watch('heroImage') || watch('image')}
               onChange={url => { setValue('heroImage', url); setValue('image', url); }}
             />
+            {!(watch('heroImage') || watch('image')) && (
+              <p className="mt-2 text-[12px] text-warning-fg">No cover image: the site shows a generated cover with the title and stack. A 16:10 screenshot makes a stronger card.</p>
+            )}
             <div className="mt-3">
               <label className={LABEL_CLS}>Image Alt Text</label>
               <Input {...register('altText')} placeholder={watch('title') || 'Falls back to the project title if left blank'} />

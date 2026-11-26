@@ -2,6 +2,8 @@ export interface Project {
   id: number | string;
   slug: string;
   title: string;
+  /** Projects page section; '' = inferred from role and category (shared/lib/projectGroups). */
+  group?: 'venture' | 'client' | 'lab' | 'academic' | '';
   tagline: string;
   date?: string;
   status: string;
