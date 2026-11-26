@@ -22,9 +22,10 @@ import { ProjectService } from '@/services/project-service';
 import type { FirestoreLikeTimestamp, Project } from '@/types';
 import { cn, plural, toJsDate } from '@/shared/lib/utils';
 import { isProjectIndexable, PROJECT_MIN_WORDS } from '@/shared/lib/indexing';
+import { projectGroupOf, type ProjectGroupId } from '@/shared/lib/projectGroups';
 import { formatDistanceToNowStrict, format } from 'date-fns';
 
-type Filter = 'all' | 'published' | 'hidden' | 'featured';
+type Filter = 'all' | 'published' | 'hidden' | 'featured' | 'nocover' | ProjectGroupId;
 type SortKey = 'order' | 'updated' | 'az';
 
 type ProjectRow = Project & { updated_at?: FirestoreLikeTimestamp };
@@ -97,6 +98,11 @@ const AdminProjects = () => {
     published: projects.filter(isPublished).length,
     hidden: projects.filter((p) => !isPublished(p)).length,
     featured: projects.filter((p) => p.featured).length,
+    nocover: projects.filter((p) => !(p.heroImage || p.image)).length,
+    venture: projects.filter((p) => projectGroupOf(p) === 'venture').length,
+    client: projects.filter((p) => projectGroupOf(p) === 'client').length,
+    lab: projects.filter((p) => projectGroupOf(p) === 'lab').length,
+    academic: projects.filter((p) => projectGroupOf(p) === 'academic').length,
   }), [projects]);
 
   const rows = useMemo(() => {
@@ -105,6 +111,8 @@ const AdminProjects = () => {
       if (filter === 'published' && !isPublished(p)) return false;
       if (filter === 'hidden' && isPublished(p)) return false;
       if (filter === 'featured' && !p.featured) return false;
+      if (filter === 'nocover' && (p.heroImage || p.image)) return false;
+      if ((filter === 'venture' || filter === 'client' || filter === 'lab' || filter === 'academic') && projectGroupOf(p) !== filter) return false;
       return !q || [p.title, p.tagline, p.slug].some((v) => v?.toLowerCase().includes(q));
     });
     if (sortKey === 'az') result.sort((a, b) => a.title.localeCompare(b.title));
@@ -173,6 +181,11 @@ const AdminProjects = () => {
     { key: 'published', label: 'Published' },
     { key: 'hidden', label: 'Hidden' },
     { key: 'featured', label: 'Featured' },
+    { key: 'nocover', label: 'No cover' },
+    { key: 'venture', label: 'Ventures' },
+    { key: 'client', label: 'Client' },
+    { key: 'lab', label: 'Side projects' },
+    { key: 'academic', label: 'Academic' },
   ];
   const sortLabels: Record<SortKey, string> = { order: 'Order', updated: 'Recently updated', az: 'A–Z' };
 
