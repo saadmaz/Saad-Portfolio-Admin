@@ -82,7 +82,7 @@ const AdminBlogSettings = () => {
   const Check = ({ ok, label, hint }: { ok?: boolean; label: string; hint: string }) => (
     <li className="flex items-start gap-2">
       {ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 text-success-fg" aria-hidden="true" /> : <CircleDashed className="mt-0.5 h-4 w-4 text-warning-fg" aria-hidden="true" />}
-      <span><span className="block text-[13px] text-foreground">{label}</span><span className="block text-[12px] text-muted-foreground">{hint}</span></span>
+      <span><span className="block text-[13px] text-foreground">{label}</span><span className="block text-[12px] text-muted-foreground">{hint}</span>{!ok && <span className="block text-[12px] text-warning-fg">Not active yet. A variable added in Cloudflare Pages only applies after the site is redeployed.</span>}</span>
     </li>
   );
 
