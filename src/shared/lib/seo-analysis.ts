@@ -75,6 +75,9 @@ export function analyzeSeo(post: Partial<BlogPost>, siteHost = 'saadmaz.com'): {
   else if (!cover.alt?.trim()) add('cover', 'Featured image', 'fail', 'Add alt text to the featured image.');
   else add('cover', 'Featured image', 'pass');
 
+  if (!post.articleType) add('type', 'Article type', 'warn', 'Pick a type so the blog shows its label and readers can filter by it.');
+  else add('type', 'Article type', 'pass');
+
   const social = post.socialImage?.url ? post.socialImage : cover;
   if (!social) add('social', 'Social image', 'warn', 'Without one, the site’s generated card is used.');
   else if ((social.width || social.height) && !imageBigEnough(social)) add('social', 'Social image', 'warn', `Use at least ${LIMITS.social.width}×${LIMITS.social.height} for large cards.`);
