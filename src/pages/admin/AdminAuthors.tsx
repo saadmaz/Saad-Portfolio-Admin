@@ -65,7 +65,11 @@ const AdminAuthors = () => {
     if (!editing || invalid) return;
     setSaving(true);
     try {
-      const id = await AuthorService.save({ ...editing, links: (editing.links ?? []).filter((l) => l.label && l.url) });
+      const id = await AuthorService.save({
+        ...editing,
+        links: (editing.links ?? []).filter((l) => l.label && l.url),
+        expertise: (editing.expertise ?? []).map((s) => s.trim()).filter(Boolean),
+      });
       if (!authors.length) await AuthorService.setDefault(id, [...authors, { ...(editing as Author), id }]);
       toast.success('Author saved');
       setEditing(null);
@@ -135,6 +139,13 @@ const AdminAuthors = () => {
         <TextField label="Profile URL slug" required value={e.slug ?? ''} onChange={(slug) => patch({ slug: slugify(slug) })} hint={`${SITE_URL}/authors/${e.slug || 'name'}`} error={slugTaken ? 'Another author uses this slug' : undefined} />
         <TextField label="Professional title" value={e.title ?? ''} onChange={(title) => patch({ title })} placeholder="Founder, TankSudda" />
         <TextAreaField label="Biography" value={e.bio ?? ''} onChange={(bio) => patch({ bio })} max={500} rows={4} />
+        <TextField
+          label="Expertise"
+          value={(e.expertise ?? []).join(', ')}
+          onChange={(v) => patch({ expertise: v.split(',').map((s) => s.trimStart()) })}
+          placeholder="AI engineering, Startups, Full-stack development"
+          hint="Comma-separated. Shown on the author page and used as knowsAbout in structured data. Leave empty to use the topics you write about."
+        />
         <ImageAssetField
           label="Profile picture"
           purpose="avatar"

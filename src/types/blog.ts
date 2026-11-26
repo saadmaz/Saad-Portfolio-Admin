@@ -124,6 +124,8 @@ export interface Author {
   github?: string;
   links?: AuthorLink[];
   isDefault?: boolean;
+  /** Topics the author is an expert in; the site falls back to what they write about. */
+  expertise?: string[];
 }
 
 export interface BlogSeries {
