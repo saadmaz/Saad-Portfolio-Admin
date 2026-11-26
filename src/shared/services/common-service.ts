@@ -11,7 +11,7 @@
  * admin page compiles without changes.
  *
  * Contact form is the ONE exception that still uses an HTTP call -
- * it hits /api/contact (a Vercel serverless function) because SendGrid
+ * it hits /api/contact (a Cloudflare Pages Function on the site) because Resend
  * credentials must never be exposed to the browser.
  */
 

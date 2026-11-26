@@ -96,8 +96,7 @@ is saved first).
 ### Scheduling
 
 Pick a date, time and time zone under Publish, then **Schedule**. The site's
-scheduler publishes it within ~10 minutes of that time (GitHub Actions; daily on
-Vercel Hobby cron alone), and sends incomplete posts back to draft with the
+scheduler publishes it within ~10 minutes of that time (GitHub Actions), and sends incomplete posts back to draft with the
 reason shown under Publish.
 
 ### Previews
@@ -109,9 +108,9 @@ at `/preview/:id` (desktop/tablet/mobile widths or a new tab). Links expire afte
 ## Configuration
 
 `.env.example` lists the Firebase variables and the optional `VITE_SITE_URL`.
-The CSP in `vercel.json` allows calling and framing `https://www.saadmaz.com`
+The CSP in `public/_headers` allows calling and framing `https://www.saadmaz.com`
 and the four embed providers; add your local site origin there if you develop
-against `vercel dev`.
+against the site's `npm run pages:dev`.
 
 ## Tests
 

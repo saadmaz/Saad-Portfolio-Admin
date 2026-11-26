@@ -29,5 +29,7 @@ npm run dev
 
 ## Deploy
 
-Deployed as its own Vercel project pointed at `admin.saadmaz.com`. Set the
-same `VITE_FIREBASE_*` environment variables in the Vercel project settings.
+Deployed as its own Cloudflare Pages project (build `npm run build`, output `dist`)
+pointed at `admin.saadmaz.com`. Set the same `VITE_FIREBASE_*` variables in the
+Pages project's build settings. Headers and redirects live in `public/_headers`
+and `public/_redirects`.

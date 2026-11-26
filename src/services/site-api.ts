@@ -1,10 +1,10 @@
 /**
  * Client for the public site's CMS endpoints (/api/admin on the portfolio).
  * These need server credentials (signing preview links, the deploy hook,
- * running the scheduler), so they live with the site's Vercel functions.
+ * running the scheduler), so they live with the site's Cloudflare Pages Functions.
  * Authenticated with the signed-in user's Firebase ID token.
  *
- * VITE_SITE_URL points at a local `vercel dev` during development.
+ * VITE_SITE_URL points at the site's local `npm run pages:dev` during development.
  */
 
 import { auth } from '@/lib/firebase';
