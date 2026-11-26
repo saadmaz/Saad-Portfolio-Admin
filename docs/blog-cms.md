@@ -96,7 +96,7 @@ is saved first).
 ### Scheduling
 
 Pick a date, time and time zone under Publish, then **Schedule**. The site's
-scheduler publishes it within ~10 minutes of that time (GitHub Actions), and sends incomplete posts back to draft with the
+scheduler publishes it within ~10 minutes of that time (a Cloudflare cron Worker), and sends incomplete posts back to draft with the
 reason shown under Publish.
 
 ### Previews
