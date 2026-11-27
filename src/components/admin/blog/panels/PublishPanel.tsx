@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { AlertTriangle, CalendarClock, Check, CheckCircle2, Copy, Globe, Link2, Star, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/shared/lib/utils';
+import { DateTimePicker } from '@/components/ui/date-picker';
 import { SITE_URL } from '@/components/admin/navConfig';
 import {
   STATUS_LABELS,
@@ -92,12 +93,10 @@ export function PublishPanel({
       {status !== 'published' && (
         <PanelSection title="Schedule">
           <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-            <input
-              type="datetime-local"
+            <DateTimePicker
               aria-label="Publish date and time"
               value={schedule.local}
-              onChange={(e) => setSchedule({ ...schedule, local: e.target.value })}
-              className="h-9 rounded-lg border border-border bg-secondary px-2 text-[13px] text-foreground [color-scheme:dark]"
+              onChange={(local) => setSchedule({ ...schedule, local })}
             />
             <select
               aria-label="Time zone"

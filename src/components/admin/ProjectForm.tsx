@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -599,11 +600,11 @@ const ProjectForm = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={LABEL_CLS} htmlFor="start_date">Start</label>
-                <Input id="start_date" type="month" {...register('start_date')} />
+                <MonthPicker id="start_date" value={(w('start_date') as string) ?? ''} onChange={(v) => setValue('start_date', v, { shouldDirty: true })} />
               </div>
               <div>
                 <label className={LABEL_CLS} htmlFor="end_date">End</label>
-                <Input id="end_date" type="month" {...register('end_date')} disabled={!!w('is_ongoing')} />
+                <MonthPicker id="end_date" value={(w('end_date') as string) ?? ''} onChange={(v) => setValue('end_date', v, { shouldDirty: true })} disabled={!!w('is_ongoing')} />
               </div>
             </div>
             <label className="flex items-center gap-2 text-sm text-fg-2 cursor-pointer">
