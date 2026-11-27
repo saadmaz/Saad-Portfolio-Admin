@@ -8,6 +8,7 @@ import { AnalyticsService } from '@/services/blog-collections';
 import { BlogService } from '@/services/blog-service';
 import { SiteApi, type SiteStatus } from '@/services/site-api';
 import { cn } from '@/shared/lib/utils';
+import { Ga4Panel, GscPanel, useGoogleReports } from '@/components/admin/analytics/GoogleReports';
 import type { ArticleStats, BlogPostDoc, DailyStats } from '@/types/blog';
 
 const fmtMs = (ms: number) => {
@@ -110,6 +111,7 @@ const AdminBlogAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [days, setDays] = useState<DailyStats[]>([]);
+  const google = useGoogleReports(status ? { ga4: status.integrations.ga4, gsc: status.integrations.searchConsole } : null);
 
   useEffect(() => {
     Promise.all([BlogService.getAll(), AnalyticsService.getAll()])
@@ -147,10 +149,14 @@ const AdminBlogAnalytics = () => {
     .slice(0, 8);
   const refTotal = referrers.reduce((n, [, v]) => n + v, 0);
   const selectedPost = posts.find((p) => p.id === selected);
+  // Last-28-day Google figures per article, matched on /blog/<slug>.
+  const gaViews = new Map(google.ga4.state === 'ok' ? google.ga4.data.pages.map((p) => [p.path.replace(/\/$/, ''), p.views]) : []);
+  const gscClicks = new Map(google.gsc.state === 'ok' ? google.gsc.data.pages.map((p) => [p.path.replace(/\/$/, ''), p.clicks]) : []);
+  const showGoogle = google.ga4.state === 'ok' || google.gsc.state === 'ok';
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Article analytics" subtitle="First-party, privacy-friendly counts from the site · no cookies, no personal data" />
+      <PageHeader title="Article analytics" subtitle="The site’s own privacy-friendly counts, plus Google Analytics and Search Console" />
 
       <section className="rounded-2xl border border-border-subtle bg-card p-4">
         <h2 className="label mb-3 text-[11px] text-fg-2">Data sources</h2>
@@ -159,11 +165,30 @@ const AdminBlogAnalytics = () => {
         ) : (
           <ul className="grid gap-3 md:grid-cols-3">
             <IntegrationRow name="Site analytics (first-party)" connected={!!status?.integrations.analyticsSalt} detail="Views, unique visitors per day, engaged time, scroll depth, referrers. Needs ANALYTICS_SALT on the site." />
-            <IntegrationRow name="Google Analytics 4" connected={!!status?.integrations.ga4} onLabel="credentials set" offLabel="not connected" detail="The site already sends GA4 data. Showing it here isn't built yet (the provider slot and env vars are ready; see README), so use the GA4 dashboard." />
-            <IntegrationRow name="Google Search Console" connected={!!status?.integrations.searchConsole} onLabel="credentials set" offLabel="not connected" detail="Impressions and queries aren't fetched into the CMS yet (env vars ready; see README). Use Search Console directly." />
+            <IntegrationRow
+              name="Google Analytics 4"
+              connected={google.ga4.state === 'ok'}
+              offLabel={google.ga4.state === 'error' ? 'access error' : google.ga4.state === 'loading' ? 'loading…' : 'not connected'}
+              detail={status?.integrations.ga4 ? 'Views, users and sources for the last 28 days, shown below.' : 'Needs GA4_PROPERTY_ID on the site and Viewer access for its service account (docs §8).'}
+            />
+            <IntegrationRow
+              name="Google Search Console"
+              connected={google.gsc.state === 'ok'}
+              offLabel={google.gsc.state === 'error' ? 'access error' : google.gsc.state === 'loading' ? 'loading…' : 'not connected'}
+              detail={status?.integrations.searchConsole ? 'Clicks, impressions and searches for the last 28 days, shown below.' : 'Needs GSC_SITE_URL on the site and access for its service account (docs §8).'}
+            />
           </ul>
         )}
       </section>
+
+      {!statusError && (
+        <div className="grid gap-6 2xl:grid-cols-2">
+          <Ga4Panel load={google.ga4} />
+          <GscPanel load={google.gsc} />
+        </div>
+      )}
+
+      <h2 className="pt-2 text-[15px] font-medium text-foreground">On-site reading <span className="text-[12px] font-normal text-muted-foreground">· first-party, no cookies</span></h2>
 
       {loading ? (
         <div className={cn(SKELETON, 'h-60')} />
@@ -206,7 +231,7 @@ const AdminBlogAnalytics = () => {
           </div>
 
           <section className="overflow-x-auto rounded-2xl border border-border-subtle bg-card">
-            <table className="w-full min-w-[680px] text-left text-sm">
+            <table className={cn("w-full text-left text-sm", showGoogle ? "min-w-[860px]" : "min-w-[680px]")}>
               <caption className="sr-only">Article performance</caption>
               <thead>
                 <tr className="border-b border-border-subtle">
@@ -215,6 +240,8 @@ const AdminBlogAnalytics = () => {
                   <th className="label py-3 text-right font-medium">Unique</th>
                   <th className="label py-3 text-right font-medium">Avg. time</th>
                   <th className="label py-3 pr-4 text-right font-medium" title="Readers who scrolled to the end">Read to end</th>
+                  {showGoogle && <th className="label py-3 pr-4 text-right font-medium" title="Google Analytics page views, last 28 days">GA4 views</th>}
+                  {showGoogle && <th className="label py-3 pr-4 text-right font-medium" title="Clicks from Google Search, last 28 days">Search clicks</th>}
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +259,8 @@ const AdminBlogAnalytics = () => {
                     <td className="tabular py-2.5 text-right">{s?.uniques?.toLocaleString() ?? '—'}</td>
                     <td className="tabular py-2.5 text-right">{s?.engagedSamples ? fmtMs(avgEngaged(s)) : '—'}</td>
                     <td className="tabular py-2.5 pr-4 text-right">{completion(s) === null ? '—' : `${completion(s)}%`}</td>
+                    {showGoogle && <td className="tabular py-2.5 pr-4 text-right">{gaViews.get(`/blog/${post.slug}`)?.toLocaleString() ?? '—'}</td>}
+                    {showGoogle && <td className="tabular py-2.5 pr-4 text-right">{gscClicks.get(`/blog/${post.slug}`)?.toLocaleString() ?? '—'}</td>}
                   </tr>
                 ))}
               </tbody>
