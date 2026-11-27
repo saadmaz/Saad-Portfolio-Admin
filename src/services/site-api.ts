@@ -51,12 +51,38 @@ export interface SiteStatus {
   rebuild: { lastTriggeredAt?: number; lastReason?: string } | null;
 }
 
+/** Mirrors the site's server/_lib/insights.ts. Last 28 days. */
+export interface Ga4Report {
+  range: { start: string; end: string };
+  totals: { views: number; users: number; sessions: number; avgEngagementSec: number };
+  daily: { date: string; views: number; users: number }[];
+  pages: { path: string; views: number; users: number; avgEngagementSec: number }[];
+  sources: { source: string; sessions: number }[];
+}
+
+export interface GscRow {
+  clicks: number;
+  impressions: number;
+  /** Click-through rate as a percentage. */
+  ctr: number;
+  position: number;
+}
+export interface GscReport {
+  range: { start: string; end: string };
+  totals: GscRow;
+  daily: ({ date: string } & GscRow)[];
+  queries: ({ query: string } & GscRow)[];
+  pages: ({ path: string } & GscRow)[];
+}
+
 export const SiteApi = {
   previewLink: (postId: string) =>
     call<{ token: string; url: string; expiresAt: string }>('preview-token', 'POST', { postId }),
   rebuild: (reason: string) => call<RebuildResult>('rebuild', 'POST', { reason }),
   runScheduler: () => call<SchedulerSummary>('run-scheduler', 'POST'),
   status: () => call<SiteStatus>('status', 'GET'),
+  ga4Report: () => call<Ga4Report>('ga4-report', 'GET'),
+  gscReport: () => call<GscReport>('gsc-report', 'GET'),
 };
 
 /** Human summary of a rebuild request, for toasts. */
