@@ -132,6 +132,10 @@ export interface BlogSeries {
   id: string;
   slug: string;
   title: string;
+  /** Short name shown with the number, e.g. "Projects". */
+  label?: string;
+  /** Display position, 1-based; shown as "01". */
+  order?: number;
   description?: string;
   cover?: ImageAsset;
   /** Ordered article ids. */
