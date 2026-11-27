@@ -3,12 +3,12 @@
  * topic; ids match the public site's src/lib/newsletter.ts and /api/subscribe.
  */
 export const SERIES = [
-  { id: 'building-in-public', number: '01', title: 'Building in Public', label: 'Projects' },
-  { id: 'ai-and-technology', number: '02', title: 'AI & Technology', label: 'AI' },
-  { id: 'startups', number: '03', title: 'Startups', label: 'Business' },
-  { id: 'personal-branding', number: '04', title: 'Personal Branding', label: 'Growth' },
-  { id: 'ai-tutorials', number: '05', title: 'AI Tutorials', label: 'Practical AI' },
-  { id: 'tech-news', number: '06', title: 'Tech News', label: 'News' },
+  { id: 'building-in-public', number: '01', title: 'Between Builds', label: 'Projects' },
+  { id: 'ai-and-technology', number: '02', title: 'Beyond the Prompt', label: 'AI' },
+  { id: 'startups', number: '03', title: 'Founder Files', label: 'Business' },
+  { id: 'personal-branding', number: '04', title: 'The Visibility Playbook', label: 'Growth' },
+  { id: 'ai-tutorials', number: '05', title: 'Better With AI', label: 'Practical AI' },
+  { id: 'tech-news', number: '06', title: 'Tech Radar', label: 'News' },
 ] as const;
 
 export type SeriesId = (typeof SERIES)[number]['id'];
