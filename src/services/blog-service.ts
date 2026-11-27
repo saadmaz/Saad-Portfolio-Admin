@@ -73,7 +73,12 @@ export function toPatch(data: Partial<BlogPost>): Record<string, unknown> {
   for (const [k, v] of Object.entries(data)) patch[k] = v === undefined || v === null ? deleteField() : clean(v);
   return patch;
 }
-const toPost = (id: string, data: DocumentData) => ({ ...data, id }) as BlogPostDoc;
+/**
+ * Scheduling clears date/publishedAt/lastUpdatedAt to null (see 'schedule' below),
+ * so nulls are dropped here: readers only ever see a string or undefined.
+ */
+export const toPost = (id: string, data: DocumentData) =>
+  ({ ...Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null)), id }) as BlogPostDoc;
 const editor = () => auth.currentUser?.email ?? 'admin';
 const now = () => new Date().toISOString();
 

@@ -52,7 +52,7 @@ const AdminSeries = () => {
     (s: Partial<BlogSeries>) => {
       const inSeries = posts.filter((p) => p.seriesId && p.seriesId === s.id);
       const ordered = (s.postIds ?? []).filter((id) => inSeries.some((p) => p.id === id));
-      const rest = inSeries.filter((p) => !ordered.includes(p.id)).sort((a, b) => (a.publishedAt ?? a.date).localeCompare(b.publishedAt ?? b.date));
+      const rest = inSeries.filter((p) => !ordered.includes(p.id)).sort((a, b) => (a.publishedAt ?? a.date ?? '').localeCompare(b.publishedAt ?? b.date ?? ''));
       return [...ordered, ...rest.map((p) => p.id)];
     },
     [posts],
