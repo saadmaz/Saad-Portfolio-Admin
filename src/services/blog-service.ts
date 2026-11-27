@@ -244,6 +244,11 @@ export class BlogService {
           meta.scheduledTimezone = opts.scheduledTimezone ?? null;
           meta.scheduleError = null;
           meta.scheduleAttempts = 0;
+          // Scheduling an unpublished post is a relaunch: the scheduled time becomes its
+          // publication date (the scheduler only sets the date when publishedAt is empty).
+          meta.publishedAt = null;
+          meta.date = null;
+          meta.lastUpdatedAt = null;
           break;
         case 'unschedule':
         case 'draft':
