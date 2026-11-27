@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronDown, ExternalLink, History, Inbox, Layers, LayoutGrid, LogOut, MoreHorizontal,
@@ -435,7 +436,10 @@ const AdminLayout = () => {
 
         <main className="flex-1 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-0">
           <div className="mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-6 md:px-8 md:py-9">
-            <Outlet />
+            {/* Per page and reset on navigation: one page crashing leaves the rest of the CMS usable. */}
+            <ErrorBoundary key={pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>
