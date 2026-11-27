@@ -16,6 +16,7 @@ import { useCreateIntent } from '@/components/admin/useAdminOverview';
 import { cn, plural } from '@/shared/lib/utils';
 import EmptyState from '@/components/admin/EmptyState';
 import * as z from 'zod';
+import { SERIES } from '@/shared/lib/newsletter-series';
 
 const newsletterSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -33,14 +34,10 @@ const newsletterFields = [
   { name: 'date', label: 'Publication Date', type: 'text', placeholder: 'e.g. March 2024' },
   {
     name: 'type',
-    label: 'Newsletter Type',
+    label: 'Series',
     type: 'select',
     placeholder: 'Select type…',
-    options: [
-      { label: 'Founder Weekly', value: 'founder' },
-      { label: 'CSE Insights', value: 'cse' },
-      { label: 'General', value: 'general' }
-    ]
+    options: SERIES.map((s) => ({ label: `${s.number} / ${s.title}`, value: s.id })),
   },
   { name: 'content_url', label: 'Content URL (Link to Newsletter)', type: 'text', placeholder: 'https://...' },
   { name: 'description', label: 'Brief Description', type: 'textarea', placeholder: 'What was this newsletter about?' },

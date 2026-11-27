@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Download, Search, Trash2, Users } from 'lucide-react';
+import { Download, Plus, Search, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { AddSubscribersDialog } from '@/components/admin/AddSubscribersDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { db } from '@/lib/firebase';
 import { cn, toJsDate } from '@/shared/lib/utils';
 import { subscribersCsv, type Subscriber } from '@/shared/lib/subscribers';
+import { seriesName } from '@/shared/lib/newsletter-series';
 import type { FirestoreLikeTimestamp } from '@/types';
 
 const STATUS_STYLE: Record<Subscriber['status'], string> = {
@@ -18,7 +20,6 @@ const STATUS_STYLE: Record<Subscriber['status'], string> = {
   pending: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
   unsubscribed: 'bg-muted text-muted-foreground',
 };
-const SERIES_LABEL: Record<string, string> = { founder: 'Founder notes', cse: 'Engineering' };
 
 const dateOf = (v: unknown) => {
   if (!v) return '';
@@ -26,13 +27,14 @@ const dateOf = (v: unknown) => {
   return d.getTime() ? format(d, 'yyyy-MM-dd') : '';
 };
 
-/** Newsletter subscribers collected by /api/subscribe (double opt-in). */
+/** Newsletter subscribers: sign-ups from /api/subscribe (double opt-in) plus people added here by hand. */
 const AdminSubscribers = () => {
   const [rows, setRows] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'all' | Subscriber['status']>('all');
   const [query, setQuery] = useState('');
   const [toDelete, setToDelete] = useState<Subscriber | null>(null);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     getDocs(collection(db, 'subscribers'))
@@ -82,9 +84,14 @@ const AdminSubscribers = () => {
         title="Subscribers"
         subtitle={`${counts.active} active · ${counts.pending} awaiting confirmation · ${counts.unsubscribed} unsubscribed`}
         actions={
-          <Button variant="outline" onClick={exportCsv} disabled={!counts.active}>
-            <Download className="h-4 w-4" /> Export active (CSV)
-          </Button>
+          <>
+            <Button variant="outline" onClick={exportCsv} disabled={!counts.active}>
+              <Download className="h-4 w-4" /> Export active (CSV)
+            </Button>
+            <Button onClick={() => setAdding(true)}>
+              <Plus className="h-4 w-4" /> Add subscribers
+            </Button>
+          </>
         }
       />
 
@@ -111,7 +118,7 @@ const AdminSubscribers = () => {
       {loading ? (
         <div className="h-40 w-full animate-pulse rounded-xl border border-border-subtle bg-card" />
       ) : rows.length === 0 ? (
-        <EmptyState icon={Users} title="No subscribers yet" description="Sign-ups from the site's newsletter forms appear here once confirmed or pending." />
+        <EmptyState icon={Users} title="No subscribers yet" description="Sign-ups from the site's newsletter forms appear here, or add people by hand." action={{ label: 'Add subscribers', onClick: () => setAdding(true) }} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-[13px]">
@@ -132,7 +139,7 @@ const AdminSubscribers = () => {
                   <td className="px-3 py-2">
                     <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium capitalize', STATUS_STYLE[r.status])}>{r.status}</span>
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">{(r.topics ?? []).map((t) => SERIES_LABEL[t] ?? t).join(', ')}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{(r.topics ?? []).map(seriesName).join(', ')}</td>
                   <td className="px-3 py-2 text-muted-foreground">{r.source ?? '—'}</td>
                   <td className="px-3 py-2 text-muted-foreground">{dateOf(r.created_at) || '—'}</td>
                   <td className="px-3 py-2">
@@ -156,6 +163,8 @@ const AdminSubscribers = () => {
           </table>
         </div>
       )}
+
+      <AddSubscribersDialog open={adding} onOpenChange={setAdding} onAdded={(added) => setRows((r) => [...added, ...r])} />
 
       <ConfirmDialog
         open={!!toDelete}

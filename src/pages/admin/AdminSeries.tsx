@@ -36,7 +36,7 @@ const AdminSeries = () => {
   const load = useCallback(async () => {
     try {
       const [s, p] = await Promise.all([SeriesService.getAll(), BlogService.getAll()]);
-      setSeries(s);
+      setSeries([...s].sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || a.title.localeCompare(b.title)));
       setPosts(p);
     } catch {
       toast.error('Failed to load series');
@@ -130,7 +130,7 @@ const AdminSeries = () => {
                   <div className="flex min-w-0 items-center gap-4">
                     {s.cover?.url ? <img src={s.cover.url} alt="" className="h-11 w-16 rounded-lg object-cover" /> : <span className="flex h-11 w-16 items-center justify-center rounded-lg bg-secondary"><Layers className="h-5 w-5 text-muted-foreground" /></span>}
                     <div className="min-w-0">
-                      <h3 className={cn(ROW_TITLE, 'flex items-center gap-2 truncate')}>{s.title} {!s.published && <Badge variant="neutral">Hidden</Badge>}</h3>
+                      <h3 className={cn(ROW_TITLE, 'flex items-center gap-2 truncate')}>{s.order ? <span className="tabular text-muted-foreground">{String(s.order).padStart(2, '0')}</span> : null}{s.title} {s.label && <Badge variant="neutral">{s.label}</Badge>} {!s.published && <Badge variant="neutral">Hidden</Badge>}</h3>
                       <p className={ROW_META}>{plural(count, 'article')} · /blog/series/{s.slug}</p>
                     </div>
                   </div>
@@ -145,6 +145,8 @@ const AdminSeries = () => {
       <EditorSheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)} title={e.id ? 'Edit series' : 'New series'} onSave={save} saving={saving} disabled={invalid}>
         <TextField label="Title" required value={e.title ?? ''} onChange={(title) => patch(e.id ? { title } : { title, slug: slugify(title) })} />
         <TextField label="URL slug" required value={e.slug ?? ''} onChange={(slug) => patch({ slug: slugify(slug) })} hint={`/blog/series/${e.slug || 'slug'}`} error={slugTaken ? 'Another series uses this slug' : undefined} />
+        <TextField label="Short label" value={e.label ?? ''} onChange={(label) => patch({ label })} max={24} placeholder="e.g. Projects" hint="Shown with the number, e.g. 01 / Projects" />
+        <TextField label="Order" type="number" value={e.order ? String(e.order) : ''} onChange={(v) => patch({ order: v ? Math.max(1, Math.round(Number(v))) || undefined : undefined })} hint="Position on the blog page; shown as 01, 02…" />
         <TextAreaField label="Description" value={e.description ?? ''} onChange={(description) => patch({ description })} max={300} />
         <ImageAssetField label="Cover image" purpose="cover" folder="blog/series" nameHint={e.slug} value={e.cover} onChange={(cover) => patch({ cover: cover ?? undefined })} />
         <Switch checked={e.published !== false} onChange={(published) => patch({ published })} label="Visible on the site" description="Hidden series keep their articles but show no series page or navigation." />
