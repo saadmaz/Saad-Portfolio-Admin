@@ -98,8 +98,8 @@ const AdminContact = () => {
                 label="Reply time"
                 value={data.reply_time}
                 onChange={(v) => setData((d) => ({ ...d, reply_time: v }))}
-                placeholder="within a day"
-                hint='Shown as "replies within a day". Leave empty for the default.'
+                placeholder="within one working day"
+                hint='Shown as "replies within one working day". Leave empty for the default.'
                 max={40}
               />
             </PanelSection>
@@ -107,7 +107,7 @@ const AdminContact = () => {
               <span className="mr-2 text-muted-foreground">Preview:</span>
               <span className={cn('mr-2 inline-block h-2 w-2 rounded-full align-middle', current.dot)} />
               {data.message.trim() || current.example}
-              <span className="text-muted-foreground"> · replies {data.reply_time.trim() || 'within a day'}</span>
+              <span className="text-muted-foreground"> · replies {data.reply_time.trim() || 'within one working day'}</span>
             </div>
           </CardContent>
         </Card>
